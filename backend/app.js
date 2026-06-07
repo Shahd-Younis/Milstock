@@ -1,0 +1,71 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const AppError = require('./utils/AppError');
+const errorHandler = require('./middleware/errorHandler');
+
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const warehouseRoutes = require('./routes/warehouseRoutes');
+const productRoutes = require('./routes/productRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const orderItemRoutes = require('./routes/orderItemRoutes');
+const productWarehouseRoutes = require('./routes/productWarehouseRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
+const consumptionRoutes = require('./routes/consumptionRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+
+const app = express();
+
+app.use(helmet());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: '1mb' }));
+
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('dev'));
+}
+
+app.get('/api/health', (_req, res) => {
+  res.json({ success: true, message: 'MilStock API running' });
+});
+
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    name: 'MilStock API',
+    message: 'Food warehouse inventory backend is running',
+    health: '/api/health',
+  });
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/warehouses', warehouseRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/orders/items', orderItemRoutes);
+app.use('/api/order-items', orderItemRoutes);
+app.use('/api/inventory/product-warehouses', productWarehouseRoutes);
+app.use('/api/product-warehouses', productWarehouseRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/consumption', consumptionRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+app.all('*', (req, _res, next) => {
+  next(new AppError(`Route ${req.originalUrl} was not found`, 404));
+});
+
+app.use(errorHandler);
+
+module.exports = app;
