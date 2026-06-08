@@ -235,7 +235,7 @@ export const SidebarAr = ({ userRole }: SidebarArProps) => {
                           />
                         )}
                         {item.badge !== undefined && (
-                          <span className="px-1.5 py-0.5 bg-[#C0392B] text-white text-[10px] font-bold rounded-md leading-none">
+                          <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] font-bold rounded-md leading-none">
                             {item.badge}
                           </span>
                         )}
@@ -243,7 +243,7 @@ export const SidebarAr = ({ userRole }: SidebarArProps) => {
                       </>
                     )}
                     {collapsed && item.badge !== undefined && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#C0392B] rounded-full" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
                     )}
                   </Link>
 
@@ -295,7 +295,7 @@ export const SidebarAr = ({ userRole }: SidebarArProps) => {
         <Link
           to="/ar/login"
           title={collapsed ? 'تسجيل الخروج' : undefined}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#C0392B]/15 hover:text-[#ff8a80] transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15 hover:text-[#ff8a80] transition-colors"
         >
           <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
           {!collapsed && <span className="flex-1 text-sm text-right">تسجيل الخروج</span>}
@@ -329,7 +329,7 @@ export const MobileNavAr = ({ userRole }: SidebarArProps) => {
           className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#C0392B] rounded-full" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
         </Link>
         <BrandLogo
           subtitle={userRole === 'admin' ? 'Admin' : 'Kitchen'}
@@ -383,7 +383,7 @@ export const MobileNavAr = ({ userRole }: SidebarArProps) => {
                     >
                       <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
                       {item.badge !== undefined && (
-                        <span className="px-1.5 py-0.5 bg-[#C0392B] text-white text-[10px] rounded-md">
+                        <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] rounded-md">
                           {item.badge}
                         </span>
                       )}
@@ -402,7 +402,7 @@ export const MobileNavAr = ({ userRole }: SidebarArProps) => {
                 <Globe className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">English</span>
               </Link>
-              <Link to="/ar/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#C0392B]/15">
+              <Link to="/ar/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
                 <LogOut className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">تسجيل الخروج</span>
               </Link>
@@ -435,7 +435,7 @@ export const MobileNavAr = ({ userRole }: SidebarArProps) => {
                 </div>
                 <span className="text-[9px] truncate max-w-[48px] text-center leading-none">{item.label}</span>
                 {item.badge && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#C0392B] rounded-full" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#D4183D] rounded-full" />
                 )}
               </Link>
             );

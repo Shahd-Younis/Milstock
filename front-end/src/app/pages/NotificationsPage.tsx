@@ -8,7 +8,7 @@ import { useApiResource } from '../lib/useApiResource';
 import { formatDate } from '../lib/format';
 
 const severityConfig = {
-  danger: { iconBg: 'bg-[#C0392B]/10', iconColor: 'text-[#C0392B]', accent: 'border-l-[#C0392B]' },
+  danger: { iconBg: 'bg-[#D4183D]/10', iconColor: 'text-[#D4183D]', accent: 'border-l-[#D4183D]' },
   warning: { iconBg: 'bg-[#B8862A]/10', iconColor: 'text-[#B8862A]', accent: 'border-l-[#B8862A]' },
   success: { iconBg: 'bg-[#5B8A4A]/10', iconColor: 'text-[#5B8A4A]', accent: 'border-l-[#5B8A4A]' },
   info: { iconBg: 'bg-[#6A7B4D]/10', iconColor: 'text-[#6A7B4D]', accent: 'border-l-[#6A7B4D]' },
@@ -51,7 +51,7 @@ export const NotificationsPage = () => {
         subtitle="Stay updated on inventory alerts and request status"
         badge={
           unreadCount > 0 ? (
-            <span className="px-2 py-0.5 bg-[#C0392B] text-white text-xs font-bold rounded-lg">{unreadCount}</span>
+            <span className="px-2 py-0.5 bg-[#D4183D] text-white text-xs font-bold rounded-lg">{unreadCount}</span>
           ) : undefined
         }
         action={unreadCount > 0 ? { label: 'Mark All Read', onClick: markAllRead, icon: Check } : undefined}

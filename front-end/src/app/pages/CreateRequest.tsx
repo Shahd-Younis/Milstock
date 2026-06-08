@@ -73,7 +73,7 @@ export const CreateRequest = () => {
       <div className="max-w-4xl">
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {message && <p className="text-sm text-[#C0392B]">{message}</p>}
+            {message && <p className="text-sm text-[#D4183D]">{message}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
                 label="Supplier *"

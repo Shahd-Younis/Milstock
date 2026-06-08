@@ -95,7 +95,7 @@ export const AuditLogs = () => {
         {[
           { icon: Shield, label: 'Total Logs (24h)', value: auditData.length, color: 'bg-[#4B5B3A]/10 border-[#4B5B3A]/20 text-[#4B5B3A]' },
           { icon: Shield, label: 'Successful Actions', value: auditData.filter(l => l.status === 'success').length, color: 'bg-[#5B8A4A]/10 border-[#5B8A4A]/20 text-[#5B8A4A]' },
-          { icon: Shield, label: 'Failed Actions', value: auditData.filter(l => l.status === 'failed').length, color: 'bg-[#C0392B]/8 border-[#C0392B]/15 text-[#C0392B]' },
+          { icon: Shield, label: 'Failed Actions', value: auditData.filter(l => l.status === 'failed').length, color: 'bg-[#D4183D]/8 border-[#D4183D]/15 text-[#D4183D]' },
           { icon: Shield, label: 'Security Events', value: auditData.filter(l => l.category === 'security').length, color: 'bg-[#B8862A]/10 border-[#B8862A]/20 text-[#B8862A]' },
         ].map((stat) => (
           <div key={stat.label} className={`p-5 rounded-2xl border ${stat.color} bg-white border-[#4E4631]/10 shadow-sm`}>

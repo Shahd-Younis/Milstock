@@ -105,7 +105,7 @@ export const AddInventoryItemAr = () => {
       />
 
       <form onSubmit={handleSubmit} className="max-w-4xl">
-        {message && <p className="mb-4 text-sm text-[#C0392B] text-right">{message}</p>}
+        {message && <p className="mb-4 text-sm text-[#D4183D] text-right">{message}</p>}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card>
             <CardHeader>

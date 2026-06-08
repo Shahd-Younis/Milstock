@@ -109,7 +109,7 @@ export const ReportsPageAr = () => {
                 <YAxis key="ar-rpt-lc-yaxis" stroke="#5A6B50" tick={{ fontSize: 11, fill: '#5A6B50' }} axisLine={false} tickLine={false} width={30} />
                 <Tooltip key="ar-rpt-lc-tooltip" content={<CustomTooltip />} />
                 <Legend key="ar-rpt-lc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: '#5A6B50' }} />
-                <Line key="ar-rpt-lc-expired" type="monotone" dataKey="expired" stroke="#C0392B" strokeWidth={2.5} name="منتهي الصلاحية" dot={false} activeDot={{ r: 4 }} />
+                <Line key="ar-rpt-lc-expired" type="monotone" dataKey="expired" stroke="#D4183D" strokeWidth={2.5} name="منتهي الصلاحية" dot={false} activeDot={{ r: 4 }} />
                 <Line key="ar-rpt-lc-damaged" type="monotone" dataKey="damaged" stroke="#C9A961" strokeWidth={2.5} name="تالف" dot={false} activeDot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>

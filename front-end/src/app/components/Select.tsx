@@ -26,7 +26,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               'text-sm transition-all duration-200 appearance-none cursor-pointer',
               'focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30 focus:border-[#6A7B4D]',
               'disabled:opacity-50 disabled:cursor-not-allowed',
-              error && 'border-[#C0392B] focus:ring-[#C0392B]/25',
+              error && 'border-[#D4183D] focus:ring-[#D4183D]/25',
               className
             )}
             {...props}
@@ -40,7 +40,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A6B50] pointer-events-none" />
         </div>
         {error && (
-          <p className="mt-1.5 text-xs text-[#C0392B]">{error}</p>
+          <p className="mt-1.5 text-xs text-[#D4183D]">{error}</p>
         )}
       </div>
     );

@@ -156,7 +156,7 @@ export const AdminDashboardAr = () => {
                       <span
                         className={
                           req.priority === 'urgent'
-                            ? 'text-[10px] font-bold text-[#C0392B] uppercase tracking-wide'
+                            ? 'text-[10px] font-bold text-[#D4183D] uppercase tracking-wide'
                             : req.priority === 'high'
                             ? 'text-[10px] font-bold text-[#B8862A] uppercase tracking-wide'
                             : 'text-[10px] text-[#5A6B50] uppercase tracking-wide'
@@ -180,7 +180,7 @@ export const AdminDashboardAr = () => {
         {/* Critical Alerts */}
         <Card>
           <CardHeader>
-            <span className="text-xs bg-[#C0392B]/10 text-[#C0392B] px-2 py-0.5 rounded-lg font-medium">
+            <span className="text-xs bg-[#D4183D]/10 text-[#D4183D] px-2 py-0.5 rounded-lg font-medium">
               2 نشط
             </span>
             <CardTitle className="text-right">التنبيهات الحرجة</CardTitle>
@@ -192,7 +192,7 @@ export const AdminDashboardAr = () => {
                   key={index}
                   className={`flex items-start gap-3 p-4 rounded-xl border flex-row-reverse ${
                     alert.severity === 'danger'
-                      ? 'bg-[#C0392B]/5 border-[#C0392B]/15'
+                      ? 'bg-[#D4183D]/5 border-[#D4183D]/15'
                       : alert.severity === 'warning'
                       ? 'bg-[#B8862A]/5 border-[#B8862A]/15'
                       : 'bg-[#5B8A4A]/5 border-[#5B8A4A]/15'
@@ -201,7 +201,7 @@ export const AdminDashboardAr = () => {
                   <div
                     className={`w-1.5 flex-shrink-0 rounded-full mt-0.5 self-stretch ${
                       alert.severity === 'danger'
-                        ? 'bg-[#C0392B]'
+                        ? 'bg-[#D4183D]'
                         : alert.severity === 'warning'
                         ? 'bg-[#B8862A]'
                         : 'bg-[#5B8A4A]'

@@ -20,10 +20,10 @@ export const AccessDeniedAr = () => {
         }}
       />
       <div className="relative z-10 max-w-md text-center">
-        <div className="inline-flex p-5 bg-[#C0392B]/8 rounded-2xl mb-8 border border-[#C0392B]/15">
-          <ShieldAlert className="w-14 h-14 text-[#C0392B]" />
+        <div className="inline-flex p-5 bg-[#D4183D]/8 rounded-2xl mb-8 border border-[#D4183D]/15">
+          <ShieldAlert className="w-14 h-14 text-[#D4183D]" />
         </div>
-        <p className="text-[120px] font-black text-[#C0392B]/8 leading-none select-none -mb-4">403</p>
+        <p className="text-[120px] font-black text-[#D4183D]/8 leading-none select-none -mb-4">403</p>
         <h1 className="text-[#2E3A24] mb-3">وصول مرفوض</h1>
         <p className="text-[#5A6B50] mb-2 leading-relaxed">
           ليس لديك صلاحية للوصول إلى هذا المورد.

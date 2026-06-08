@@ -69,7 +69,7 @@ export const LoginPageAr = () => {
               onChange={(event) => setPassword(event.target.value)}
               required
             />
-            {error && <p className="text-sm text-[#C0392B]">{error}</p>}
+            {error && <p className="text-sm text-[#D4183D]">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               <Mail className="w-5 h-5" />
               {loading ? 'جار تسجيل الدخول...' : 'دخول'}

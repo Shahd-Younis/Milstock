@@ -102,7 +102,7 @@ export const LoginPage = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            {error && <p className="text-sm text-[#C0392B]">{error}</p>}
+            {error && <p className="text-sm text-[#D4183D]">{error}</p>}
             <Input
               label="Email or Username"
               type="text"

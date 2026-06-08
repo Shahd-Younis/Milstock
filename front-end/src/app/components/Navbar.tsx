@@ -72,7 +72,7 @@ export const Navbar = ({ userRole }: NavbarProps) => {
           className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#4B5B3A]/8 transition-colors text-[#4E4631]"
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#C0392B] rounded-full ring-2 ring-white" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full ring-2 ring-white" />
         </Link>
 
         {/* User */}

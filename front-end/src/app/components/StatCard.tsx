@@ -24,9 +24,9 @@ const colorConfig = {
     accent: 'border-l-[#B8862A]',
   },
   danger: {
-    iconBg: 'bg-[#C0392B]/10',
-    iconColor: 'text-[#C0392B]',
-    accent: 'border-l-[#C0392B]',
+    iconBg: 'bg-[#D4183D]/10',
+    iconColor: 'text-[#D4183D]',
+    accent: 'border-l-[#D4183D]',
   },
   success: {
     iconBg: 'bg-[#5B8A4A]/12',
@@ -69,12 +69,12 @@ export const StatCard = ({
           {trend.isPositive ? (
             <TrendingUp className="w-3.5 h-3.5 text-[#5B8A4A]" />
           ) : (
-            <TrendingDown className="w-3.5 h-3.5 text-[#C0392B]" />
+            <TrendingDown className="w-3.5 h-3.5 text-[#D4183D]" />
           )}
           <span
             className={clsx(
               'text-xs font-medium',
-              trend.isPositive ? 'text-[#5B8A4A]' : 'text-[#C0392B]'
+              trend.isPositive ? 'text-[#5B8A4A]' : 'text-[#D4183D]'
             )}
           >
             {trend.value}

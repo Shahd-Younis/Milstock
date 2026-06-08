@@ -218,7 +218,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
                       <>
                         <span className="flex-1 text-sm font-medium">{item.label}</span>
                         {item.badge !== undefined && (
-                          <span className="px-1.5 py-0.5 bg-[#C0392B] text-white text-[10px] font-bold rounded-md leading-none">
+                          <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] font-bold rounded-md leading-none">
                             {item.badge}
                           </span>
                         )}
@@ -233,7 +233,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
                       </>
                     )}
                     {collapsed && item.badge !== undefined && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#C0392B] rounded-full" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
                     )}
                   </Link>
 
@@ -285,7 +285,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
         <Link
           to="/login"
           title={collapsed ? 'Logout' : undefined}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#C0392B]/15 hover:text-[#ff8a80] transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15 hover:text-[#ff8a80] transition-colors"
         >
           <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
           {!collapsed && <span className="text-sm">Logout</span>}

@@ -62,7 +62,7 @@ export const AuditLogsAr = () => {
         {[
           { label: 'إجمالي السجلات (24 ساعة)', value: auditData.length, color: 'border-[#4B5B3A]/20 text-[#4B5B3A]' },
           { label: 'الإجراءات الناجحة', value: auditData.filter(l => l.status === 'success').length, color: 'border-[#5B8A4A]/20 text-[#5B8A4A]' },
-          { label: 'الإجراءات الفاشلة', value: auditData.filter(l => l.status === 'failed').length, color: 'border-[#C0392B]/15 text-[#C0392B]' },
+          { label: 'الإجراءات الفاشلة', value: auditData.filter(l => l.status === 'failed').length, color: 'border-[#D4183D]/15 text-[#D4183D]' },
           { label: 'الأحداث الأمنية', value: auditData.filter(l => l.module === 'المصادقة').length, color: 'border-[#B8862A]/20 text-[#B8862A]' },
         ].map((stat) => (
           <div key={stat.label} className={`p-5 rounded-2xl border bg-white ${stat.color} shadow-sm text-right`}>

@@ -108,7 +108,7 @@ export const ReportsPage = () => {
                 <YAxis key="rpt-lc-yaxis" stroke="#5A6B50" tick={{ fontSize: 11, fill: '#5A6B50' }} axisLine={false} tickLine={false} width={30} />
                 <Tooltip key="rpt-lc-tooltip" content={<CustomTooltip />} />
                 <Legend key="rpt-lc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: '#5A6B50' }} />
-                <Line key="rpt-lc-expired" type="monotone" dataKey="expired" stroke="#C0392B" strokeWidth={2.5} name="Expired Items" dot={false} activeDot={{ r: 4 }} />
+                <Line key="rpt-lc-expired" type="monotone" dataKey="expired" stroke="#D4183D" strokeWidth={2.5} name="Expired Items" dot={false} activeDot={{ r: 4 }} />
                 <Line key="rpt-lc-damaged" type="monotone" dataKey="damaged" stroke="#C9A961" strokeWidth={2.5} name="Damaged Items" dot={false} activeDot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>

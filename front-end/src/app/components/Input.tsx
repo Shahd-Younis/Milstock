@@ -24,13 +24,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             'focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30 focus:border-[#6A7B4D]',
             'placeholder:text-[#5A6B50]/50',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[#ECEEE2]',
-            error && 'border-[#C0392B] focus:ring-[#C0392B]/25 focus:border-[#C0392B]',
+            error && 'border-[#D4183D] focus:ring-[#D4183D]/25 focus:border-[#D4183D]',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-xs text-[#C0392B]">{error}</p>
+          <p className="mt-1.5 text-xs text-[#D4183D]">{error}</p>
         )}
       </div>
     );

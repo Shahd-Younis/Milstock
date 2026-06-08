@@ -16,7 +16,7 @@ export const Badge = ({ variant, children, className, size = 'md' }: BadgeProps)
         {
           'bg-[#5B8A4A]/12 text-[#3d6b2e] border border-[#5B8A4A]/20': variant === 'success',
           'bg-[#B8862A]/12 text-[#8a6014] border border-[#B8862A]/20': variant === 'warning',
-          'bg-[#C0392B]/10 text-[#C0392B] border border-[#C0392B]/20': variant === 'danger',
+          'bg-[#D4183D]/10 text-[#D4183D] border border-[#D4183D]/20': variant === 'danger',
           'bg-[#6A7B4D]/12 text-[#4B5B3A] border border-[#6A7B4D]/20': variant === 'info',
           'bg-[#4E4631]/10 text-[#4E4631] border border-[#4E4631]/15': variant === 'pending',
           'bg-[#E0E1B7]/60 text-[#2E3A24] border border-[#4E4631]/12': variant === 'neutral',
@@ -28,7 +28,7 @@ export const Badge = ({ variant, children, className, size = 'md' }: BadgeProps)
         className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', {
           'bg-[#5B8A4A]': variant === 'success',
           'bg-[#B8862A]': variant === 'warning',
-          'bg-[#C0392B]': variant === 'danger',
+          'bg-[#D4183D]': variant === 'danger',
           'bg-[#6A7B4D]': variant === 'info',
           'bg-[#4E4631]': variant === 'pending',
           'bg-[#4B5B3A]': variant === 'neutral',

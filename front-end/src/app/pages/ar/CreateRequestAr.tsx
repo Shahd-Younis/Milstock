@@ -76,7 +76,7 @@ export const CreateRequestAr = () => {
       <PageHeaderAr title="إنشاء طلب توريد" subtitle="اختيار أصناف غذائية من بيانات MongoDB وإرسالها للمراجعة" />
 
       <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
-        {message && <p className="text-sm text-[#C0392B] text-right">{message}</p>}
+        {message && <p className="text-sm text-[#D4183D] text-right">{message}</p>}
         <Card>
           <CardHeader>
             <CardTitle className="text-right">معلومات الطلب</CardTitle>

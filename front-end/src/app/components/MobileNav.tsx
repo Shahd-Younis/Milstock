@@ -127,7 +127,7 @@ export const MobileNav = ({ userRole }: MobileNavProps) => {
           className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#C0392B] rounded-full" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
         </Link>
       </div>
 
@@ -168,7 +168,7 @@ export const MobileNav = ({ userRole }: MobileNavProps) => {
                       <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
                       <span className="flex-1 text-sm">{item.label}</span>
                       {item.badge !== undefined && (
-                        <span className="px-1.5 py-0.5 bg-[#C0392B] text-white text-[10px] rounded-md">
+                        <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] rounded-md">
                           {item.badge}
                         </span>
                       )}
@@ -194,7 +194,7 @@ export const MobileNav = ({ userRole }: MobileNavProps) => {
                 <Globe className="w-[18px] h-[18px]" />
                 <span className="text-sm">العربية</span>
               </Link>
-              <Link to="/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#C0392B]/15">
+              <Link to="/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
                 <LogOut className="w-[18px] h-[18px]" />
                 <span className="text-sm">Logout</span>
               </Link>
@@ -235,7 +235,7 @@ export const MobileNav = ({ userRole }: MobileNavProps) => {
                   {item.label}
                 </span>
                 {item.badge && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#C0392B] rounded-full" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#D4183D] rounded-full" />
                 )}
               </Link>
             );

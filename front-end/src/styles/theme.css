@@ -24,7 +24,7 @@
   --accent-foreground: #2E3A24;
 
   /* ── Semantic Tokens ── */
-  --destructive: #C0392B;
+  --destructive: #D4183D;
   --destructive-foreground: #FFFFFF;
 
   /* ── Component Tokens ── */
@@ -62,7 +62,7 @@
   --mil-cream: #E0E1B7;
   --mil-success: #5B8A4A;
   --mil-warning: #B8862A;
-  --mil-danger: #C0392B;
+  --mil-danger: #D4183D;
   --mil-info: #6A7B4D;
 
   --font-weight-medium: 500;
@@ -84,7 +84,7 @@
   --muted-foreground: #9aab8a;
   --accent: #3d4e2c;
   --accent-foreground: #E0E1B7;
-  --destructive: #C0392B;
+  --destructive: #D4183D;
   --destructive-foreground: #FFFFFF;
   --border: rgba(224, 225, 183, 0.1);
   --input: rgba(224, 225, 183, 0.08);
