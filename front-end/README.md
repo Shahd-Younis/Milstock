@@ -69,6 +69,12 @@ npm run dev:frontend
 npm run dev:backend
 ```
 
+From the project root, a new device can create env files, install dependencies, and load public demo data with:
+
+```bash
+npm run setup:demo
+```
+
 Seed MongoDB with ERD-aligned sample data:
 
 ```bash
