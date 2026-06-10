@@ -9,6 +9,7 @@ import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getProductStatus } from "../lib/format";
 import { normalizeArray, sameId } from "../lib/normalize";
+import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
 const statusVariant = {
   pending: "pending",
   approved: "success",
@@ -17,6 +18,7 @@ const statusVariant = {
 };
 const UserDashboard = () => {
   const navigate = useNavigate();
+  const assignedWarehouse = getStoredAssignedWarehouse();
   const { data: orders } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
   const { data: products } = useApiResource(() => api.products.list(), []);
@@ -49,11 +51,21 @@ const UserDashboard = () => {
   });
   const pendingRequests = orders.filter((order) => order.status === "pending").length;
   const completedRequests = orders.filter((order) => order.status === "completed").length;
+  if (!assignedWarehouse.id) {
+    return <div className="p-6 lg:p-8">
+      <Card>
+        <CardContent className="py-10 text-center text-[#D4183D]">
+          No warehouse assigned to this user. Please contact admin.
+        </CardContent>
+      </Card>
+    </div>;
+  }
   return <div className="p-6 lg:p-8 space-y-8">
       {
     /* Header action */
   }
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm font-medium text-[#2E3A24]">Warehouse: {assignedWarehouse.name || "Not assigned"}</p>
         <Button onClick={() => navigate("/user/requests/create")} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           New Request

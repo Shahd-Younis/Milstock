@@ -8,6 +8,7 @@ import { Select } from "../components/Select";
 import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
+import { getWarehouseId } from "../lib/warehouseDisplay";
 
 const initialForm = {
   name: "",
@@ -15,13 +16,15 @@ const initialForm = {
   military_number: "",
   phone: "",
   role: "unit",
-  status: "active"
+  status: "active",
+  assigned_warehouse: ""
 };
 
 const EditUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: users, loading, error } = useApiResource(() => api.users.list(), []);
+  const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
   const user = useMemo(() => users.find((entry) => entry._id === id), [id, users]);
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
@@ -36,7 +39,8 @@ const EditUser = () => {
       military_number: user.military_number || "",
       phone: user.phone || "",
       role: user.role || "unit",
-      status: user.status || "active"
+      status: user.status || "active",
+      assigned_warehouse: getWarehouseId(user.assigned_warehouse)
     });
   }, [user]);
 
@@ -47,7 +51,14 @@ const EditUser = () => {
     setSaving(true);
     setMessage("");
     try {
-      await api.users.update(id, form);
+      const payload = { ...form, assigned_warehouse: form.assigned_warehouse || null };
+      if (payload.role === "unit" && !payload.assigned_warehouse) {
+        setMessageType("error");
+        setMessage("Assigned Warehouse is required for Kitchen / Unit users.");
+        setSaving(false);
+        return;
+      }
+      await api.users.update(id, payload);
       setMessageType("success");
       setMessage("User updated successfully.");
       window.setTimeout(() => navigate("/admin/users", { state: { message: "User updated successfully." } }), 700);
@@ -85,6 +96,17 @@ const EditUser = () => {
             <Input label="Phone" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} required />
             <Select label="Role" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "Kitchen / Unit" }, { value: "admin", label: "Admin" }]} />
             <Select label="Status" value={form.status} onChange={(event) => updateField("status", event.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
+            <Select
+              label="Assigned Warehouse"
+              value={form.assigned_warehouse}
+              onChange={(event) => updateField("assigned_warehouse", event.target.value)}
+              required={form.role === "unit"}
+              disabled={warehousesLoading}
+              options={[
+                { value: "", label: form.role === "admin" ? "All Warehouses" : warehousesLoading ? "Loading warehouses..." : warehousesError || "Select warehouse..." },
+                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
+              ]}
+            />
           </div>
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => navigate("/admin/users")} disabled={saving}>Cancel</Button>

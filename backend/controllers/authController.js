@@ -17,6 +17,8 @@ const sanitizeUser = (user) => {
   return plain;
 };
 
+const userPopulate = { path: 'assigned_warehouse', select: '_id name location' };
+
 const registerRules = [
   body('name').trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
   body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
@@ -36,8 +38,9 @@ const register = asyncHandler(async (req, res) => {
   payload.password = await bcrypt.hash(payload.password, 12);
 
   const user = await User.create(payload);
+  const populatedUser = await User.findById(user._id).populate(userPopulate);
   const token = signToken(user);
-  const safeUser = sanitizeUser(user);
+  const safeUser = sanitizeUser(populatedUser);
 
   await createAuditLog({
     req: { ...req, user },
@@ -54,7 +57,7 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password').populate(userPopulate);
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     await createAuditLog({
@@ -82,7 +85,8 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  const safeUser = sanitizeUser(req.user);
+  const user = await User.findById(req.user._id).populate(userPopulate);
+  const safeUser = sanitizeUser(user || req.user);
   res.json({ success: true, user: safeUser, data: safeUser });
 });
 

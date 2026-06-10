@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, Edit, Mail, Phone, Shield, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Edit, Mail, MapPin, Phone, Shield, User as UserIcon } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/Card";
 import { Badge } from "../components/Badge";
@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
+import { getAssignedWarehouseName } from "../lib/warehouseDisplay";
 
 const UserDetails = () => {
   const { id } = useParams();
@@ -51,6 +52,7 @@ const UserDetails = () => {
               ["Employee Code", user.military_number, Shield],
               ["Phone", user.phone, Phone],
               ["Role", user.role === "admin" ? "Admin" : "Kitchen / Unit", Shield],
+              ["Warehouse", getAssignedWarehouseName(user), MapPin],
               ["Created", formatDate(user.createdAt), UserIcon],
             ].map(([label, value, Icon]) => <div key={label} className="flex items-start gap-3">
               <Icon className="w-4 h-4 text-[#5A6B50] mt-0.5" />

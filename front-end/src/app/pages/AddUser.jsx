@@ -7,6 +7,7 @@ import { Input } from "../components/Input";
 import { Select } from "../components/Select";
 import { Button } from "../components/Button";
 import { api } from "../lib/api";
+import { useApiResource } from "../lib/useApiResource";
 
 const initialForm = {
   name: "",
@@ -14,7 +15,8 @@ const initialForm = {
   password: "",
   military_number: "",
   phone: "",
-  role: "unit"
+  role: "unit",
+  assigned_warehouse: ""
 };
 
 const AddUser = () => {
@@ -23,6 +25,7 @@ const AddUser = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -36,11 +39,16 @@ const AddUser = () => {
       password: form.password,
       military_number: form.military_number.trim(),
       phone: form.phone.trim(),
-      role: form.role
+      role: form.role,
+      assigned_warehouse: form.assigned_warehouse || null
     };
 
     if (!payload.name || !payload.email || !payload.password || !payload.military_number || !payload.phone || !payload.role) {
       setError("Please fill in all required fields.");
+      return;
+    }
+    if (payload.role === "unit" && !payload.assigned_warehouse) {
+      setError("Assigned Warehouse is required for Kitchen / Unit users.");
       return;
     }
 
@@ -135,6 +143,17 @@ const AddUser = () => {
               options={[
                 { value: "unit", label: "Kitchen / Unit" },
                 { value: "admin", label: "Admin" }
+              ]}
+            />
+            <Select
+              label="Assigned Warehouse"
+              value={form.assigned_warehouse}
+              onChange={(event) => updateField("assigned_warehouse", event.target.value)}
+              required={form.role === "unit"}
+              disabled={warehousesLoading}
+              options={[
+                { value: "", label: form.role === "admin" ? "All Warehouses" : warehousesLoading ? "Loading warehouses..." : warehousesError || "Select warehouse..." },
+                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
               ]}
             />
           </div>

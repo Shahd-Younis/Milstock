@@ -12,7 +12,7 @@ const authenticate = asyncHandler(async (req, _res, next) => {
   }
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).populate('assigned_warehouse', '_id name location');
 
   if (!user) {
     throw new AppError('Authenticated user no longer exists', 401);

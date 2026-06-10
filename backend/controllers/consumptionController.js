@@ -3,6 +3,7 @@ const Consumption = require('../models/consumptionModel');
 const { getAll, getOne, deleteOne } = require('./crudFactory');
 const asyncHandler = require('../utils/asyncHandler');
 const { adjustStock } = require('../services/inventoryService');
+const { enforcePayloadWarehouse } = require('../utils/warehouseScope');
 
 const consumptionRules = [
   body('user_id').optional().isMongoId().withMessage('Valid user_id is required'),
@@ -12,9 +13,11 @@ const consumptionRules = [
 ];
 
 const createConsumption = asyncHandler(async (req, res) => {
+  const payload = { ...req.body };
+  enforcePayloadWarehouse(req, payload);
   const consumption = await Consumption.create({
-    ...req.body,
-    user_id: req.body.user_id || req.user._id,
+    ...payload,
+    user_id: req.user?.role === 'unit' ? req.user._id : payload.user_id || req.user._id,
   });
 
   await adjustStock({

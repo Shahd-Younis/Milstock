@@ -4,6 +4,8 @@ const { getOne, createOne, updateOne, deleteOne } = require('./crudFactory');
 const asyncHandler = require('../utils/asyncHandler');
 const { generateExpirationNotifications } = require('../services/expirationNotificationService');
 const { createAuditLog } = require('../services/auditLogService');
+const Product = require('../models/productModel');
+const { requireAssignedWarehouse } = require('../utils/warehouseScope');
 
 const notificationRules = [
   body('title').optional().trim().notEmpty().withMessage('Title is required'),
@@ -28,6 +30,19 @@ const getExpirationNotifications = asyncHandler(async (req, res) => {
 const getNotifications = asyncHandler(async (req, res) => {
   await generateExpirationNotifications(req);
   const filter = req.user?._id ? { $or: [{ user_id: req.user._id }, { user_id: null }] } : {};
+  if (req.user?.role === 'unit') {
+    const warehouseId = requireAssignedWarehouse(req);
+    const productIds = await Product.find({ warehouse_id: warehouseId }).distinct('_id');
+    filter.$and = [
+      {
+        $or: [
+          { item_id: null },
+          { item_id: { $in: productIds } },
+          { entity_type: { $nin: ['Product', 'product', 'inventory'] } },
+        ],
+      },
+    ];
+  }
   const notifications = await Notification.find(filter)
     .populate('user_id')
     .populate('item_id')

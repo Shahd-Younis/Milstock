@@ -10,6 +10,7 @@ import { ActionsPortalMenu } from "../../components/ActionsPortalMenu";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
+import { getAssignedWarehouseName } from "../../lib/warehouseDisplay";
 
 const getCurrentUser = () => {
   try {
@@ -62,6 +63,7 @@ const UserManagementAr = () => {
     { key: "email", header: "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a" },
     { header: "\u0627\u0644\u062f\u0648\u0631", value: (row) => row.role === "admin" ? "\u0645\u0633\u0624\u0648\u0644" : "\u0645\u0633\u062a\u062e\u062f\u0645 \u0648\u062d\u062f\u0629" },
     { header: "\u0627\u0644\u062d\u0627\u0644\u0629", value: (row) => (row.status || "active") === "active" ? "\u0646\u0634\u0637" : "\u063a\u064a\u0631 \u0646\u0634\u0637" },
+    { header: "\u0627\u0644\u0645\u062e\u0632\u0646 \u0627\u0644\u0645\u0633\u0624\u0648\u0644 \u0639\u0646\u0647", value: (row) => getAssignedWarehouseName(row, "\u0643\u0644 \u0627\u0644\u0645\u062e\u0627\u0632\u0646", "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f") },
     { key: "phone", header: "\u0627\u0644\u0647\u0627\u062a\u0641" },
     { header: "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0646\u0634\u0627\u0621", value: (row) => formatDate(row.createdAt) }
   ];
@@ -151,7 +153,7 @@ const UserManagementAr = () => {
       <table className="w-full text-right">
         <thead>
           <tr className="border-b border-[#4E4631]/10 bg-[#ECEEE2]/60">
-            {["??? ??????", "?????", "?????? ??????????", "?????", "??????", "??????", "????? ???????", "???????"].map((header) => <th key={header} className="px-5 py-3.5 text-xs font-semibold text-[#5A6B50] uppercase tracking-wide">{header}</th>)}
+            {["??? ??????", "?????", "?????? ??????????", "?????", "??????", "\u0627\u0644\u0645\u062e\u0632\u0646", "??????", "????? ???????", "???????"].map((header) => <th key={header} className="px-5 py-3.5 text-xs font-semibold text-[#5A6B50] uppercase tracking-wide">{header}</th>)}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#4E4631]/6">
@@ -161,6 +163,7 @@ const UserManagementAr = () => {
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{user.email || "??? ????"}</td>
             <td className="px-5 py-3.5"><Badge variant={user.role === "admin" ? "info" : "neutral"}>{user.role === "admin" ? "?????" : "?????? ????"}</Badge></td>
             <td className="px-5 py-3.5"><Badge variant={(user.status || "active") === "active" ? "success" : "neutral"}>{(user.status || "active") === "active" ? "???" : "??? ???"}</Badge></td>
+            <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{getAssignedWarehouseName(user, "\u0643\u0644 \u0627\u0644\u0645\u062e\u0627\u0632\u0646", "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f")}</td>
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{user.phone || "??? ????"}</td>
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{formatDate(user.createdAt)}</td>
             <td className="px-5 py-3.5">
@@ -171,7 +174,7 @@ const UserManagementAr = () => {
               </div>
             </td>
           </tr>)}
-          {!loading && filtered.length === 0 && <tr><td colSpan={8} className="px-5 py-12 text-center text-sm text-[#5A6B50]">{error || "?? ???? ????????."}</td></tr>}
+          {!loading && filtered.length === 0 && <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-[#5A6B50]">{error || "?? ???? ????????."}</td></tr>}
         </tbody>
       </table>
     </div>

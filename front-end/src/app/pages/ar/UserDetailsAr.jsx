@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowRight, Edit, Mail, Phone, Shield, User as UserIcon } from "lucide-react";
+import { ArrowRight, Edit, Mail, MapPin, Phone, Shield, User as UserIcon } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
+import { getAssignedWarehouseName } from "../../lib/warehouseDisplay";
 
 const UserDetailsAr = () => {
   const { id } = useParams();
@@ -41,6 +42,7 @@ const UserDetailsAr = () => {
               ["الهاتف", user.phone, Phone],
               ["الدور", user.role === "admin" ? "مسؤول" : "مستخدم وحدة", Shield],
               ["تاريخ الإنشاء", formatDate(user.createdAt), UserIcon],
+              ["المخزن المسؤول عنه", getAssignedWarehouseName(user, "كل المخازن", "غير محدد"), MapPin],
             ].map(([label, value, Icon]) => <div key={label} className="flex items-start gap-3 flex-row-reverse"><Icon className="w-4 h-4 text-[#5A6B50] mt-0.5" /><div><p className="text-sm text-muted-foreground mb-1">{label}</p><p className="font-medium text-foreground">{value || "غير محدد"}</p></div></div>)}
           </div>
         </CardContent>

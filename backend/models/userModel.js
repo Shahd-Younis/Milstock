@@ -49,10 +49,30 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'inactive'],
       default: 'active',
     },
+    assigned_warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      default: null,
+      required() {
+        return this.role === 'unit';
+      },
+    },
+    assigned_warehouse_name: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.pre('validate', function normalizeAssignedWarehouse(next) {
+  if (this.role === 'admin' && this.assigned_warehouse === '') {
+    this.assigned_warehouse = null;
+  }
+  next();
+});
 
 module.exports = mongoose.model('User', userSchema);

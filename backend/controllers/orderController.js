@@ -9,6 +9,7 @@ const AppError = require('../utils/AppError');
 const { adjustStock } = require('../services/inventoryService');
 const { createNotification } = require('../services/notificationService');
 const { createAuditLog } = require('../services/auditLogService');
+const { assertWarehouseAccess, requireAssignedWarehouse } = require('../utils/warehouseScope');
 
 const orderRules = [
   body('total_price').optional().isFloat({ min: 0 }).withMessage('Total price must be 0 or greater'),
@@ -53,6 +54,14 @@ const applyCompletedOrderInventory = async ({ order, userId }) => {
 
 const createOrder = asyncHandler(async (req, res) => {
   const items = req.body.items || [];
+  if (req.user?.role === 'unit') {
+    const warehouseId = requireAssignedWarehouse(req);
+    const productIds = items.map((item) => item.product_id).filter(Boolean);
+    const matchingCount = await Product.countDocuments({ _id: { $in: productIds }, warehouse_id: warehouseId });
+    if (matchingCount !== productIds.length) {
+      throw new AppError('Unit users can only request products from their assigned warehouse', 403);
+    }
+  }
   const total_price =
     req.body.total_price ??
     items.reduce((sum, item) => sum + Number(item.quantity) * Number(item.unit_price), 0);
@@ -61,7 +70,7 @@ const createOrder = asyncHandler(async (req, res) => {
     date: req.body.date,
     total_price,
     status: req.body.status || 'pending',
-    user_id: req.body.user_id || req.user._id,
+    user_id: req.user?.role === 'unit' ? req.user._id : req.body.user_id || req.user._id,
     supplier_id: req.body.supplier_id,
   });
 
@@ -100,6 +109,10 @@ const createOrder = asyncHandler(async (req, res) => {
 
 const updateOrder = asyncHandler(async (req, res) => {
   const before = await Order.findById(req.params.id);
+  if (!before) {
+    throw new AppError('Order not found', 404);
+  }
+  await assertWarehouseAccess(req, Order, before);
   const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -145,6 +158,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   if (!order) {
     throw new AppError('Order not found', 404);
   }
+  await assertWarehouseAccess(req, Order, order);
 
   const previousStatus = order.status;
 
@@ -213,6 +227,7 @@ const getOrderStatusLogs = asyncHandler(async (req, res) => {
   if (!order) {
     throw new AppError('Order not found', 404);
   }
+  await assertWarehouseAccess(req, Order, order);
 
   const logs = await OrderStatusLog.find({ order_id: req.params.id })
     .populate('changed_by')

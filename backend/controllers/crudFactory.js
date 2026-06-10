@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { createAuditLog } = require('../services/auditLogService');
+const { assertWarehouseAccess, buildWarehouseScopeFilter } = require('../utils/warehouseScope');
 
 const moduleForModel = (modelName = '') => {
   const map = {
@@ -17,7 +18,8 @@ const moduleForModel = (modelName = '') => {
 
 const getAll = (Model, populate = []) =>
   asyncHandler(async (req, res) => {
-    let query = Model.find();
+    const scopeFilter = await buildWarehouseScopeFilter(req, Model);
+    let query = Model.find(scopeFilter);
     populate.forEach((field) => {
       query = query.populate(field);
     });
@@ -35,6 +37,7 @@ const getOne = (Model, populate = []) =>
 
     const doc = await query;
     if (!doc) throw new AppError('Resource not found', 404);
+    await assertWarehouseAccess(req, Model, doc);
 
     res.json({ success: true, data: doc });
   });

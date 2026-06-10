@@ -5,6 +5,7 @@ import { Button } from "../../components/Button";
 import { FileText, Clock, CheckCircle, ArrowRight, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { getStoredAssignedWarehouse } from "../../lib/warehouseDisplay";
 const myRequests = [
   { id: "REQ-1230", item: "\u0623\u0631\u0632", quantity: 100, status: "approved", requestedDate: "2026-05-01", deliveryDate: "2026-05-05" },
   { id: "REQ-1228", item: "\u0642\u0648\u0627\u0631\u064A\u0631 \u0645\u064A\u0627\u0647", quantity: 200, status: "pending", requestedDate: "2026-04-30", deliveryDate: "\u0642\u064A\u062F \u0627\u0644\u062A\u062D\u062F\u064A\u062F" },
@@ -42,11 +43,22 @@ const statusVariant = {
 };
 const UserDashboardAr = () => {
   const navigate = useNavigate();
+  const assignedWarehouse = getStoredAssignedWarehouse();
+  if (!assignedWarehouse.id) {
+    return <div className="p-6 lg:p-8">
+      <Card>
+        <CardContent className="py-10 text-center text-[#D4183D]">
+          لم يتم تعيين مخزن لهذا المستخدم. يرجى التواصل مع المسؤول.
+        </CardContent>
+      </Card>
+    </div>;
+  }
   return <div className="p-6 lg:p-8 space-y-8">
       {
     /* Header action */
   }
-      <div className="flex items-center justify-start">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm font-medium text-[#2E3A24] text-right">المخزن: {assignedWarehouse.name || "غير محدد"}</p>
         <Button onClick={() => navigate("/ar/user/requests/create")} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           إنشاء طلب جديد

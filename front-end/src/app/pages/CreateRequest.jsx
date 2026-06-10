@@ -8,16 +8,16 @@ import { Send, X } from "lucide-react";
 import { useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
+import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
 const CreateRequest = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState([{ product_id: "", quantity: "", unit_price: "" }]);
   const [supplierId, setSupplierId] = useState("");
-  const [warehouseId, setWarehouseId] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const assignedWarehouse = getStoredAssignedWarehouse();
   const { data: products, loading: productsLoading, error: productsError } = useApiResource(() => api.products.list(), []);
   const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useApiResource(() => api.suppliers.list(), []);
-  const { data: warehouses, loading: warehousesLoading } = useApiResource(() => api.warehouses.list(), []);
   const addItem = () => {
     setItems([...items, { product_id: "", quantity: "", unit_price: "" }]);
   };
@@ -31,6 +31,10 @@ const CreateRequest = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!assignedWarehouse.id) {
+      setMessage("No warehouse assigned to this user. Please contact admin.");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
@@ -68,16 +72,12 @@ const CreateRequest = () => {
     disabled={suppliersLoading}
     required
   />
-              <Select
-    label="Delivery Warehouse"
-    options={[
-      { value: "", label: warehousesLoading ? "Loading warehouses..." : "Select warehouse..." },
-      ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
-    ]}
-    value={warehouseId}
-    onChange={(e) => setWarehouseId(e.target.value)}
-    disabled={warehousesLoading}
-  />
+              <div>
+                <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Delivery Warehouse</p>
+                <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
+                  {assignedWarehouse.name || "No warehouse assigned"}
+                </div>
+              </div>
             </div>
 
             <div>

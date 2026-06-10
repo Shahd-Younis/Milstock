@@ -1,8 +1,11 @@
 const { body } = require('express-validator');
 const OrderItem = require('../models/orderItemModel');
 const Order = require('../models/orderModel');
+const Product = require('../models/productModel');
 const { getAll, getOne, deleteOne } = require('./crudFactory');
 const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/AppError');
+const { assertWarehouseAccess, requireAssignedWarehouse } = require('../utils/warehouseScope');
 
 const orderItemRules = [
   body('order_id').optional().isMongoId().withMessage('Valid order_id is required'),
@@ -23,6 +26,18 @@ const createOrderItem = asyncHandler(async (req, res) => {
     ...req.body,
     total_price: req.body.total_price ?? Number(req.body.quantity) * Number(req.body.unit_price),
   };
+  if (req.user?.role === 'unit') {
+    const warehouseId = requireAssignedWarehouse(req);
+    const product = await Product.findById(payload.product_id);
+    const order = await Order.findById(payload.order_id);
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+    await assertWarehouseAccess(req, Order, order);
+    if (!product || String(product.warehouse_id) !== warehouseId) {
+      throw new AppError('Unit users can only add products from their assigned warehouse', 403);
+    }
+  }
   const item = await OrderItem.create(payload);
   await recalculateOrderTotal(item.order_id);
   res.status(201).json({ success: true, data: item });
@@ -30,11 +45,22 @@ const createOrderItem = asyncHandler(async (req, res) => {
 
 const updateOrderItem = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
+  const existing = await OrderItem.findById(req.params.id);
+  if (!existing) {
+    throw new AppError('Order item not found', 404);
+  }
+  await assertWarehouseAccess(req, OrderItem, existing);
   if (payload.quantity !== undefined || payload.unit_price !== undefined) {
-    const existing = await OrderItem.findById(req.params.id);
     const quantity = payload.quantity ?? existing.quantity;
     const unit_price = payload.unit_price ?? existing.unit_price;
     payload.total_price = payload.total_price ?? Number(quantity) * Number(unit_price);
+  }
+  if (req.user?.role === 'unit' && payload.product_id) {
+    const warehouseId = requireAssignedWarehouse(req);
+    const product = await Product.findById(payload.product_id);
+    if (!product || String(product.warehouse_id) !== warehouseId) {
+      throw new AppError('Unit users can only add products from their assigned warehouse', 403);
+    }
   }
 
   const item = await OrderItem.findByIdAndUpdate(req.params.id, payload, {

@@ -8,18 +8,18 @@ import { Select } from "../../components/Select";
 import { Button } from "../../components/Button";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
+import { getStoredAssignedWarehouse } from "../../lib/warehouseDisplay";
 const CreateRequestAr = () => {
   const navigate = useNavigate();
   const [supplierId, setSupplierId] = useState("");
-  const [warehouseId, setWarehouseId] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const assignedWarehouse = getStoredAssignedWarehouse();
   const [items, setItems] = useState([
     { id: "1", product_id: "", quantity: "", unit_price: "" }
   ]);
   const { data: products, loading: productsLoading, error: productsError } = useApiResource(() => api.products.list(), []);
   const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useApiResource(() => api.suppliers.list(), []);
-  const { data: warehouses, loading: warehousesLoading } = useApiResource(() => api.warehouses.list(), []);
   const addItem = () => {
     setItems((current) => [
       ...current,
@@ -34,12 +34,15 @@ const CreateRequestAr = () => {
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!assignedWarehouse.id) {
+      setMessage("لم يتم تعيين مخزن لهذا المستخدم. يرجى التواصل مع المسؤول.");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       await api.orders.create({
         supplier_id: supplierId,
-        warehouse_id: warehouseId || void 0,
         items: items.map((item) => ({
           product_id: item.product_id,
           quantity: Number(item.quantity),
@@ -73,15 +76,12 @@ const CreateRequestAr = () => {
     disabled={suppliersLoading}
     required
   />
-            <Select
-    options={[
-      { value: "", label: warehousesLoading ? "\u062C\u0627\u0631 \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0645\u0633\u062A\u0648\u062F\u0639\u0627\u062A..." : "\u0627\u062E\u062A\u0631 \u0645\u0633\u062A\u0648\u062F\u0639 \u0627\u0644\u062A\u0633\u0644\u064A\u0645" },
-      ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
-    ]}
-    value={warehouseId}
-    onChange={(event) => setWarehouseId(event.target.value)}
-    disabled={warehousesLoading}
-  />
+            <div>
+              <p className="block mb-1.5 text-sm font-medium text-[#2E3A24] text-right">مخزن التسليم</p>
+              <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24] text-right">
+                {assignedWarehouse.name || "غير محدد"}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

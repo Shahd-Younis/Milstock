@@ -42,7 +42,7 @@ const run = async () => {
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const users = await User.insertMany([
+  const adminUsers = await User.insertMany([
     {
       name: 'Food Inventory Admin',
       email: 'admin@milstock.local',
@@ -50,14 +50,6 @@ const run = async () => {
       phone: '+966555000100',
       military_number: 'EMP-0001',
       role: 'admin',
-    },
-    {
-      name: 'Kitchen Request Coordinator',
-      email: 'kitchen@milstock.local',
-      password: hashedPassword,
-      phone: '+966555000200',
-      military_number: 'EMP-0101',
-      role: 'unit',
     },
     {
       name: 'Warehouse Supervisor',
@@ -69,13 +61,24 @@ const run = async () => {
     },
   ]);
 
-  const [adminUser, kitchenUser, warehouseUser] = users;
+  const [adminUser, warehouseUser] = adminUsers;
 
   const warehouses = await Warehouse.insertMany([
     { name: 'Dry Goods Warehouse', location: 'Central Food Depot - Aisle 1', user_id: warehouseUser._id },
     { name: 'Cold Storage Warehouse', location: 'Central Food Depot - Refrigerated Zone', user_id: warehouseUser._id },
     { name: 'Fresh Produce Warehouse', location: 'Distribution Center - Produce Hall', user_id: adminUser._id },
   ]);
+
+  const kitchenUser = await User.create({
+    name: 'Kitchen Request Coordinator',
+    email: 'kitchen@milstock.local',
+    password: hashedPassword,
+    phone: '+966555000200',
+    military_number: 'EMP-0101',
+    role: 'unit',
+    assigned_warehouse: warehouses[0]._id,
+    assigned_warehouse_name: warehouses[0].name,
+  });
 
   const suppliers = await Supplier.insertMany([
     { name: 'Golden Grain Foods', phone: '+966555100001' },

@@ -8,13 +8,15 @@ import { Select } from "../../components/Select";
 import { Button } from "../../components/Button";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
+import { getWarehouseId } from "../../lib/warehouseDisplay";
 
-const initialForm = { name: "", email: "", military_number: "", phone: "", role: "unit", status: "active" };
+const initialForm = { name: "", email: "", military_number: "", phone: "", role: "unit", status: "active", assigned_warehouse: "" };
 
 const EditUserAr = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: users, loading, error } = useApiResource(() => api.users.list(), []);
+  const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
   const user = useMemo(() => users.find((entry) => entry._id === id), [id, users]);
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
@@ -29,7 +31,8 @@ const EditUserAr = () => {
       military_number: user.military_number || "",
       phone: user.phone || "",
       role: user.role || "unit",
-      status: user.status || "active"
+      status: user.status || "active",
+      assigned_warehouse: getWarehouseId(user.assigned_warehouse)
     });
   }, [user]);
 
@@ -39,7 +42,14 @@ const EditUserAr = () => {
     setSaving(true);
     setMessage("");
     try {
-      await api.users.update(id, form);
+      const payload = { ...form, assigned_warehouse: form.assigned_warehouse || null };
+      if (payload.role === "unit" && !payload.assigned_warehouse) {
+        setMessageType("error");
+        setMessage("المخزن المسؤول عنه مطلوب لمستخدم الوحدة.");
+        setSaving(false);
+        return;
+      }
+      await api.users.update(id, payload);
       setMessageType("success");
       setMessage("تم تحديث المستخدم بنجاح.");
       window.setTimeout(() => navigate("/ar/admin/users", { state: { message: "تم تحديث المستخدم بنجاح." } }), 700);
@@ -69,6 +79,18 @@ const EditUserAr = () => {
             <Input label="الهاتف" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} required className="text-right" />
             <Select label="الدور" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "مستخدم وحدة" }, { value: "admin", label: "مسؤول" }]} className="text-right" />
             <Select label="الحالة" value={form.status} onChange={(event) => updateField("status", event.target.value)} options={[{ value: "active", label: "نشط" }, { value: "inactive", label: "غير نشط" }]} className="text-right" />
+            <Select
+              label="المخزن المسؤول عنه"
+              value={form.assigned_warehouse}
+              onChange={(event) => updateField("assigned_warehouse", event.target.value)}
+              required={form.role === "unit"}
+              disabled={warehousesLoading}
+              options={[
+                { value: "", label: form.role === "admin" ? "كل المخازن" : warehousesLoading ? "جاري تحميل المخازن..." : warehousesError || "اختر المخزن" },
+                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
+              ]}
+              className="text-right"
+            />
           </div>
           <div className="flex justify-end gap-3"><Button type="button" variant="outline" onClick={() => navigate("/ar/admin/users")} disabled={saving}>إلغاء</Button><Button type="submit" disabled={saving}><Save className="w-4 h-4" />{saving ? "جار الحفظ..." : "حفظ التعديلات"}</Button></div>
         </form>
