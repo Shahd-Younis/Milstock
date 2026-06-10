@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { clsx } from "clsx";
+import { useNavigate } from "react-router";
 const colorConfig = {
   primary: {
     iconBg: "bg-[#6A7B4D]/12",
@@ -27,13 +28,33 @@ const StatCard = ({
   value,
   icon: Icon,
   trend,
-  color = "primary"
+  color = "primary",
+  to,
+  onClick
 }) => {
   const config = colorConfig[color];
+  const navigate = useNavigate();
+  const clickable = Boolean(to || onClick);
+  const activate = () => {
+    if (onClick) onClick();
+    else if (to) navigate(to);
+  };
+  const handleKeyDown = (event) => {
+    if (!clickable) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  };
   return <div
+    role={clickable ? "button" : void 0}
+    tabIndex={clickable ? 0 : void 0}
+    onClick={clickable ? activate : void 0}
+    onKeyDown={handleKeyDown}
     className={clsx(
       "bg-card rounded-2xl border border-border shadow-sm p-5",
       "border-l-4 hover:shadow-md transition-all duration-200",
+      clickable && "cursor-pointer hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30",
       config.accent
     )}
   >

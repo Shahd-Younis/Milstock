@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Input } from "../../components/Input";
@@ -27,10 +27,29 @@ const variantMap = {
 
 const InventoryListAr = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
+  const query = new URLSearchParams(location.search);
+  const urlFilter = query.get("filter");
+
+  useEffect(() => {
+    const urlStatus = new URLSearchParams(location.search).get("status");
+    const normalizedStatus = urlStatus === "low_stock" ? "low-stock" : urlStatus;
+    if (normalizedStatus) {
+      setStatusFilter(normalizedStatus);
+    } else if (new URLSearchParams(location.search).get("filter") === "expiring") {
+      setStatusFilter("all");
+    }
+  }, [location.search]);
+
+  const isExpiringWithin30Days = (value) => {
+    if (!value) return false;
+    const days = (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return days >= 0 && days <= 30;
+  };
 
   const inventoryData = products.map((product) => {
     const status = getProductStatus(product);
@@ -41,6 +60,7 @@ const InventoryListAr = () => {
       category: product.category,
       quantity: product.quantity,
       unit: product.unit,
+      expirationRaw: product.expiration_date || product.expiry_date,
       expirationDate: formatDate(product.expiration_date || product.expiry_date),
       warehouse: product.warehouse_id?.name || "غير محدد",
       storageSection: product.storage_section || "غير محدد",
@@ -53,7 +73,8 @@ const InventoryListAr = () => {
     const matchesSearch = String(item.name ?? "").toLowerCase().includes(search) || String(item.id ?? "").toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
-    return matchesSearch && matchesCategory && matchesStatus;
+    const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter;
   });
 
   const columns = [

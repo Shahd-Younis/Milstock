@@ -69,10 +69,10 @@ const AdminDashboardAr = () => {
     /* KPI Stats */
   }
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        <StatCardAr title="إجمالي أصناف المخزون" value="12,458" icon={Package} trend={{ value: "+12% \u0639\u0646 \u0627\u0644\u0634\u0647\u0631 \u0627\u0644\u0645\u0627\u0636\u064A", isPositive: true }} color="primary" />
-        <StatCardAr title="أصناف منخفضة المخزون" value="23" icon={AlertTriangle} trend={{ value: "+5 \u0645\u0646\u0630 \u0623\u0645\u0633", isPositive: false }} color="warning" />
-        <StatCardAr title="تنتهي صلاحيتها قريباً" value="47" icon={Calendar} trend={{ value: "\u062E\u0644\u0627\u0644 30 \u064A\u0648\u0645\u0627\u064B", isPositive: false }} color="danger" />
-        <StatCardAr title="الطلبات المعلّقة" value="12" icon={FileText} trend={{ value: "-3 \u0639\u0646 \u0623\u0645\u0633", isPositive: true }} color="success" />
+        <StatCardAr title="إجمالي أصناف المخزون" value="12,458" icon={Package} trend={{ value: "+12% \u0639\u0646 \u0627\u0644\u0634\u0647\u0631 \u0627\u0644\u0645\u0627\u0636\u064A", isPositive: true }} color="primary" to="/ar/admin/inventory" />
+        <StatCardAr title="أصناف منخفضة المخزون" value="23" icon={AlertTriangle} trend={{ value: "+5 \u0645\u0646\u0630 \u0623\u0645\u0633", isPositive: false }} color="warning" to="/ar/admin/inventory?status=low_stock" />
+        <StatCardAr title="تنتهي صلاحيتها قريباً" value="47" icon={Calendar} trend={{ value: "\u062E\u0644\u0627\u0644 30 \u064A\u0648\u0645\u0627\u064B", isPositive: false }} color="danger" to="/ar/admin/inventory?filter=expiring" />
+        <StatCardAr title="الطلبات المعلّقة" value="12" icon={FileText} trend={{ value: "-3 \u0639\u0646 \u0623\u0645\u0633", isPositive: true }} color="success" to="/ar/admin/requests?status=pending" />
       </div>
 
       {

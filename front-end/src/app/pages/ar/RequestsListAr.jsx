@@ -1,6 +1,6 @@
-﻿import { useState } from "react";
-import { useNavigate, useLocation } from "react-router";
-import { Search, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { Plus, Search } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Badge } from "../../components/Badge";
 import { Input } from "../../components/Input";
@@ -38,6 +38,11 @@ const RequestsListAr = () => {
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
 
+  useEffect(() => {
+    const urlStatus = new URLSearchParams(location.search).get("status");
+    if (urlStatus) setStatusFilter(urlStatus);
+  }, [location.search]);
+
   const orderItemsArray = normalizeArray(orderItems);
   const requestRows = orders.map((order) => {
     const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
@@ -64,21 +69,26 @@ const RequestsListAr = () => {
     const matchStatus = statusFilter === "all" || request.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
   const exportColumns = [
-    { key: "id", header: "\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628" },
-    { key: "kitchen", header: "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645" },
-    { key: "item", header: "\u0627\u0644\u0623\u0635\u0646\u0627\u0641" },
-    { key: "quantity", header: "\u0627\u0644\u0643\u0645\u064a\u0629" },
-    { key: "supplier", header: "\u0627\u0644\u0645\u0648\u0631\u062f" },
-    { header: "\u0627\u0644\u062d\u0627\u0644\u0629", value: (row) => statusLabels[row.status] || row.status },
-    { key: "requestedDate", header: "\u0627\u0644\u062a\u0627\u0631\u064a\u062e" },
-    { key: "requestedBy", header: "\u0645\u0642\u062f\u0645 \u0627\u0644\u0637\u0644\u0628" }
+    { key: "id", header: "رقم الطلب" },
+    { key: "kitchen", header: "المستخدم" },
+    { key: "item", header: "الأصناف" },
+    { key: "quantity", header: "الكمية" },
+    { key: "supplier", header: "المورد" },
+    { header: "الحالة", value: (row) => statusLabels[row.status] || row.status },
+    { key: "requestedDate", header: "التاريخ" },
+    { key: "requestedBy", header: "مقدم الطلب" }
   ];
+
+  const openRequest = (request) => {
+    navigate(isAdmin ? `/ar/admin/requests/${request.mongoId}` : `/ar/user/requests/${request.mongoId}`);
+  };
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
       title={isAdmin ? "جميع طلبات التوريد" : "طلباتي"}
-      subtitle="نفس طلبات MongoDB المستخدمة في الواجهة الإنجليزية"
+      subtitle="طلبات التوريد المحملة من MongoDB"
       action={!isAdmin ? {
         label: "طلب جديد",
         onClick: () => navigate("/ar/user/requests/create"),
@@ -116,7 +126,7 @@ const RequestsListAr = () => {
         {ordersLoading ? "جاري تحميل الطلبات من MongoDB..." : ordersError || `عرض ${filtered.length} من ${requestRows.length} طلب`}
       </p>
       <ExportCsvButton filenamePrefix="requests-export" columns={exportColumns} rows={ordersLoading ? [] : filtered} className="flex items-center gap-2">
-        {"\u062a\u0635\u062f\u064a\u0631"}
+        تصدير
       </ExportCsvButton>
     </div>
 
@@ -128,11 +138,7 @@ const RequestsListAr = () => {
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {filtered.map((request) => <tr
-            key={request.mongoId}
-            className="hover:bg-muted/20 transition-colors cursor-pointer"
-            onClick={() => navigate(isAdmin ? `/ar/admin/requests/${request.mongoId}` : `/ar/user/requests/${request.mongoId}`)}
-          >
+          {filtered.map((request) => <tr key={request.mongoId} className="hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => openRequest(request)}>
             <td className="px-4 py-3 font-mono text-sm font-medium text-foreground">{request.id}</td>
             <td className="px-4 py-3 text-foreground">{request.kitchen}</td>
             <td className="px-4 py-3 text-foreground">{request.item}</td>
@@ -147,11 +153,7 @@ const RequestsListAr = () => {
     </div>
 
     <div className="lg:hidden space-y-3">
-      {filtered.map((request) => <div
-        key={request.mongoId}
-        className="p-4 rounded-xl border border-border bg-card cursor-pointer hover:border-primary transition-colors"
-        onClick={() => navigate(isAdmin ? `/ar/admin/requests/${request.mongoId}` : `/ar/user/requests/${request.mongoId}`)}
-      >
+      {filtered.map((request) => <div key={request.mongoId} className="p-4 rounded-xl border border-border bg-card cursor-pointer hover:border-primary transition-colors" onClick={() => openRequest(request)}>
         <div className="flex items-center justify-between mb-3">
           <Badge variant={statusVariants[request.status] || "neutral"}>{statusLabels[request.status] || request.status}</Badge>
           <div className="text-right">
@@ -169,4 +171,3 @@ const RequestsListAr = () => {
 export {
   RequestsListAr
 };
-

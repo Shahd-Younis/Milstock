@@ -85,10 +85,10 @@ const AdminDashboard = () => {
     /* KPI stats */
   }
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard title="Total Inventory Items" value={products.reduce((sum, product) => sum + product.quantity, 0).toLocaleString()} icon={Package} trend={{ value: `${products.length} products`, isPositive: true }} color="primary" />
-        <StatCard title="Low Stock Items" value={lowStockItems.length.toString()} icon={AlertTriangle} trend={{ value: "From MongoDB thresholds", isPositive: false }} color="warning" />
-        <StatCard title="Expiring Soon" value={expiringSoon.length.toString()} icon={Calendar} trend={{ value: "Next 45 days", isPositive: false }} color="danger" />
-        <StatCard title="Pending Requests" value={pendingOrders.length.toString()} icon={FileText} trend={{ value: "Open orders", isPositive: true }} color="success" />
+        <StatCard title="Total Inventory Items" value={products.reduce((sum, product) => sum + product.quantity, 0).toLocaleString()} icon={Package} trend={{ value: `${products.length} products`, isPositive: true }} color="primary" to="/admin/inventory" />
+        <StatCard title="Low Stock Items" value={lowStockItems.length.toString()} icon={AlertTriangle} trend={{ value: "From MongoDB thresholds", isPositive: false }} color="warning" to="/admin/inventory?status=low_stock" />
+        <StatCard title="Expiring Soon" value={expiringSoon.length.toString()} icon={Calendar} trend={{ value: "Next 45 days", isPositive: false }} color="danger" to="/admin/inventory?filter=expiring" />
+        <StatCard title="Pending Requests" value={pendingOrders.length.toString()} icon={FileText} trend={{ value: "Open orders", isPositive: true }} color="success" to="/admin/requests?status=pending" />
       </div>
 
       {

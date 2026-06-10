@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
@@ -18,6 +18,10 @@ const RequestsList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems, loading: itemsLoading } = useApiResource(() => api.orderItems.list(), []);
+  useEffect(() => {
+    const urlStatus = new URLSearchParams(location.search).get("status");
+    if (urlStatus) setStatusFilter(urlStatus);
+  }, [location.search]);
   const requestsData = useMemo(() => {
     const orderItemsArray = normalizeArray(orderItems);
     return orders.map((order) => {

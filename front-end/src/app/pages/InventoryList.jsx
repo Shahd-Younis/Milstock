@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { Input } from "../components/Input";
 import { Select } from "../components/Select";
@@ -7,16 +7,35 @@ import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { ExportCsvButton } from "../components/ExportCsvButton";
 import { Plus, Search } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../lib/format";
 const InventoryList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
+  const query = new URLSearchParams(location.search);
+  const urlFilter = query.get("filter");
+
+  useEffect(() => {
+    const urlStatus = new URLSearchParams(location.search).get("status");
+    const normalizedStatus = urlStatus === "low_stock" ? "low-stock" : urlStatus;
+    if (normalizedStatus) {
+      setStatusFilter(normalizedStatus);
+    } else if (new URLSearchParams(location.search).get("filter") === "expiring") {
+      setStatusFilter("all");
+    }
+  }, [location.search]);
+
+  const isExpiringWithin30Days = (value) => {
+    if (!value) return false;
+    const days = (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return days >= 0 && days <= 30;
+  };
   const inventoryData = products.map((product) => ({
     id: product._id.slice(-8).toUpperCase(),
     mongoId: product._id,
@@ -24,6 +43,7 @@ const InventoryList = () => {
     category: product.category,
     quantity: product.quantity,
     unit: product.unit,
+    expirationRaw: product.expiration_date || product.expiry_date,
     expirationDate: formatDate(product.expiration_date || product.expiry_date),
     warehouse: product.warehouse_id?.name || "Unassigned",
     storageSection: product.storage_section || "N/A",
@@ -34,7 +54,8 @@ const InventoryList = () => {
     const matchesSearch = String(item.name ?? "").toLowerCase().includes(search) || String(item.id ?? "").toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
-    return matchesSearch && matchesCategory && matchesStatus;
+    const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter;
   });
   const columns = [
     { key: "id", header: "Item ID" },
