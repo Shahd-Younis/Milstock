@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BrandLogo } from "../BrandLogo";
+import { clearStoredAuth } from "../../lib/auth";
+import { useNotifications } from "../../context/NotificationContext";
 const adminNavGroups = [
   {
     label: "\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629",
@@ -107,7 +109,11 @@ const SidebarAr = ({ userRole }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
-  const navGroups = userRole === "admin" ? adminNavGroups : userNavGroups;
+  const { unreadCount } = useNotifications();
+  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+    ...group,
+    items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
+  }));
   const toggleExpand = (path) => {
     setExpandedItems(
       (prev) => prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
@@ -250,7 +256,7 @@ const SidebarAr = ({ userRole }) => {
           {!collapsed && <span className="flex-1 text-sm text-right">الملف الشخصي</span>}
         </Link>
         <Link
-    to="/admin/dashboard"
+    to={userRole === "admin" ? "/admin/dashboard" : "/user/dashboard"}
     title={collapsed ? "English" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10 transition-colors"
   >
@@ -259,6 +265,7 @@ const SidebarAr = ({ userRole }) => {
         </Link>
         <Link
     to="/ar/login"
+    onClick={clearStoredAuth}
     title={collapsed ? "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062E\u0631\u0648\u062C" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15 hover:text-[#ff8a80] transition-colors"
   >
@@ -271,7 +278,11 @@ const SidebarAr = ({ userRole }) => {
 const MobileNavAr = ({ userRole }) => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const navGroups = userRole === "admin" ? adminNavGroups : userNavGroups;
+  const { unreadCount } = useNotifications();
+  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+    ...group,
+    items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
+  }));
   const allItems = navGroups.flatMap((g) => g.items);
   const bottomItems = allItems.slice(0, 5).map((item) => ({
     label: item.label,
@@ -289,7 +300,9 @@ const MobileNavAr = ({ userRole }) => {
     className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
   >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
+          {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D4183D] text-white text-[10px] leading-4 text-center rounded-full">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>}
         </Link>
         <BrandLogo
     subtitle={userRole === "admin" ? "Admin" : "Kitchen"}
@@ -351,11 +364,11 @@ const MobileNavAr = ({ userRole }) => {
                 <User className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">الملف الشخصي</span>
               </Link>
-              <Link to="/admin/dashboard" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
+              <Link to={userRole === "admin" ? "/admin/dashboard" : "/user/dashboard"} onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
                 <Globe className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">English</span>
               </Link>
-              <Link to="/ar/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
+              <Link to="/ar/login" onClick={() => { clearStoredAuth(); setDrawerOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
                 <LogOut className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">تسجيل الخروج</span>
               </Link>

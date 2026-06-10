@@ -7,6 +7,8 @@ const {
   getOrder,
   createOrder,
   updateOrder,
+  updateOrderStatus,
+  getOrderStatusLogs,
   deleteOrder,
 } = require('../controllers/orderController');
 
@@ -15,6 +17,8 @@ const router = express.Router();
 router.use(authenticate);
 
 router.route('/').get(getOrders).post(orderRules, validate, createOrder);
+router.patch('/:id/status', authorize('admin'), updateOrderStatus);
+router.get('/:id/status-logs', getOrderStatusLogs);
 router
   .route('/:id')
   .get(getOrder)

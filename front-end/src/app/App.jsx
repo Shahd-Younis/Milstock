@@ -1,6 +1,7 @@
 import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { useEffect } from "react";
+import { NotificationProvider } from "./context/NotificationContext";
 function App() {
   useEffect(() => {
     const applyDirection = (pathname) => {
@@ -14,7 +15,7 @@ function App() {
     });
     return unsubscribe;
   }, []);
-  return <RouterProvider router={router} />;
+  return <NotificationProvider><RouterProvider router={router} /></NotificationProvider>;
 }
 export {
   App as default

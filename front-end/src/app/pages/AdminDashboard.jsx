@@ -26,6 +26,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getProductStatus } from "../lib/format";
+import { normalizeArray, sameId } from "../lib/normalize";
 const COLORS = ["#4B5B3A", "#6A7B4D", "#8A9B6D", "#C9A961"];
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -43,7 +44,11 @@ const AdminDashboard = () => {
   const { data: products } = useApiResource(() => api.products.list(), []);
   const { data: orders } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
-  const { data: notifications } = useApiResource(() => api.notifications.list(), []);
+  const { data: notifications } = useApiResource(async () => {
+    await api.notifications.expiration().catch(() => {});
+    return api.notifications.list();
+  }, []);
+  const orderItemsArray = normalizeArray(orderItems);
   const lowStockItems = products.filter((product) => getProductStatus(product) === "low-stock");
   const expiringSoon = products.filter((product) => getProductStatus(product) === "expiring-soon");
   const pendingOrders = orders.filter((order) => order.status === "pending");
@@ -56,15 +61,15 @@ const AdminDashboard = () => {
   const stockTrendData = orders.slice(-5).map((order) => ({
     month: new Date(order.date).toLocaleDateString("en", { month: "short", day: "numeric" }),
     stock: products.reduce((sum, product) => sum + product.quantity, 0),
-    requests: orderItems.filter((item) => item.order_id?._id === order._id).reduce((sum, item) => sum + item.quantity, 0)
+    requests: orderItemsArray.filter((item) => sameId(item.order_id, order._id)).reduce((sum, item) => sum + Number(item.quantity || 0), 0)
   }));
   const recentRequests = orders.slice(0, 3).map((order) => {
-    const items = orderItems.filter((item) => item.order_id?._id === order._id);
+    const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
     return {
       id: order._id.slice(-8).toUpperCase(),
       kitchen: order.user_id?.name || "Unknown kitchen",
-      item: items.map((item) => item.product_id?.name).filter(Boolean).join(", ") || "No items",
-      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+      quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       priority: order.status === "pending" ? "high" : "normal",
       time: new Date(order.date).toLocaleDateString()

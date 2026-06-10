@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 8,
+      minlength: 6,
       trim: true,
       select: false,
     },
@@ -41,6 +41,13 @@ const userSchema = new mongoose.Schema(
       trim: true,
       enum: ['admin', 'unit'],
       default: 'unit',
+    },
+    status: {
+      type: String,
+      required: true,
+      trim: true,
+      enum: ['active', 'inactive'],
+      default: 'active',
     },
   },
   {

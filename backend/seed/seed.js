@@ -16,6 +16,12 @@ const Consumption = require('../models/consumptionModel');
 const Notification = require('../models/notificationModel');
 
 const password = 'Password123!';
+const daysFromToday = (days) => {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return date;
+};
 
 const run = async () => {
   await connectDB();
@@ -203,7 +209,34 @@ const run = async () => {
       category: 'Bakery',
       min_quantity: 200,
       warehouse_id: warehouses[2]._id,
-      expiry_date: new Date('2026-06-12'),
+      expiry_date: daysFromToday(-1),
+    },
+    {
+      name: 'Yogurt',
+      quantity: 320,
+      unit: 'piece',
+      category: 'Dairy',
+      min_quantity: 100,
+      warehouse_id: warehouses[1]._id,
+      expiry_date: daysFromToday(7),
+    },
+    {
+      name: 'Tomato Sauce',
+      quantity: 850,
+      unit: 'piece',
+      category: 'Canned Food',
+      min_quantity: 180,
+      warehouse_id: warehouses[0]._id,
+      expiry_date: daysFromToday(30),
+    },
+    {
+      name: 'Apple Juice',
+      quantity: 1100,
+      unit: 'piece',
+      category: 'Beverages',
+      min_quantity: 220,
+      warehouse_id: warehouses[0]._id,
+      expiry_date: daysFromToday(90),
     },
     {
       name: 'Water Bottles',
@@ -233,6 +266,9 @@ const run = async () => {
     { product_id: byName['Fresh Vegetables']._id, warehouse_id: warehouses[2]._id, quantity: 700 },
     { product_id: byName['Fresh Fruits']._id, warehouse_id: warehouses[2]._id, quantity: 640 },
     { product_id: byName.Bread._id, warehouse_id: warehouses[2]._id, quantity: 500 },
+    { product_id: byName.Yogurt._id, warehouse_id: warehouses[1]._id, quantity: 320 },
+    { product_id: byName['Tomato Sauce']._id, warehouse_id: warehouses[0]._id, quantity: 850 },
+    { product_id: byName['Apple Juice']._id, warehouse_id: warehouses[0]._id, quantity: 1100 },
     { product_id: byName['Water Bottles']._id, warehouse_id: warehouses[0]._id, quantity: 6000 },
   ]);
 

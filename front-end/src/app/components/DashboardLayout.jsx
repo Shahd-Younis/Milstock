@@ -2,10 +2,13 @@ import { Outlet, useLocation } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { Navbar } from "./Navbar";
+import { getStoredAuth } from "../lib/auth";
 const DashboardLayout = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const userRole = isAdmin ? "admin" : "user";
+  const isUser = location.pathname.startsWith("/user");
+  const storedRole = getStoredAuth().role;
+  const userRole = isAdmin ? "admin" : isUser ? "user" : storedRole || "user";
   return <div dir="ltr" className="flex min-h-screen bg-[#ECEEE2]">
       {
     /* Desktop sidebar */

@@ -21,10 +21,45 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    status: {
+      type: String,
+      enum: ['unread', 'read'],
+      default: 'unread',
+    },
+    notification_key: {
+      type: String,
+      trim: true,
+      sparse: true,
+      unique: true,
+    },
+    severity: {
+      type: String,
+      enum: ['info', 'warning', 'critical', 'success'],
+      default: 'info',
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      default: null,
+    },
+    entity_id: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    entity_type: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    item_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      default: null,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
   },
   {

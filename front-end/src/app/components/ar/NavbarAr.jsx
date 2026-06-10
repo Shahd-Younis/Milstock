@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router";
 import { Bell, ChevronDown, Globe, User } from "lucide-react";
+import { useNotifications } from "../../context/NotificationContext";
 const pageTitleMap = {
   "/ar/admin/dashboard": "\u0644\u0648\u062D\u0629 \u062A\u062D\u0643\u0645 \u0627\u0644\u0645\u0633\u0624\u0648\u0644",
   "/ar/admin/inventory": "\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0645\u062E\u0632\u0648\u0646",
@@ -30,6 +31,7 @@ const subtitleMap = {
 };
 const NavbarAr = ({ userRole }) => {
   const location = useLocation();
+  const { unreadCount } = useNotifications();
   const title = pageTitleMap[location.pathname] ?? "MilStock";
   const subtitle = subtitleMap[location.pathname];
   const notifPath = userRole === "admin" ? "/ar/admin/notifications" : "/ar/user/notifications";
@@ -79,7 +81,9 @@ const NavbarAr = ({ userRole }) => {
     className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#4B5B3A]/8 transition-colors text-[#4E4631]"
   >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full ring-2 ring-white" />
+          {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D4183D] text-white text-[10px] leading-4 text-center rounded-full ring-2 ring-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>}
         </Link>
 
         {

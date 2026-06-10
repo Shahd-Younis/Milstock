@@ -3,12 +3,16 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = require('./app');
 const connectDB = require('./config/db');
+const { generateExpirationNotifications } = require('./services/expirationNotificationService');
 
 const PORT = process.env.PORT || 5001;
 
 const start = async () => {
   try {
     await connectDB();
+    generateExpirationNotifications().catch((error) => {
+      console.error('Failed to generate startup expiration notifications:', error.message);
+    });
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

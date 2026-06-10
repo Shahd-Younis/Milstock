@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const User = require('../models/userModel');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
+const { createAuditLog } = require('../services/auditLogService');
 
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
@@ -36,8 +37,19 @@ const register = asyncHandler(async (req, res) => {
 
   const user = await User.create(payload);
   const token = signToken(user);
+  const safeUser = sanitizeUser(user);
 
-  res.status(201).json({ success: true, token, data: sanitizeUser(user) });
+  await createAuditLog({
+    req: { ...req, user },
+    action: 'register',
+    module: 'security',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Registered user ${user.email}`,
+    newData: safeUser,
+  });
+
+  res.status(201).json({ success: true, token, user: safeUser, data: safeUser });
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -45,15 +57,33 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
+    await createAuditLog({
+      req,
+      action: 'failed_login',
+      module: 'security',
+      entityType: 'User',
+      description: `Failed login attempt for ${email}`,
+      newData: { email },
+    });
     throw new AppError('Invalid email or password', 401);
   }
 
   const token = signToken(user);
-  res.json({ success: true, token, data: sanitizeUser(user) });
+  const safeUser = sanitizeUser(user);
+  await createAuditLog({
+    req: { ...req, user },
+    action: 'login',
+    module: 'security',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Login for ${user.email}`,
+  });
+  res.json({ success: true, token, user: safeUser, data: safeUser });
 });
 
 const me = asyncHandler(async (req, res) => {
-  res.json({ success: true, data: sanitizeUser(req.user) });
+  const safeUser = sanitizeUser(req.user);
+  res.json({ success: true, user: safeUser, data: safeUser });
 });
 
 module.exports = { register, login, me, registerRules, loginRules };

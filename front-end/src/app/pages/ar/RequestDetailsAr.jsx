@@ -1,180 +1,337 @@
-import { useParams, useNavigate } from "react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
-import { ArrowRight, CheckCircle, XCircle, Clock, Package, User, Calendar, MessageSquare } from "lucide-react";
-const timeline = [
-  { status: "\u062A\u0645 \u0627\u0644\u0625\u0646\u0634\u0627\u0621", date: "2026-05-02 09:15", by: "\u0645\u0646\u0633\u0642 \u0627\u0644\u0645\u0637\u0628\u062E \u0645\u062D\u0645\u062F \u0639\u0644\u064A", icon: Package, color: "text-[#4B5B3A]" },
-  { status: "\u0642\u064A\u062F \u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629", date: "2026-05-02 09:30", by: "\u0627\u0644\u0646\u0638\u0627\u0645", icon: Clock, color: "text-[#C9A961]" },
-  { status: "\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0645\u0633\u0624\u0648\u0644", date: "2026-05-03 10:00", by: "\u0627\u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0644\u0622\u0644\u064A\u0629", icon: Clock, color: "text-[#C9A961]" }
-];
-const requestItems = [
-  { name: "\u0623\u0631\u0632", quantity: 300, kitchen: "\u0635\u0646\u062F\u0648\u0642", category: "\u063A\u0630\u0627\u0621" },
-  { name: "\u0645\u064A\u0627\u0647 \u0645\u0639\u0628\u0623\u0629 1.5 \u0644\u062A\u0631", quantity: 1200, kitchen: "\u0642\u0627\u0631\u0648\u0631\u0629", category: "\u063A\u0630\u0627\u0621" },
-  { name: "\u062D\u0644\u064A\u0628", quantity: 50, kitchen: "\u0642\u0646\u064A\u0646\u0629", category: "\u0623\u063A\u0630\u064A\u0629" }
-];
+import { ArrowRight, Calendar, CheckCircle, Clock, Package, Truck, User, XCircle } from "lucide-react";
+import { api } from "../../lib/api";
+import { formatDate } from "../../lib/format";
+import { getDocumentId, normalizeArray, normalizeRecord, sameId } from "../../lib/normalize";
+
+const statusVariants = {
+  pending: "pending",
+  approved: "success",
+  completed: "info",
+  cancelled: "danger"
+};
+
+const statusLabels = {
+  pending: "قيد المراجعة",
+  approved: "موافق عليه",
+  completed: "مكتمل",
+  cancelled: "ملغي"
+};
+
+const money = (value) => {
+  const number = Number(value || 0);
+  return number ? `${number.toLocaleString()} جنيه` : "غير محدد";
+};
+
 const RequestDetailsAr = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const request = {
-    id: id || "REQ-1234",
-    kitchen: "\u0627\u0644\u0645\u0637\u0628\u062E \u0627\u0644\u0645\u0631\u0643\u0632\u064A",
-    requestedBy: "\u0645\u0646\u0633\u0642 \u0627\u0644\u0645\u0637\u0628\u062E \u0645\u062D\u0645\u062F \u0639\u0644\u064A",
-    priority: "high",
-    status: "pending",
-    requestedDate: "2026-05-02",
-    deliveryDate: "2026-05-10",
-    justification: "\u0648\u062D\u062F\u062A\u0646\u0627 \u0641\u064A \u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u0634\u0645\u0627\u0644\u064A\u0629 \u062A\u0648\u0627\u062C\u0647 \u0646\u0642\u0635\u0627\u064B \u062D\u0627\u062F\u0627\u064B \u0641\u064A \u0627\u0644\u0645\u0624\u0646 \u0627\u0644\u0623\u0633\u0627\u0633\u064A\u0629. \u0627\u0644\u0627\u062D\u062A\u064A\u0627\u0637\u064A\u0627\u062A \u0627\u0644\u062D\u0627\u0644\u064A\u0629 \u062A\u0643\u0641\u064A \u0644\u0640 3 \u0623\u064A\u0627\u0645 \u0641\u0642\u0637. \u0645\u0637\u0644\u0648\u0628 \u0627\u0644\u0625\u0645\u062F\u0627\u062F \u0642\u0628\u0644 \u0628\u062F\u0621 \u0645\u0631\u062D\u0644\u0629 \u0627\u0644\u0639\u0645\u0644\u064A\u0627\u062A \u0627\u0644\u0642\u0627\u062F\u0645\u0629."
-  };
+  const location = useLocation();
   const isAdmin = location.pathname.includes("/ar/admin");
-  return <div className="p-6 lg:p-8 space-y-6">
-      <div className="mb-2">
-        <button
-    onClick={() => navigate(isAdmin ? "/ar/admin/requests" : "/ar/user/requests")}
-    className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] transition-colors text-sm flex-row-reverse"
-  >
-          <ArrowRight className="w-4 h-4" />
-          العودة إلى الطلبات
-        </button>
-      </div>
+  const backPath = isAdmin ? "/ar/admin/requests" : "/ar/user/requests";
+  const [order, setOrder] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
-      <PageHeaderAr
-    title={`\u062A\u0641\u0627\u0635\u064A\u0644 \u0627\u0644\u0637\u0644\u0628 ${request.id}`}
-    subtitle={`${request.kitchen} \u2022 ${request.requestedDate}`}
-  />
+  const loadRequest = useCallback(async () => {
+    if (!id) {
+      setOrder(null);
+      setItems([]);
+      setError("رقم الطلب غير موجود.");
+      setLoading(false);
+      return;
+    }
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {
-    /* Main details */
-  }
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <Badge variant={request.status === "pending" ? "pending" : "success"}>
-                  {request.status === "pending" ? "\u0642\u064A\u062F \u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629" : "\u0645\u0648\u0627\u0641\u0642 \u0639\u0644\u064A\u0647"}
-                </Badge>
-                <CardTitle className="text-right">معلومات الطلب</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-5">
-                {[
-    { label: "\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628", value: request.id, icon: Package },
-    { label: "\u0627\u0644\u0645\u0637\u0628\u062E", value: request.kitchen, icon: User },
-    { label: "\u0645\u0642\u062F\u0651\u0645 \u0627\u0644\u0637\u0644\u0628", value: request.requestedBy, icon: User },
-    { label: "\u0627\u0644\u0623\u0648\u0644\u0648\u064A\u0629", value: "\u0639\u0627\u0644\u064A\u0629", icon: Clock },
-    { label: "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0637\u0644\u0628", value: request.requestedDate, icon: Calendar },
-    { label: "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u0645\u0637\u0644\u0648\u0628", value: request.deliveryDate, icon: Calendar }
-  ].map((f) => <div key={f.label} className="text-right">
-                    <p className="text-xs text-muted-foreground mb-1">{f.label}</p>
-                    <p className="font-medium text-foreground">{f.value}</p>
-                  </div>)}
-              </div>
-              <div className="mt-5 pt-5 border-t border-border text-right">
-                <p className="text-xs text-muted-foreground mb-2">مبرر الطلب</p>
-                <p className="text-foreground text-sm leading-relaxed">{request.justification}</p>
-              </div>
-            </CardContent>
-          </Card>
+    setLoading(true);
+    setError("");
+    try {
+      const [orderData, orderItems] = await Promise.all([
+        api.orders.get(id),
+        api.orderItems.list()
+      ]);
+      const orderItemsArray = normalizeArray(orderItems);
+      const relatedItems = orderItemsArray.filter((item) => sameId(item.order_id, id));
+      setOrder(orderData || null);
+      setItems(relatedItems);
+    } catch (requestError) {
+      setError(requestError.message || "تعذر تحميل تفاصيل الطلب.");
+      setOrder(null);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-          {
-    /* Items table */
-  }
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-right">الأصناف المطلوبة</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-right">
-                  <thead className="border-b border-border">
-                    <tr>
-                      {["\u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641", "\u0627\u0644\u0641\u0626\u0629", "\u0627\u0644\u0643\u0645\u064A\u0629 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629"].map((h) => <th key={h} className="pb-3 text-sm font-medium text-muted-foreground">{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {requestItems.map((item, i) => <tr key={i} className="hover:bg-muted/20">
-                        <td className="py-3 font-medium text-foreground">{item.name}</td>
-                        <td className="py-3 text-foreground">{item.category}</td>
-                        <td className="py-3 font-medium">{item.quantity} {item.kitchen}</td>
-                      </tr>)}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+  useEffect(() => {
+    loadRequest();
+  }, [loadRequest]);
 
-          {
-    /* Admin comment */
-  }
-          {isAdmin && request.status === "pending" && <Card>
-              <CardHeader>
-                <CardTitle className="text-right flex items-center justify-end gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  تعليق المراجعة
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <textarea
-    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-right resize-none"
-    rows={3}
-    placeholder="أضف تعليقاً على قرار الموافقة أو الرفض..."
-  />
-                <div className="flex gap-3 mt-4 justify-end">
-                  <Button variant="outline" className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-white">
-                    <XCircle className="w-4 h-4" />
-                    رفض الطلب
-                  </Button>
-                  <Button className="flex items-center gap-2 bg-[#6A7B4D] hover:bg-[#4B5B3A]">
-                    <CheckCircle className="w-4 h-4" />
-                    الموافقة على الطلب
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>}
-        </div>
+  const updateStatus = async (status) => {
+    if (!id || !order) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await api.orders.updateStatus(id, status, `Status changed to ${status} from request details`);
+      const updatedOrder = normalizeRecord(response);
+      setOrder(updatedOrder || { ...order, status });
+      setMessage(`تم تحديث حالة الطلب إلى ${statusLabels[status] || status}.`);
+      await loadRequest();
+    } catch (requestError) {
+      setError(requestError.message || "تعذر تحديث حالة الطلب.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-        {
-    /* Sidebar: timeline */
-  }
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-right">سجل الحالة</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 relative">
-                <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-border" />
-                {timeline.map((event, i) => <div key={i} className="flex items-start gap-3 flex-row-reverse relative">
-                    <div className={`p-2 bg-card border border-border rounded-full z-10 ${event.color}`}>
-                      <event.icon className="w-4 h-4" />
-                    </div>
-                    <div className="text-right flex-1">
-                      <p className="font-medium text-foreground text-sm">{event.status}</p>
-                      <p className="text-xs text-muted-foreground">{event.by}</p>
-                      <p className="text-xs text-muted-foreground">{event.date}</p>
-                    </div>
-                  </div>)}
-              </div>
-            </CardContent>
-          </Card>
+  const requestId = useMemo(() => {
+    const rawId = order?._id || id || "";
+    return rawId ? rawId.slice(-8).toUpperCase() : "غير محدد";
+  }, [id, order?._id]);
 
-          <Card>
-            <CardContent className="pt-6 space-y-3">
-              {!isAdmin && request.status === "pending" && <Button variant="outline" className="w-full text-destructive border-destructive hover:bg-destructive hover:text-white">
-                  إلغاء الطلب
-                </Button>}
-              <Button variant="outline" className="w-full">
-                طباعة الطلب
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+  const notes = order?.notes || order?.note || order?.description || order?.justification || "";
+  const requesterName = order?.user_id?.name || "مستخدم غير محدد";
+  const requesterCode = order?.user_id?.military_number || order?.user_id?.email || "غير محدد";
+  const supplierName = order?.supplier_id?.name || "بدون مورد";
+  const currentStatus = order?.status || "pending";
+  const adminUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("milstock_user") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+  const canManageRequest = isAdmin && (!adminUser?.role || adminUser.role === "admin");
+  const createdDate = formatDate(order?.date || order?.createdAt);
+  const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+  const timeline = [
+    {
+      title: "تم إنشاء الطلب",
+      description: `تم الإنشاء بواسطة ${requesterName}`,
+      complete: Boolean(order),
+      active: currentStatus === "pending",
+      icon: Package
+    },
+    {
+      title: "تمت الموافقة",
+      description: "تمت الموافقة على الطلب للتجهيز",
+      complete: ["approved", "completed"].includes(currentStatus),
+      active: currentStatus === "approved",
+      icon: CheckCircle
+    },
+    {
+      title: currentStatus === "cancelled" ? "تم الإلغاء" : "تم التسليم",
+      description: currentStatus === "cancelled" ? "تم رفض أو إلغاء الطلب" : "تم تحديث الطلب كطلب مكتمل",
+      complete: ["completed", "cancelled"].includes(currentStatus),
+      active: ["completed", "cancelled"].includes(currentStatus),
+      icon: currentStatus === "cancelled" ? XCircle : Truck
+    }
+  ];
+
+  if (loading) {
+    return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
+      <button onClick={() => navigate(backPath)} className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] text-sm">
+        <ArrowRight className="w-4 h-4" />
+        العودة إلى الطلبات
+      </button>
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">جاري تحميل تفاصيل الطلب من MongoDB...</CardContent>
+      </Card>
     </div>;
+  }
+
+  if (error && !order) {
+    return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
+      <button onClick={() => navigate(backPath)} className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] text-sm">
+        <ArrowRight className="w-4 h-4" />
+        العودة إلى الطلبات
+      </button>
+      <Card>
+        <CardContent className="py-10 text-center">
+          <p className="font-semibold text-[#D4183D] mb-2">تعذر تحميل هذا الطلب.</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </CardContent>
+      </Card>
+    </div>;
+  }
+
+  if (!order) {
+    return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
+      <button onClick={() => navigate(backPath)} className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] text-sm">
+        <ArrowRight className="w-4 h-4" />
+        العودة إلى الطلبات
+      </button>
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">الطلب غير موجود.</CardContent>
+      </Card>
+    </div>;
+  }
+
+  return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
+    <button onClick={() => navigate(backPath)} className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] transition-colors text-sm">
+      <ArrowRight className="w-4 h-4" />
+      العودة إلى الطلبات
+    </button>
+
+    <PageHeaderAr
+      title={`تفاصيل الطلب ${requestId}`}
+      subtitle={`${supplierName} - ${createdDate}`}
+    />
+
+    {error && <div className="rounded-xl border border-[#D4183D]/20 bg-[#D4183D]/10 px-4 py-3 text-sm text-[#D4183D] text-right">{error}</div>}
+    {message && <div className="rounded-xl border border-[#5B8A4A]/20 bg-[#5B8A4A]/10 px-4 py-3 text-sm text-[#3d6b2e] text-right">{message}</div>}
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-6">
+        <Card>
+          <CardHeader>
+            <Badge variant={statusVariants[currentStatus] || "neutral"}>{statusLabels[currentStatus] || currentStatus}</Badge>
+            <CardTitle className="text-right">حالة الطلب</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {timeline.map((step, index) => {
+                const Icon = step.icon;
+                const isDone = step.complete;
+                return <div key={step.title} className="flex gap-4 flex-row-reverse">
+                  <div className="flex flex-col items-center">
+                    <div className={`p-3 rounded-full ${isDone ? "bg-[#6A7B4D] text-white" : step.active ? "bg-[#4B5B3A] text-white" : "bg-[#E0E1B7] text-muted-foreground"}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    {index !== timeline.length - 1 && <div className={`w-0.5 h-14 mt-2 ${isDone ? "bg-[#6A7B4D]" : "bg-border"}`} />}
+                  </div>
+                  <div className="flex-1 pb-5 text-right">
+                    <div className="flex items-start justify-between gap-4 mb-1">
+                      <p className="text-sm text-muted-foreground whitespace-nowrap">{createdDate}</p>
+                      <h4 className="font-semibold text-foreground">{step.title}</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <span className="text-sm text-muted-foreground">{items.length} أصناف</span>
+            <CardTitle className="text-right">الأصناف المطلوبة</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {items.length === 0 ? <p className="text-sm text-muted-foreground text-right">لا توجد أصناف مرتبطة بهذا الطلب.</p> : <div className="space-y-4">
+              {items.map((item) => {
+                const product = item.product_id || item.product || {};
+                const productId = getDocumentId(product);
+                const productName = product?.name || item.product_name || item.name || "صنف غير محدد";
+                return <div key={item._id || `${productId || productName}-${item.quantity}`} className="p-4 bg-background rounded-xl border border-border text-right">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <Badge variant="info">{product?.category || "مواد غذائية"}</Badge>
+                    <div>
+                      <p className="font-semibold text-foreground">{productName}</p>
+                      <p className="text-sm text-muted-foreground">{String(productId || "").slice(-8).toUpperCase() || "غير محدد"}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">الكمية</p>
+                      <p className="font-medium text-foreground">{item.quantity || 0} {product?.unit || ""}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">سعر الوحدة</p>
+                      <p className="font-medium text-foreground">{money(item.unit_price)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">الإجمالي</p>
+                      <p className="font-medium text-foreground">{money(item.total_price)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">المخزون المتاح</p>
+                      <p className="font-medium text-foreground">{product?.quantity ?? "غير محدد"} {product?.unit || ""}</p>
+                    </div>
+                  </div>
+                </div>;
+              })}
+            </div>}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-right">معلومات الطلب</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { label: "رقم الطلب", value: requestId, icon: Package },
+                { label: "مقدم الطلب", value: requesterName, icon: User },
+                { label: "كود الموظف", value: requesterCode, icon: User },
+                { label: "المورد", value: supplierName, icon: Truck },
+                { label: "تاريخ الطلب", value: createdDate, icon: Calendar },
+                { label: "إجمالي الكمية", value: totalQuantity || "غير محدد", icon: Package },
+                { label: "إجمالي السعر", value: money(order.total_price), icon: Package }
+              ].map((field) => {
+                const Icon = field.icon;
+                return <div key={field.label} className="flex items-start gap-3 flex-row-reverse text-right">
+                  <Icon className="w-4 h-4 text-[#5A6B50] mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{field.label}</p>
+                    <p className="font-semibold text-foreground">{field.value}</p>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-right">ملاحظات إضافية</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground leading-relaxed text-right">
+              {notes || "لا توجد ملاحظات إضافية محفوظة لهذا الطلب."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {canManageRequest && <Card>
+          <CardHeader>
+            <CardTitle className="text-right">إجراءات المسؤول</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Button className="w-full" onClick={() => updateStatus("approved")} disabled={saving || ["approved", "completed", "cancelled"].includes(currentStatus)}>
+                <CheckCircle className="w-4 h-4" />
+                الموافقة على الطلب
+              </Button>
+              <Button variant="danger" className="w-full" onClick={() => updateStatus("cancelled")} disabled={saving || ["completed", "cancelled"].includes(currentStatus)}>
+                <XCircle className="w-4 h-4" />
+                رفض الطلب
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => updateStatus("completed")} disabled={saving || currentStatus === "completed" || currentStatus === "cancelled"}>
+                <Truck className="w-4 h-4" />
+                تأكيد التسليم
+              </Button>
+            </div>
+          </CardContent>
+        </Card>}
+      </div>
+    </div>
+  </div>;
 };
+
 export {
   RequestDetailsAr
 };

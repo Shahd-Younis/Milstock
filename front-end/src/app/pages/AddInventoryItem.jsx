@@ -25,6 +25,7 @@ const AddInventoryItem = () => {
   const { data: products, loading: productsLoading } = useApiResource(() => api.products.list(), []);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("error");
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -32,7 +33,15 @@ const AddInventoryItem = () => {
     unit: "",
     min_quantity: "",
     warehouse_id: "",
-    expiry_date: ""
+    warehouse_name: "",
+    storage_section: "",
+    expiry_date: "",
+    expiration_date: "",
+    manufacturing_date: "",
+    batch_number: "",
+    serial_number: "",
+    description: "",
+    notes: ""
   });
   const categoryOptions = useMemo(() => {
     const categories = Array.from(new Set(products.map((product) => product.category).filter(Boolean)));
@@ -52,7 +61,15 @@ const AddInventoryItem = () => {
       unit: product.unit,
       min_quantity: String(product.min_quantity),
       warehouse_id: product.warehouse_id?._id || "",
-      expiry_date: product.expiry_date ? product.expiry_date.slice(0, 10) : ""
+      warehouse_name: product.warehouse_name || product.warehouse_id?.name || "",
+      storage_section: product.storage_section || "",
+      expiry_date: (product.expiration_date || product.expiry_date) ? (product.expiration_date || product.expiry_date).slice(0, 10) : "",
+      expiration_date: (product.expiration_date || product.expiry_date) ? (product.expiration_date || product.expiry_date).slice(0, 10) : "",
+      manufacturing_date: product.manufacturing_date ? product.manufacturing_date.slice(0, 10) : "",
+      batch_number: product.batch_number || "",
+      serial_number: product.serial_number || "",
+      description: product.description || "",
+      notes: product.notes || ""
     });
   }, [id, isEdit, products]);
   const handleChange = (field) => (event) => {
@@ -62,6 +79,13 @@ const AddInventoryItem = () => {
     e.preventDefault();
     setSaving(true);
     setMessage("");
+    if (!form.warehouse_id) {
+      setMessageType("error");
+      setMessage("Warehouse is required.");
+      setSaving(false);
+      return;
+    }
+    const selectedWarehouse = warehouses.find((warehouse) => warehouse._id === form.warehouse_id);
     const payload = {
       name: form.name,
       category: form.category,
@@ -69,7 +93,15 @@ const AddInventoryItem = () => {
       unit: form.unit,
       min_quantity: Number(form.min_quantity),
       warehouse_id: form.warehouse_id,
-      expiry_date: form.expiry_date || void 0
+      warehouse_name: selectedWarehouse?.name || form.warehouse_name || "",
+      storage_section: form.storage_section,
+      expiry_date: form.expiration_date || form.expiry_date || void 0,
+      expiration_date: form.expiration_date || form.expiry_date || void 0,
+      manufacturing_date: form.manufacturing_date || void 0,
+      batch_number: form.batch_number,
+      serial_number: form.serial_number,
+      description: form.description,
+      notes: form.notes
     };
     try {
       if (isEdit && id) {
@@ -77,8 +109,11 @@ const AddInventoryItem = () => {
       } else {
         await api.products.create(payload);
       }
-      navigate("/admin/inventory");
+      setMessageType("success");
+      setMessage(isEdit ? "Item updated successfully." : "Item created successfully.");
+      window.setTimeout(() => navigate("/admin/inventory"), 700);
     } catch (error) {
+      setMessageType("error");
       setMessage(error instanceof Error ? error.message : "Unable to save product");
     } finally {
       setSaving(false);
@@ -93,7 +128,7 @@ const AddInventoryItem = () => {
       <div className="max-w-4xl">
         <Card>
           <form onSubmit={handleSubmit} className="space-y-8">
-            {message && <p className="text-sm text-[#D4183D]">{message}</p>}
+            {message && <div className={`rounded-xl px-4 py-3 text-sm ${messageType === "success" ? "border border-[#5B8A4A]/20 bg-[#5B8A4A]/10 text-[#3d6b2e]" : "border border-[#D4183D]/20 bg-[#D4183D]/10 text-[#D4183D]"}`}>{message}</div>}
             <div>
               <h3 className="text-foreground font-semibold mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -153,7 +188,8 @@ const AddInventoryItem = () => {
 
             <div className="border-t border-border pt-6">
               <h3 className="text-foreground font-semibold mb-4">Location & Storage</h3>
-              <Select
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Select
     label="Warehouse *"
     options={[
       {
@@ -170,16 +206,67 @@ const AddInventoryItem = () => {
     disabled={warehousesLoading}
     required
   />
+                <Input
+    label="Storage Section"
+    placeholder="e.g., B-12"
+    value={form.storage_section}
+    onChange={handleChange("storage_section")}
+  />
+              </div>
             </div>
 
             <div className="border-t border-border pt-6">
               <h3 className="text-foreground font-semibold mb-4">Expiration & Tracking</h3>
-              <Input
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
     label="Expiration Date"
     type="date"
-    value={form.expiry_date}
-    onChange={handleChange("expiry_date")}
+    value={form.expiration_date || form.expiry_date}
+    onChange={handleChange("expiration_date")}
   />
+                <Input
+    label="Manufacturing Date"
+    type="date"
+    value={form.manufacturing_date}
+    onChange={handleChange("manufacturing_date")}
+  />
+                <Input
+    label="Batch Number"
+    placeholder="Enter batch number"
+    value={form.batch_number}
+    onChange={handleChange("batch_number")}
+  />
+                <Input
+    label="Serial Number"
+    placeholder="Enter serial number"
+    value={form.serial_number}
+    onChange={handleChange("serial_number")}
+  />
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-6">
+              <h3 className="text-foreground font-semibold mb-4">Additional Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Description</label>
+                  <textarea
+                    className="w-full min-h-28 px-4 py-2.5 rounded-xl bg-white border border-[#4E4631]/15 text-[#2E3A24] text-sm focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30 focus:border-[#6A7B4D]"
+                    placeholder="Describe this food item"
+                    value={form.description}
+                    onChange={handleChange("description")}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Notes</label>
+                  <textarea
+                    className="w-full min-h-28 px-4 py-2.5 rounded-xl bg-white border border-[#4E4631]/15 text-[#2E3A24] text-sm focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30 focus:border-[#6A7B4D]"
+                    placeholder="Internal storage or handling notes"
+                    value={form.notes}
+                    onChange={handleChange("notes")}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4 pt-6 border-t border-border">

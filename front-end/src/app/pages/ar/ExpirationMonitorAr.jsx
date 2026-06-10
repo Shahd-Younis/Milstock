@@ -22,7 +22,8 @@ const ExpirationMonitorAr = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [urgencyFilter, setUrgencyFilter] = useState("all");
   const filtered = expiringItems.filter((item) => {
-    const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchSearch = String(item.name ?? "").toLowerCase().includes(search);
     if (urgencyFilter === "critical") return matchSearch && item.daysLeft <= 30;
     if (urgencyFilter === "warning") return matchSearch && item.daysLeft > 30 && item.daysLeft <= 60;
     if (urgencyFilter === "monitor") return matchSearch && item.daysLeft > 60;

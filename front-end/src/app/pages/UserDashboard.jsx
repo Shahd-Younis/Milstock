@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getProductStatus } from "../lib/format";
+import { normalizeArray, sameId } from "../lib/normalize";
 const statusVariant = {
   pending: "pending",
   approved: "success",
@@ -20,13 +21,14 @@ const UserDashboard = () => {
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
   const { data: products } = useApiResource(() => api.products.list(), []);
   const { data: notifications } = useApiResource(() => api.notifications.list(), []);
+  const orderItemsArray = normalizeArray(orderItems);
   const myRequests = orders.slice(0, 3).map((order) => {
-    const items = orderItems.filter((item) => item.order_id?._id === order._id);
+    const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
     return {
       id: order._id.slice(-8).toUpperCase(),
       mongoId: order._id,
-      item: items.map((item) => item.product_id?.name).filter(Boolean).join(", ") || "No items",
-      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+      quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       requestedDate: new Date(order.date).toLocaleDateString(),
       deliveryDate: order.status === "completed" ? "Completed" : "TBD"

@@ -4,11 +4,12 @@ import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
 import { Input } from "../components/Input";
 import { Select } from "../components/Select";
-import { Button } from "../components/Button";
-import { Search, Filter, Plus } from "lucide-react";
+import { ExportCsvButton } from "../components/ExportCsvButton";
+import { Search, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
+import { normalizeArray, sameId } from "../lib/normalize";
 const RequestsList = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,14 +19,15 @@ const RequestsList = () => {
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems, loading: itemsLoading } = useApiResource(() => api.orderItems.list(), []);
   const requestsData = useMemo(() => {
+    const orderItemsArray = normalizeArray(orderItems);
     return orders.map((order) => {
-      const items = orderItems.filter((item) => item.order_id?._id === order._id);
+      const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
       return {
         id: order._id.slice(-8).toUpperCase(),
         mongoId: order._id,
         kitchen: order.user_id?.military_number || order.user_id?.role || "Kitchen",
-        item: items.map((item) => item.product_id?.name).filter(Boolean).join(", ") || "No items",
-        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+        item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+        quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
         supplier: order.supplier_id?.name || "No supplier",
         status: order.status,
         requestedDate: new Date(order.date).toLocaleDateString(),
@@ -34,7 +36,8 @@ const RequestsList = () => {
     });
   }, [orders, orderItems]);
   const filteredData = requestsData.filter((req) => {
-    const matchesSearch = req.id.toLowerCase().includes(searchTerm.toLowerCase()) || req.kitchen.toLowerCase().includes(searchTerm.toLowerCase()) || req.item.toLowerCase().includes(searchTerm.toLowerCase()) || req.supplier.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchesSearch = String(req.id ?? "").toLowerCase().includes(search) || String(req.kitchen ?? "").toLowerCase().includes(search) || String(req.item ?? "").toLowerCase().includes(search) || String(req.supplier ?? "").toLowerCase().includes(search);
     const matchesStatus = statusFilter === "all" || req.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -57,6 +60,21 @@ const RequestsList = () => {
         return <Badge variant={variantMap[row.status]}>{row.status}</Badge>;
       }
     },
+    { key: "requestedDate", header: "Date" },
+    { key: "requestedBy", header: "Requested By" },
+    {
+      key: "open",
+      header: "",
+      render: () => <span className="text-xs font-semibold text-[#4B5B3A]">Open details</span>
+    }
+  ];
+  const exportColumns = [
+    { key: "id", header: "Request ID" },
+    { key: "kitchen", header: "Kitchen" },
+    { key: "item", header: "Items" },
+    { key: "quantity", header: "Quantity" },
+    { key: "supplier", header: "Supplier" },
+    { key: "status", header: "Status" },
     { key: "requestedDate", header: "Date" },
     { key: "requestedBy", header: "Requested By" }
   ];
@@ -106,13 +124,12 @@ const RequestsList = () => {
                   {requestsData.length} requests
                 </>}
         </p>
-        <Button variant="outline" size="sm">
-          <Filter className="w-3.5 h-3.5" />
-          More Filters
-        </Button>
+        <ExportCsvButton filenamePrefix="requests-export" columns={exportColumns} rows={loading ? [] : filteredData}>
+          Export
+        </ExportCsvButton>
       </div>
 
-      <Table
+  <Table
     columns={columns}
     data={loading ? [] : filteredData}
     emptyMessage={ordersError || "No MongoDB orders found. Run npm run seed in the backend."}

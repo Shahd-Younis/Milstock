@@ -1,125 +1,213 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { AlertTriangle, Bell, Check, CheckCircle, Eye, Info, RefreshCw } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
-import { Card, CardContent } from "../../components/Card";
 import { Button } from "../../components/Button";
-import { Bell, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
-const notifications = [
-  { id: "1", title: "\u062A\u0646\u0628\u064A\u0647 \u0627\u0646\u062E\u0641\u0627\u0636 \u0627\u0644\u0645\u062E\u0632\u0648\u0646", message: "\u0645\u0633\u062A\u0648\u0649 \u0627\u0644\u0623\u063A\u0630\u064A\u0629 \u0627\u0644\u0623\u0644\u0628\u0627\u0646\u0629 \u0641\u064A \u0627\u0644\u0645\u0633\u062A\u0648\u062F\u0639 B \u0623\u0635\u0628\u062D \u062F\u0648\u0646 \u0627\u0644\u062D\u062F \u0627\u0644\u0623\u062F\u0646\u0649 \u0627\u0644\u0645\u0633\u0645\u0648\u062D \u0628\u0647 (150 \u0648\u062D\u062F\u0629)", type: "alert", category: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646", time: "\u0645\u0646\u0630 5 \u062F\u0642\u0627\u0626\u0642", read: false },
-  { id: "2", title: "\u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629", message: "\u0645\u0637\u0628\u062E \u0627\u0644\u0645\u062E\u0628\u0648\u0632\u0627\u062A \u0623\u0631\u0633\u0644\u062A \u0637\u0644\u0628 \u062A\u0648\u0631\u064A\u062F REQ-1234 \u0628\u0623\u0648\u0644\u0648\u064A\u0629 \u0639\u0627\u062C\u0644\u0629", type: "warning", category: "\u0627\u0644\u0637\u0644\u0628\u0627\u062A", time: "\u0645\u0646\u0630 15 \u062F\u0642\u064A\u0642\u0629", read: false },
-  { id: "3", title: "\u062A\u0645\u062A \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u0649 \u0627\u0644\u0637\u0644\u0628", message: "\u062A\u0645\u062A \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u0649 \u0637\u0644\u0628\u0643 REQ-1233 \u0648\u062C\u0627\u0631\u064D \u062A\u062C\u0647\u064A\u0632 \u0627\u0644\u0625\u0645\u062F\u0627\u062F", type: "success", category: "\u0627\u0644\u0637\u0644\u0628\u0627\u062A", time: "\u0645\u0646\u0630 \u0633\u0627\u0639\u0629", read: false },
-  { id: "4", title: "\u0627\u0642\u062A\u0631\u0627\u0628 \u062A\u0627\u0631\u064A\u062E \u0627\u0646\u062A\u0647\u0627\u0621 \u0627\u0644\u0635\u0644\u0627\u062D\u064A\u0629", message: "50 \u0635\u0646\u0641\u0627\u064B \u0633\u062A\u0646\u062A\u0647\u064A \u0635\u0644\u0627\u062D\u064A\u062A\u0647\u0627 \u062E\u0644\u0627\u0644 7 \u0623\u064A\u0627\u0645 \u2014 \u064A\u0631\u062C\u0649 \u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629 \u0627\u0644\u0641\u0648\u0631\u064A\u0629", type: "warning", category: "\u0627\u0644\u0635\u0644\u0627\u062D\u064A\u0629", time: "\u0645\u0646\u0630 2 \u0633\u0627\u0639\u0629", read: true },
-  { id: "5", title: "\u0627\u0643\u062A\u0645\u0627\u0644 \u0627\u0644\u062C\u0631\u062F \u0627\u0644\u0634\u0647\u0631\u064A", message: "\u062A\u0645 \u0625\u0646\u062C\u0627\u0632 \u0627\u0644\u062A\u062F\u0642\u064A\u0642 \u0627\u0644\u0634\u0647\u0631\u064A \u0644\u0644\u0645\u062E\u0632\u0648\u0646 \u0628\u0646\u062C\u0627\u062D \u062A\u0627\u0645 \u062F\u0648\u0646 \u0623\u064A \u062A\u0628\u0627\u064A\u0646", type: "success", category: "\u0627\u0644\u0646\u0638\u0627\u0645", time: "\u0645\u0646\u0630 3 \u0633\u0627\u0639\u0627\u062A", read: true },
-  { id: "6", title: "\u062A\u0633\u0644\u064A\u0645 \u0646\u0627\u062C\u062D", message: "\u062A\u0645 \u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u0637\u0644\u0628 REQ-1232 \u0625\u0644\u0649 \u0645\u0637\u0628\u062E \u0627\u0644\u062E\u0636\u0631\u0648\u0627\u062A \u0628\u0646\u062C\u0627\u062D", type: "info", category: "\u0627\u0644\u0637\u0644\u0628\u0627\u062A", time: "\u0623\u0645\u0633", read: true },
-  { id: "7", title: "\u062A\u062D\u062F\u064A\u062B \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u0633\u062A\u062E\u062F\u0645", message: "\u062A\u0645 \u062A\u062D\u062F\u064A\u062B \u0635\u0644\u0627\u062D\u064A\u0627\u062A \u0627\u0644\u0648\u0635\u0648\u0644 \u0644\u0644\u0645\u0644\u0627\u0632\u0645 \u062E\u0627\u0644\u062F", type: "info", category: "\u0627\u0644\u0646\u0638\u0627\u0645", time: "\u0623\u0645\u0633", read: true }
-];
-const typeConfig = {
-  alert: { icon: AlertTriangle, variant: "danger", color: "text-destructive bg-destructive bg-opacity-10" },
-  warning: { icon: AlertTriangle, variant: "warning", color: "text-[#C9A961] bg-[#C9A961] bg-opacity-10" },
-  success: { icon: CheckCircle, variant: "success", color: "text-[#6A7B4D] bg-[#6A7B4D] bg-opacity-10" },
-  info: { icon: Info, variant: "info", color: "text-[#4B5B3A] bg-[#4B5B3A] bg-opacity-10" }
-};
-const categoryLabels = {
-  "all": "\u0627\u0644\u0643\u0644",
-  "\u0627\u0644\u0645\u062E\u0632\u0648\u0646": "\u0627\u0644\u0645\u062E\u0632\u0648\u0646",
-  "\u0627\u0644\u0637\u0644\u0628\u0627\u062A": "\u0627\u0644\u0637\u0644\u0628\u0627\u062A",
-  "\u0627\u0644\u0635\u0644\u0627\u062D\u064A\u0629": "\u0627\u0644\u0635\u0644\u0627\u062D\u064A\u0629",
-  "\u0627\u0644\u0646\u0638\u0627\u0645": "\u0627\u0644\u0646\u0638\u0627\u0645"
-};
-const NotificationsPageAr = () => {
-  const [filter, setFilter] = useState("all");
-  const [readFilter, setReadFilter] = useState("all");
-  const [notifs, setNotifs] = useState(notifications);
-  const markAllRead = () => setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-  const dismiss = (id) => setNotifs((prev) => prev.filter((n) => n.id !== id));
-  const filtered = notifs.filter((n) => {
-    const matchCat = filter === "all" || n.category === filter;
-    const matchRead = readFilter === "all" || !n.read;
-    return matchCat && matchRead;
-  });
-  const unreadCount = notifs.filter((n) => !n.read).length;
-  return <div className="p-6 lg:p-8 space-y-6">
-      <PageHeaderAr
-    title="الإشعارات"
-    subtitle={`${unreadCount} \u0625\u0634\u0639\u0627\u0631 \u063A\u064A\u0631 \u0645\u0642\u0631\u0648\u0621`}
-  />
+import { ExportCsvButton } from "../../components/ExportCsvButton";
+import { useNotifications } from "../../context/NotificationContext";
+import { formatDate, formatDateTime } from "../../lib/format";
 
-      {
-    /* Filters — RTL: action button on right, toggle filters on left */
+const getNotificationItemId = (notification) => {
+  const itemId =
+    notification.item_id?._id ||
+    notification.item_id ||
+    notification.item?._id ||
+    notification.metadata?.item_id ||
+    notification.metadata?.itemId ||
+    (["item", "inventory", "product"].includes(notification.entity_type) ? notification.entity_id : null);
+  return itemId ? String(itemId) : "";
+};
+
+const isItemNotification = (notification) => {
+  const types = ["low_stock", "expiration", "expiration_reminder", "expired", "inventory", "inventory_update", "item_update"];
+  return Boolean(getNotificationItemId(notification)) || types.includes(notification.type);
+};
+
+const getItemName = (notification) =>
+  notification.item_id?.name ||
+  notification.item?.name ||
+  notification.metadata?.item_name ||
+  notification.metadata?.product_name ||
+  notification.metadata?.name ||
+  "";
+
+const getTypeLabel = (notification) => {
+  if (notification.type === "low_stock") return "تنبيه انخفاض المخزون";
+  if (notification.metadata?.expiration_status === "expired" || notification.type === "expired") return "صنف منتهي الصلاحية";
+  if (notification.type === "expiration" || notification.type === "expiration_reminder") return "تذكير بانتهاء الصلاحية";
+  if (String(notification.type || "").includes("order") || String(notification.type || "").includes("request")) return "تحديث طلب";
+  if (String(notification.type || "").includes("inventory") || String(notification.type || "").includes("item")) return "تحديث مخزون";
+  return notification.title || "إشعار نظام";
+};
+
+const getDisplayMessage = (notification) => {
+  const itemName = getItemName(notification);
+  const days = notification.metadata?.days_remaining;
+  if (notification.type === "low_stock" && itemName) {
+    return `مستوى المخزون للصنف ${itemName} أقل من الحد الأدنى المحدد.`;
   }
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2 justify-end">
-          {["all", "unread"].map((r) => <button
-    key={r}
-    onClick={() => setReadFilter(r)}
-    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${readFilter === r ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
-  >
-              {r === "all" ? "\u062C\u0645\u064A\u0639 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062A" : "\u063A\u064A\u0631 \u0627\u0644\u0645\u0642\u0631\u0648\u0621\u0629"}
-            </button>)}
-        </div>
-        <Button
-    variant="outline"
-    size="sm"
-    onClick={markAllRead}
-    className="flex items-center gap-2"
-  >
-          <CheckCircle className="w-4 h-4" />
-          تعليم الكل كمقروء
-        </Button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-6 justify-end">
-        {Object.keys(categoryLabels).map((cat) => <button
-    key={cat}
-    onClick={() => setFilter(cat)}
-    className={`px-3 py-1.5 rounded-xl text-sm transition-colors ${filter === cat ? "bg-[#4B5B3A] text-white" : "bg-card border border-border text-foreground hover:bg-muted"}`}
-  >
-            {categoryLabels[cat]}
-          </button>)}
-      </div>
-
-      <div className="space-y-3">
-        {filtered.length === 0 && <div className="text-center py-16">
-            <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
-            <p className="text-muted-foreground">لا توجد إشعارات</p>
-          </div>}
-        {filtered.map((notif) => {
-    const config = typeConfig[notif.type];
-    const Icon = config.icon;
-    return <Card
-      key={notif.id}
-      className={`transition-all ${!notif.read ? "border-primary border-opacity-30 bg-primary bg-opacity-5" : ""}`}
-    >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4 flex-row-reverse">
-                  <div className={`p-2.5 rounded-xl flex-shrink-0 ${config.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 text-right">
-                    <div className="flex items-start justify-between mb-1 flex-row-reverse">
-                      <div className="flex items-center gap-2">
-                        {!notif.read && <span className="w-2 h-2 bg-[#B85C50] rounded-full flex-shrink-0" />}
-                        <p className="font-semibold text-foreground">{notif.title}</p>
-                      </div>
-                      <button
-      onClick={() => dismiss(notif.id)}
-      className="text-muted-foreground hover:text-foreground transition-colors p-1"
-    >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{notif.message}</p>
-                    <div className="flex items-center gap-2 flex-row-reverse justify-end">
-                      <span className="text-xs text-muted-foreground">{notif.time}</span>
-                      <span className="text-xs px-2 py-0.5 bg-muted rounded-lg text-muted-foreground">{notif.category}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>;
-  })}
-      </div>
-    </div>;
+  if ((notification.type === "expiration" || notification.type === "expiration_reminder") && itemName && days >= 0) {
+    return `${itemName} ستنتهي صلاحيته خلال ${days} يوم.`;
+  }
+  if ((notification.metadata?.expiration_status === "expired" || notification.type === "expired") && itemName) {
+    return `${itemName} انتهت صلاحيته في ${formatDate(notification.metadata?.expiration_date)}.`;
+  }
+  return notification.message || "";
 };
+
+const getCardStyle = (notification) => {
+  if (notification.severity === "critical") {
+    return { icon: AlertTriangle, iconClass: "bg-[#D4183D]/10 text-[#D4183D]", border: "border-r-[#D4183D]" };
+  }
+  if (notification.severity === "warning" || notification.type === "expiration" || notification.type === "expiration_reminder") {
+    return { icon: AlertTriangle, iconClass: "bg-[#B8862A]/10 text-[#B8862A]", border: "border-r-[#B8862A]" };
+  }
+  if (notification.type?.includes("order")) {
+    return { icon: CheckCircle, iconClass: "bg-[#5B8A4A]/10 text-[#5B8A4A]", border: "border-r-[#5B8A4A]" };
+  }
+  return { icon: Info, iconClass: "bg-[#6A7B4D]/10 text-[#6A7B4D]", border: "border-r-[#6A7B4D]" };
+};
+
+const NotificationsPageAr = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { notifications, unreadCount, loading, error, fetchNotifications, markAllAsRead, markOneAsRead, isRead } = useNotifications();
+  const [filter, setFilter] = useState("all");
+  const isAdminPath = location.pathname.startsWith("/ar/admin");
+
+  const filtered = useMemo(() => notifications.filter((notification) => {
+    if (filter === "unread") return !isRead(notification);
+    if (filter === "expiration") return notification.type === "expiration" || notification.type === "expiration_reminder";
+    if (filter === "requests") return String(notification.type || "").includes("order") || String(notification.type || "").includes("request");
+    return true;
+  }), [notifications, filter, isRead]);
+
+  const exportColumns = [
+    { key: "title", header: "العنوان" },
+    { key: "type", header: "النوع" },
+    { key: "message", header: "الرسالة" },
+    { header: "مقروء", value: (row) => isRead(row) ? "نعم" : "لا" },
+    { header: "التاريخ والوقت", value: (row) => formatDateTime(row.createdAt, "ar-EG") }
+  ];
+
+  const viewItem = (notification) => {
+    const itemId = getNotificationItemId(notification);
+    if (itemId && isAdminPath) navigate(`/ar/admin/inventory/${itemId}`);
+  };
+
+  return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
+    <PageHeaderAr
+      title="الإشعارات"
+      subtitle="تذكيرات المخزون وتحديثات الطلبات والتنبيهات"
+      badge={unreadCount > 0 ? <span className="px-2 py-0.5 bg-[#D4183D] text-white text-xs font-bold rounded-lg">{unreadCount}</span> : void 0}
+    />
+
+    <div className="rounded-2xl border border-[#4E4631]/10 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: "all", label: "الكل" },
+            { value: "unread", label: "غير المقروء" },
+            { value: "expiration", label: "الصلاحية" },
+            { value: "requests", label: "الطلبات" },
+          ].map((item) => <button
+            key={item.value}
+            type="button"
+            onClick={() => setFilter(item.value)}
+            className={`min-h-9 rounded-xl px-3 text-sm transition-colors ${filter === item.value ? "bg-[#4B5B3A] text-white" : "bg-[#ECEEE2] text-[#4E4631] hover:bg-[#E0E1B7]"}`}
+          >
+            {item.label}
+          </button>)}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={fetchNotifications}>
+            <RefreshCw className="w-4 h-4" />
+            تحديث
+          </Button>
+          <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
+            <Check className="w-4 h-4" />
+            تعليم الكل كمقروء
+          </Button>
+          <ExportCsvButton filenamePrefix="notifications-export" columns={exportColumns} rows={loading ? [] : filtered}>
+            تصدير
+          </ExportCsvButton>
+        </div>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-sm text-[#5A6B50]">{loading ? "جار تحميل الإشعارات..." : error || `يتم عرض ${filtered.length} إشعار`}</p>
+      <p className="text-xs text-[#5A6B50]">{unreadCount > 0 ? `${unreadCount} غير مقروء` : "كل الإشعارات مقروءة"}</p>
+    </div>
+
+    <div className="grid gap-3">
+      {!loading && filtered.length === 0 && <div className="rounded-2xl border border-[#4E4631]/10 bg-white p-10 text-center">
+        <Bell className="mx-auto mb-3 h-10 w-10 text-[#6A7B4D]" />
+        <p className="text-sm text-[#5A6B50]">{error || "لا توجد إشعارات."}</p>
+      </div>}
+
+      {filtered.map((notification) => {
+        const read = isRead(notification);
+        const style = getCardStyle(notification);
+        const Icon = style.icon;
+        const itemId = getNotificationItemId(notification);
+        const itemName = getItemName(notification);
+        const canOpenItem = Boolean(itemId && isAdminPath && isItemNotification(notification));
+        const handleOpen = () => {
+          if (canOpenItem) viewItem(notification);
+        };
+        const handleKeyDown = (event) => {
+          if (!canOpenItem) return;
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleOpen();
+          }
+        };
+
+        return <article
+          key={notification._id}
+          role={canOpenItem ? "button" : void 0}
+          tabIndex={canOpenItem ? 0 : void 0}
+          onClick={handleOpen}
+          onKeyDown={handleKeyDown}
+          className={`rounded-2xl border border-[#4E4631]/10 border-r-4 ${style.border} p-4 shadow-sm transition-all ${canOpenItem ? "cursor-pointer hover:bg-[#FBFCF5] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30" : ""} ${read ? "bg-white opacity-75" : "bg-[#FBFCF5] ring-1 ring-[#4B5B3A]/10"}`}
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${style.iconClass}`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 text-right">
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-wide ${notification.severity === "critical" ? "text-[#D4183D]" : notification.severity === "warning" ? "text-[#B8862A]" : "text-[#4B5B3A]"}`}>{getTypeLabel(notification)}</p>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {!read && <span className="rounded-lg bg-[#D4183D] px-2 py-0.5 text-xs font-semibold text-white">غير مقروء</span>}
+                  <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || notification.title || "إشعار"}</h3>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-[#5A6B50]">{getDisplayMessage(notification)}</p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap justify-end gap-2 text-xs text-[#5A6B50]">
+                <span>{formatDateTime(notification.createdAt, "ar-EG")}</span>
+                {notification.type === "low_stock" && notification.metadata?.current_stock !== undefined && <span>المخزون الحالي: {notification.metadata.current_stock} {notification.metadata?.unit || ""}</span>}
+                {notification.type === "low_stock" && notification.metadata?.minimum_stock !== undefined && <span>الحد الأدنى: {notification.metadata.minimum_stock} {notification.metadata?.unit || ""}</span>}
+                {(notification.type === "expiration" || notification.type === "expiration_reminder") && <span>تاريخ الصلاحية: {formatDate(notification.metadata?.expiration_date)}</span>}
+                {notification.metadata?.days_remaining !== undefined && <span>الأيام المتبقية: {notification.metadata.days_remaining}</span>}
+              </div>
+
+              <div className="mt-4 flex flex-wrap justify-end gap-2">
+                {!read && <Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); markOneAsRead(notification._id); }}>
+                  <Eye className="w-4 h-4" />
+                  تحديد كمقروء
+                </Button>}
+              </div>
+            </div>
+          </div>
+        </article>;
+      })}
+    </div>
+  </div>;
+};
+
 export {
   NotificationsPageAr
 };

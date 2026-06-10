@@ -1,8 +1,10 @@
 const bcrypt = require('bcryptjs');
 const { body } = require('express-validator');
 const User = require('../models/userModel');
-const { getAll, getOne, updateOne, deleteOne } = require('./crudFactory');
+const { getAll, getOne } = require('./crudFactory');
 const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/AppError');
+const { createAuditLog } = require('../services/auditLogService');
 
 const userRules = [
   body('name').optional().trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
@@ -11,10 +13,37 @@ const userRules = [
   body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
   body('military_number').optional().notEmpty().withMessage('Employee code cannot be empty'),
   body('role').optional().isIn(['admin', 'unit']).withMessage('Role must be admin or unit'),
+  body('status').optional().isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
+];
+
+const createUserRules = [
+  body('name').trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
+  body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('phone').notEmpty().withMessage('Phone cannot be empty'),
+  body('military_number').notEmpty().withMessage('Employee code cannot be empty'),
+  body('role').isIn(['admin', 'unit']).withMessage('Role must be admin or unit'),
+  body('status').optional().isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
+];
+
+const statusRules = [
+  body('status').isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
+];
+
+const passwordRules = [
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
 const createUser = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
+  const existingUser = await User.findOne({
+    $or: [{ email: payload.email }, { military_number: payload.military_number }],
+  });
+
+  if (existingUser) {
+    throw new AppError('A user with this email or employee code already exists', 409);
+  }
+
   if (payload.password) {
     payload.password = await bcrypt.hash(payload.password, 12);
   }
@@ -23,10 +52,21 @@ const createUser = asyncHandler(async (req, res) => {
   const plain = user.toObject();
   delete plain.password;
 
+  await createAuditLog({
+    req,
+    action: 'create_user',
+    module: 'users',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Created user ${user.name}`,
+    newData: plain,
+  });
+
   res.status(201).json({ success: true, data: plain });
 });
 
 const updateUser = asyncHandler(async (req, res) => {
+  const previous = await User.findById(req.params.id);
   const payload = { ...req.body };
   if (payload.password) {
     payload.password = await bcrypt.hash(payload.password, 12);
@@ -37,14 +77,103 @@ const updateUser = asyncHandler(async (req, res) => {
     runValidators: true,
   });
 
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  await createAuditLog({
+    req,
+    action: 'update_user',
+    module: 'users',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Updated user ${user.name}`,
+    previousData: previous,
+    newData: user,
+  });
+
   res.json({ success: true, data: user });
+});
+
+const updateUserStatus = asyncHandler(async (req, res) => {
+  const previous = await User.findById(req.params.id);
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { status: req.body.status },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  await createAuditLog({
+    req,
+    action: req.body.status === 'active' ? 'activate_user' : 'deactivate_user',
+    module: 'users',
+    entityId: user._id,
+    entityType: 'User',
+    description: `${req.body.status === 'active' ? 'Activated' : 'Deactivated'} user ${user.name}`,
+    previousData: previous,
+    newData: user,
+  });
+
+  res.json({ success: true, data: user });
+});
+
+const resetUserPassword = asyncHandler(async (req, res) => {
+  const hashedPassword = await bcrypt.hash(req.body.password, 12);
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { password: hashedPassword },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  await createAuditLog({
+    req,
+    action: 'reset_password',
+    module: 'users',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Password reset for ${user.name}`,
+  });
+
+  res.json({ success: true, message: 'Password reset successfully' });
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  await createAuditLog({
+    req,
+    action: 'delete_user',
+    module: 'users',
+    entityId: user._id,
+    entityType: 'User',
+    description: `Deleted user ${user.name}`,
+    previousData: user,
+  });
+
+  res.status(204).send();
 });
 
 module.exports = {
   userRules,
+  createUserRules,
+  statusRules,
+  passwordRules,
   getUsers: getAll(User),
   getUser: getOne(User),
   createUser,
   updateUser,
-  deleteUser: deleteOne(User),
+  updateUserStatus,
+  resetUserPassword,
+  deleteUser,
 };

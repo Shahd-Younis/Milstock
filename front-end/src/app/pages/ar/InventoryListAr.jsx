@@ -6,6 +6,7 @@ import { Input } from "../../components/Input";
 import { Select } from "../../components/Select";
 import { Badge } from "../../components/Badge";
 import { Table } from "../../components/Table";
+import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../../lib/format";
@@ -40,15 +41,16 @@ const InventoryListAr = () => {
       category: product.category,
       quantity: product.quantity,
       unit: product.unit,
-      expirationDate: formatDate(product.expiry_date),
+      expirationDate: formatDate(product.expiration_date || product.expiry_date),
       warehouse: product.warehouse_id?.name || "غير محدد",
+      storageSection: product.storage_section || "غير محدد",
       status
     };
   });
 
   const filteredData = inventoryData.filter((item) => {
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = item.name.toLowerCase().includes(search) || item.id.toLowerCase().includes(search);
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchesSearch = String(item.name ?? "").toLowerCase().includes(search) || String(item.id ?? "").toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;
@@ -60,7 +62,14 @@ const InventoryListAr = () => {
     { key: "category", header: "الفئة" },
     { key: "quantity", header: "الكمية", render: (row) => `${row.quantity} ${row.unit}` },
     { key: "expirationDate", header: "تاريخ الصلاحية" },
-    { key: "warehouse", header: "المستودع" },
+    {
+      key: "warehouse",
+      header: "المستودع",
+      render: (row) => <div className="text-right">
+        <p className="font-medium text-foreground">{row.warehouse}</p>
+        <p className="text-xs text-muted-foreground">{row.storageSection}</p>
+      </div>
+    },
     {
       key: "status",
       header: "الحالة",
@@ -82,6 +91,16 @@ const InventoryListAr = () => {
         حذف
       </button>
     }
+  ];
+  const exportColumns = [
+    { key: "id", header: "\u0631\u0645\u0632 \u0627\u0644\u0635\u0646\u0641" },
+    { key: "name", header: "\u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641" },
+    { key: "category", header: "\u0627\u0644\u0641\u0626\u0629" },
+    { header: "\u0627\u0644\u0643\u0645\u064a\u0629", value: (row) => `${row.quantity} ${row.unit}` },
+    { key: "expirationDate", header: "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629" },
+    { key: "warehouse", header: "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639" },
+    { key: "storageSection", header: "\u0642\u0633\u0645 \u0627\u0644\u062a\u062e\u0632\u064a\u0646" },
+    { header: "\u0627\u0644\u062d\u0627\u0644\u0629", value: (row) => statusLabels[row.status] || row.status }
   ];
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
@@ -124,6 +143,12 @@ const InventoryListAr = () => {
           onChange={(event) => setStatusFilter(event.target.value)}
         />
       </div>
+    </div>
+
+    <div className="flex justify-start">
+      <ExportCsvButton filenamePrefix="inventory-export" columns={exportColumns} rows={loading ? [] : filteredData}>
+        {"\u062a\u0635\u062f\u064a\u0631"}
+      </ExportCsvButton>
     </div>
 
     <p className="text-sm text-[#5A6B50] text-right">

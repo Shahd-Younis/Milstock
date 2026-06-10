@@ -4,8 +4,8 @@ import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
 import { Input } from "../components/Input";
 import { Select } from "../components/Select";
-import { Button } from "../components/Button";
-import { Search, Filter, Download } from "lucide-react";
+import { ExportCsvButton } from "../components/ExportCsvButton";
+import { Search } from "lucide-react";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
@@ -25,7 +25,8 @@ const MovementLogs = () => {
     reason: movement.reference_type || "Inventory movement"
   }));
   const filteredData = movementData.filter((movement) => {
-    const matchesSearch = movement.id.toLowerCase().includes(searchTerm.toLowerCase()) || movement.itemName.toLowerCase().includes(searchTerm.toLowerCase()) || movement.itemId.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchesSearch = String(movement.id ?? "").toLowerCase().includes(search) || String(movement.itemName ?? "").toLowerCase().includes(search) || String(movement.itemId ?? "").toLowerCase().includes(search);
     const matchesAction = actionFilter === "all" || movement.action === actionFilter;
     return matchesSearch && matchesAction;
   });
@@ -54,6 +55,17 @@ const MovementLogs = () => {
           {row.quantity}
         </span>
     },
+    { key: "location", header: "Warehouse" },
+    { key: "user", header: "Performed By" },
+    { key: "reason", header: "Reference" }
+  ];
+  const exportColumns = [
+    { key: "id", header: "Movement ID" },
+    { key: "date", header: "Date" },
+    { key: "itemId", header: "Item ID" },
+    { key: "itemName", header: "Item Name" },
+    { key: "action", header: "Action" },
+    { key: "quantity", header: "Quantity" },
     { key: "location", header: "Warehouse" },
     { key: "user", header: "Performed By" },
     { key: "reason", header: "Reference" }
@@ -89,16 +101,9 @@ const MovementLogs = () => {
         <p className="text-muted-foreground">
           {loading ? "Loading movement logs from MongoDB..." : error || `Showing ${filteredData.length} of ${movementData.length} movements`}
         </p>
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4" />
-            Advanced Filters
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4" />
-            Export Logs
-          </Button>
-        </div>
+        <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={loading ? [] : filteredData}>
+          Export Logs
+        </ExportCsvButton>
       </div>
 
       <Table

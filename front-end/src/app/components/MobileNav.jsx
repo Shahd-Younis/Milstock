@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BrandLogo } from "./BrandLogo";
+import { clearStoredAuth } from "../lib/auth";
+import { useNotifications } from "../context/NotificationContext";
 const adminNavGroups = [
   {
     label: "MAIN",
@@ -89,7 +91,11 @@ const userNavGroups = [
 const MobileNav = ({ userRole }) => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const navGroups = userRole === "admin" ? adminNavGroups : userNavGroups;
+  const { unreadCount } = useNotifications();
+  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+    ...group,
+    items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
+  }));
   const allItems = navGroups.flatMap((g) => g.items);
   const bottomItems = allItems.slice(0, 5);
   return <>
@@ -112,7 +118,9 @@ const MobileNav = ({ userRole }) => {
     className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
   >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />
+          {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D4183D] text-white text-[10px] leading-4 text-center rounded-full">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>}
         </Link>
       </div>
 
@@ -172,7 +180,7 @@ const MobileNav = ({ userRole }) => {
                 <Globe className="w-[18px] h-[18px]" />
                 <span className="text-sm">العربية</span>
               </Link>
-              <Link to="/login" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
+              <Link to="/login" onClick={() => { clearStoredAuth(); setDrawerOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
                 <LogOut className="w-[18px] h-[18px]" />
                 <span className="text-sm">Logout</span>
               </Link>

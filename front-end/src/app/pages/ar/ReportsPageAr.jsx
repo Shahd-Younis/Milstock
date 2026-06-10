@@ -1,7 +1,7 @@
-import { StatCardAr } from "../../components/ar/StatCardAr";
+﻿import { StatCardAr } from "../../components/ar/StatCardAr";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card";
-import { Button } from "../../components/Button";
+import { ExportCsvButton } from "../../components/ExportCsvButton";
 import {
   BarChart,
   Bar,
@@ -14,7 +14,7 @@ import {
   Line,
   Legend
 } from "recharts";
-import { TrendingUp, TrendingDown, Package, AlertCircle, Download, FileText } from "lucide-react";
+import { TrendingUp, TrendingDown, Package, AlertCircle } from "lucide-react";
 const consumptionData = [
   { month: "\u062F\u064A\u0633\u0645\u0628\u0631", food: 1200, medical: 450, equipment: 320, supplies: 280 },
   { month: "\u064A\u0646\u0627\u064A\u0631", food: 1350, medical: 520, equipment: 380, supplies: 310 },
@@ -30,6 +30,18 @@ const wasteData = [
   { month: "\u0645\u0627\u0631\u0633", expired: 41, damaged: 9 },
   { month: "\u0623\u0628\u0631\u064A\u0644", expired: 36, damaged: 11 },
   { month: "\u0645\u0627\u064A\u0648", expired: 29, damaged: 7 }
+];
+const consumptionExportColumns = [
+  { key: "month", header: "\u0627\u0644\u0634\u0647\u0631" },
+  { key: "food", header: "\u0627\u0644\u063a\u0630\u0627\u0621" },
+  { key: "medical", header: "\u0627\u0644\u0623\u0644\u0628\u0627\u0646" },
+  { key: "equipment", header: "\u0627\u0644\u0645\u062e\u0628\u0648\u0632\u0627\u062a" },
+  { key: "supplies", header: "\u0627\u0644\u0645\u0624\u0646\u0629" }
+];
+const wasteExportColumns = [
+  { key: "month", header: "\u0627\u0644\u0634\u0647\u0631" },
+  { key: "expired", header: "\u0645\u0646\u062a\u0647\u064a \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629" },
+  { key: "damaged", header: "\u062a\u0627\u0644\u0641" }
 ];
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -54,14 +66,12 @@ const ReportsPageAr = () => {
     /* Export actions */
   }
       <div className="flex items-center gap-3 -mt-4">
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-          <Download className="w-3.5 h-3.5" />
-          تصدير PDF
-        </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-          <FileText className="w-3.5 h-3.5" />
-          تصدير Excel
-        </Button>
+        <ExportCsvButton filenamePrefix="reports-consumption-export" columns={consumptionExportColumns} rows={consumptionData} className="flex items-center gap-1.5">
+          {"\u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0627\u0633\u062a\u0647\u0644\u0627\u0643"}
+        </ExportCsvButton>
+        <ExportCsvButton filenamePrefix="reports-waste-export" columns={wasteExportColumns} rows={wasteData} className="flex items-center gap-1.5">
+          {"\u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0647\u062f\u0631"}
+        </ExportCsvButton>
       </div>
 
       {
@@ -171,3 +181,4 @@ const ReportsPageAr = () => {
 export {
   ReportsPageAr
 };
+

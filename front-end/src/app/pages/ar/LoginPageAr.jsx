@@ -5,6 +5,7 @@ import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { api } from "../../lib/api";
 import { BrandLogo } from "../../components/BrandLogo";
+import { getRoleHomePath } from "../../lib/auth";
 const LoginPageAr = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("admin@milstock.local");
@@ -27,15 +28,16 @@ const LoginPageAr = () => {
       };
       localStorage.setItem("milstock_token", "frontend-test-admin-token");
       localStorage.setItem("milstock_user", JSON.stringify(testUser));
-      navigate("/ar/admin/dashboard");
+      navigate("/ar/admin/dashboard", { replace: true });
       setLoading(false);
       return;
     }
     try {
       const response = await api.auth.login({ email, password });
       localStorage.setItem("milstock_token", response.token);
-      localStorage.setItem("milstock_user", JSON.stringify(response.data));
-      navigate(response.data.role === "admin" ? "/ar/admin/dashboard" : "/ar/user/dashboard");
+      const user = response.user || response.data;
+      localStorage.setItem("milstock_user", JSON.stringify(user));
+      navigate(getRoleHomePath(user?.role, true), { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "\u062A\u0639\u0630\u0631 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644");
     } finally {

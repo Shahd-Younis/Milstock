@@ -1,10 +1,13 @@
 import { Outlet, useLocation } from "react-router";
 import { SidebarAr, MobileNavAr } from "./SidebarAr";
 import { NavbarAr } from "./NavbarAr";
+import { getStoredAuth } from "../../lib/auth";
 const DashboardLayoutAr = () => {
   const location = useLocation();
   const isAdmin = location.pathname.includes("/ar/admin");
-  const userRole = isAdmin ? "admin" : "user";
+  const isUser = location.pathname.includes("/ar/user");
+  const storedRole = getStoredAuth().role;
+  const userRole = isAdmin ? "admin" : isUser ? "user" : storedRole || "user";
   return <div
     dir="rtl"
     className="flex min-h-screen bg-[#ECEEE2]"

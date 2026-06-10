@@ -1,11 +1,11 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Card, CardContent } from "../../components/Card";
 import { Badge } from "../../components/Badge";
 import { Input } from "../../components/Input";
 import { Select } from "../../components/Select";
-import { Button } from "../../components/Button";
-import { Search, Download, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
+import { ExportCsvButton } from "../../components/ExportCsvButton";
+import { Search, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
 const logsData = [
   { id: "LOG-001", itemId: "INV-001", itemName: "\u0623\u0631\u0632", type: "in", quantity: 500, kitchen: "\u0635\u0646\u062F\u0648\u0642", from: "\u0627\u0644\u0645\u0648\u0631\u062F \u0627\u0644\u062E\u0627\u0631\u062C\u064A", to: "\u0627\u0644\u0645\u0633\u062A\u0648\u062F\u0639 A", performedBy: "\u0645\u0634\u0631\u0641 \u0627\u0644\u0645\u062E\u0632\u0646 \u0623\u062D\u0645\u062F", date: "2026-05-04", notes: "\u0627\u0633\u062A\u0644\u0627\u0645 \u062F\u0648\u0631\u064A \u0634\u0647\u0631\u064A" },
   { id: "LOG-002", itemId: "INV-002", itemName: "\u062C\u0628\u0646", type: "out", quantity: 30, kitchen: "\u062D\u0642\u064A\u0628\u0629", from: "\u0627\u0644\u0645\u0633\u062A\u0648\u062F\u0639 B", to: "\u0627\u0644\u0645\u0637\u0628\u062E \u0627\u0644\u0645\u0631\u0643\u0632\u064A", performedBy: "\u0645\u0646\u0633\u0642 \u0627\u0644\u062A\u0648\u0631\u064A\u062F \u062E\u0627\u0644\u062F", date: "2026-05-03", notes: "\u062A\u0648\u0632\u064A\u0639 \u0639\u0644\u0649 \u0627\u0644\u0648\u062D\u062F\u0629" },
@@ -24,10 +24,24 @@ const MovementLogsAr = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const filtered = logsData.filter((log) => {
-    const matchSearch = log.itemName.toLowerCase().includes(searchTerm.toLowerCase()) || log.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchSearch = String(log.itemName ?? "").toLowerCase().includes(search) || String(log.id ?? "").toLowerCase().includes(search);
     const matchType = typeFilter === "all" || log.type === typeFilter;
     return matchSearch && matchType;
   });
+  const exportColumns = [
+    { key: "id", header: "\u0631\u0642\u0645 \u0627\u0644\u0633\u062c\u0644" },
+    { key: "itemId", header: "\u0631\u0645\u0632 \u0627\u0644\u0635\u0646\u0641" },
+    { key: "itemName", header: "\u0627\u0644\u0635\u0646\u0641" },
+    { header: "\u0627\u0644\u0646\u0648\u0639", value: (row) => typeLabels[row.type] || row.type },
+    { key: "quantity", header: "\u0627\u0644\u0643\u0645\u064a\u0629" },
+    { key: "kitchen", header: "\u0627\u0644\u0648\u062d\u062f\u0629" },
+    { key: "from", header: "\u0645\u0646" },
+    { key: "to", header: "\u0625\u0644\u0649" },
+    { key: "performedBy", header: "\u0645\u0646\u0641\u0630 \u0628\u0648\u0627\u0633\u0637\u0629" },
+    { key: "date", header: "\u0627\u0644\u062a\u0627\u0631\u064a\u062e" },
+    { key: "notes", header: "\u0645\u0644\u0627\u062d\u0638\u0627\u062a" }
+  ];
   return <div className="p-6 lg:p-8 space-y-6">
       <PageHeaderAr
     title="سجل حركة المخزون"
@@ -65,10 +79,9 @@ const MovementLogsAr = () => {
         <p className="text-muted-foreground text-sm">
           عرض {filtered.length} من {logsData.length} سجل
         </p>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          تصدير السجل
-        </Button>
+        <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={filtered} className="flex items-center gap-2">
+          {"\u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0633\u062c\u0644"}
+        </ExportCsvButton>
       </div>
 
       {
@@ -143,3 +156,4 @@ const MovementLogsAr = () => {
 export {
   MovementLogsAr
 };
+

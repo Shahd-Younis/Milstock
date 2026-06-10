@@ -1,6 +1,6 @@
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/Card";
-import { Button } from "../components/Button";
+import { ExportCsvButton } from "../components/ExportCsvButton";
 import {
   BarChart,
   Bar,
@@ -13,7 +13,7 @@ import {
   Line,
   Legend
 } from "recharts";
-import { TrendingUp, TrendingDown, Package, AlertCircle, Download, FileText } from "lucide-react";
+import { TrendingUp, TrendingDown, Package, AlertCircle } from "lucide-react";
 import { StatCard } from "../components/StatCard";
 const consumptionData = [
   { month: "Dec", food: 1200, medical: 450, equipment: 320, supplies: 280 },
@@ -30,6 +30,18 @@ const wasteData = [
   { month: "Mar", expired: 41, damaged: 9 },
   { month: "Apr", expired: 36, damaged: 11 },
   { month: "May", expired: 29, damaged: 7 }
+];
+const consumptionExportColumns = [
+  { key: "month", header: "Month" },
+  { key: "food", header: "Food" },
+  { key: "medical", header: "Dairy" },
+  { key: "equipment", header: "Bakery" },
+  { key: "supplies", header: "Pantry" }
+];
+const wasteExportColumns = [
+  { key: "month", header: "Month" },
+  { key: "expired", header: "Expired Items" },
+  { key: "damaged", header: "Damaged Items" }
 ];
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -54,14 +66,12 @@ const ReportsPage = () => {
     /* Export actions */
   }
       <div className="flex items-center gap-3 -mt-4">
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-          <Download className="w-3.5 h-3.5" />
-          Export PDF
-        </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-          <FileText className="w-3.5 h-3.5" />
-          Export Excel
-        </Button>
+        <ExportCsvButton filenamePrefix="reports-consumption-export" columns={consumptionExportColumns} rows={consumptionData} className="flex items-center gap-1.5">
+          Export Consumption
+        </ExportCsvButton>
+        <ExportCsvButton filenamePrefix="reports-waste-export" columns={wasteExportColumns} rows={wasteData} className="flex items-center gap-1.5">
+          Export Waste
+        </ExportCsvButton>
       </div>
 
       {

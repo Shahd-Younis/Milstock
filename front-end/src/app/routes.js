@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { createElement } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { UserDashboard } from "./pages/UserDashboard";
@@ -15,11 +16,15 @@ import { ReportsPage } from "./pages/ReportsPage";
 import { AuditLogs } from "./pages/AuditLogs";
 import { ProfilePage } from "./pages/ProfilePage";
 import { UserManagement } from "./pages/UserManagement";
+import { AddUser } from "./pages/AddUser";
+import { UserDetails } from "./pages/UserDetails";
+import { EditUser } from "./pages/EditUser";
 import { SettingsPage } from "./pages/SettingsPage";
 import { ExpirationMonitor } from "./pages/ExpirationMonitor";
 import { NotFound } from "./pages/NotFound";
 import { AccessDenied } from "./pages/AccessDenied";
 import { DashboardLayout } from "./components/DashboardLayout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPageAr } from "./pages/ar/LoginPageAr";
 import { AdminDashboardAr } from "./pages/ar/AdminDashboardAr";
 import { UserDashboardAr } from "./pages/ar/UserDashboardAr";
@@ -36,12 +41,21 @@ import { NotificationsPageAr } from "./pages/ar/NotificationsPageAr";
 import { ReportsPageAr } from "./pages/ar/ReportsPageAr";
 import { AuditLogsAr } from "./pages/ar/AuditLogsAr";
 import { UserManagementAr } from "./pages/ar/UserManagementAr";
+import { AddUserAr } from "./pages/ar/AddUserAr";
+import { UserDetailsAr } from "./pages/ar/UserDetailsAr";
+import { EditUserAr } from "./pages/ar/EditUserAr";
 import { SettingsPageAr } from "./pages/ar/SettingsPageAr";
 import { ProfilePageAr } from "./pages/ar/ProfilePageAr";
 import { NotFoundAr } from "./pages/ar/NotFoundAr";
 import { AccessDeniedAr } from "./pages/ar/AccessDeniedAr";
 import { DashboardLayoutAr } from "./components/ar/DashboardLayoutAr";
 import { LanguageSelect } from "./pages/LanguageSelect";
+const AdminLayout = () => createElement(ProtectedRoute, { allowedRole: "admin" }, createElement(DashboardLayout));
+const UserLayout = () => createElement(ProtectedRoute, { allowedRole: "user" }, createElement(DashboardLayout));
+const ProfileLayout = () => createElement(ProtectedRoute, null, createElement(DashboardLayout));
+const AdminLayoutAr = () => createElement(ProtectedRoute, { allowedRole: "admin" }, createElement(DashboardLayoutAr));
+const UserLayoutAr = () => createElement(ProtectedRoute, { allowedRole: "user" }, createElement(DashboardLayoutAr));
+const ProfileLayoutAr = () => createElement(ProtectedRoute, null, createElement(DashboardLayoutAr));
 const router = createBrowserRouter([
   // ── Root: language selector ────────────────────────
   { path: "/", Component: LanguageSelect },
@@ -50,7 +64,7 @@ const router = createBrowserRouter([
   { path: "/403", Component: AccessDenied },
   {
     path: "/admin",
-    Component: DashboardLayout,
+    Component: AdminLayout,
     children: [
       { path: "dashboard", Component: AdminDashboard },
       { path: "inventory", Component: InventoryList },
@@ -67,12 +81,15 @@ const router = createBrowserRouter([
       { path: "reports", Component: ReportsPage },
       { path: "audit-logs", Component: AuditLogs },
       { path: "users", Component: UserManagement },
+      { path: "users/new", Component: AddUser },
+      { path: "users/:id", Component: UserDetails },
+      { path: "users/:id/edit", Component: EditUser },
       { path: "settings", Component: SettingsPage }
     ]
   },
   {
     path: "/user",
-    Component: DashboardLayout,
+    Component: UserLayout,
     children: [
       { path: "dashboard", Component: UserDashboard },
       { path: "inventory", Component: InventoryList },
@@ -84,7 +101,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/profile",
-    Component: DashboardLayout,
+    Component: ProfileLayout,
     children: [{ index: true, Component: ProfilePage }]
   },
   { path: "*", Component: NotFound },
@@ -94,7 +111,7 @@ const router = createBrowserRouter([
   // Arabic Admin routes
   {
     path: "/ar/admin",
-    Component: DashboardLayoutAr,
+    Component: AdminLayoutAr,
     children: [
       { path: "dashboard", Component: AdminDashboardAr },
       { path: "inventory", Component: InventoryListAr },
@@ -111,13 +128,16 @@ const router = createBrowserRouter([
       { path: "reports", Component: ReportsPageAr },
       { path: "audit-logs", Component: AuditLogsAr },
       { path: "users", Component: UserManagementAr },
+      { path: "users/new", Component: AddUserAr },
+      { path: "users/:id", Component: UserDetailsAr },
+      { path: "users/:id/edit", Component: EditUserAr },
       { path: "settings", Component: SettingsPageAr }
     ]
   },
   // Arabic User routes
   {
     path: "/ar/user",
-    Component: DashboardLayoutAr,
+    Component: UserLayoutAr,
     children: [
       { path: "dashboard", Component: UserDashboardAr },
       { path: "inventory", Component: InventoryListAr },
@@ -130,7 +150,7 @@ const router = createBrowserRouter([
   // Arabic Profile (shared layout)
   {
     path: "/ar/profile",
-    Component: DashboardLayoutAr,
+    Component: ProfileLayoutAr,
     children: [{ index: true, Component: ProfilePageAr }]
   },
   // Arabic 404 catch-all

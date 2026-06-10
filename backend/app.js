@@ -9,16 +9,17 @@ const AppError = require('./utils/AppError');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/users');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const productRoutes = require('./routes/productRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+const orderRoutes = require('./routes/orders');
 const orderItemRoutes = require('./routes/orderItemRoutes');
 const productWarehouseRoutes = require('./routes/productWarehouseRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const consumptionRoutes = require('./routes/consumptionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const auditLogRoutes = require('./routes/auditLogRoutes');
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/consumption', consumptionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
 
 app.all('*', (req, _res, next) => {
   next(new AppError(`Route ${req.originalUrl} was not found`, 404));

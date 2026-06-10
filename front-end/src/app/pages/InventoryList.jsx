@@ -5,7 +5,8 @@ import { Select } from "../components/Select";
 import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
-import { Plus, Search, Filter, Download, MoreVertical } from "lucide-react";
+import { ExportCsvButton } from "../components/ExportCsvButton";
+import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
@@ -23,12 +24,14 @@ const InventoryList = () => {
     category: product.category,
     quantity: product.quantity,
     unit: product.unit,
-    expirationDate: formatDate(product.expiry_date),
+    expirationDate: formatDate(product.expiration_date || product.expiry_date),
     warehouse: product.warehouse_id?.name || "Unassigned",
+    storageSection: product.storage_section || "N/A",
     status: getProductStatus(product)
   }));
   const filteredData = inventoryData.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const search = String(searchTerm ?? "").toLowerCase();
+    const matchesSearch = String(item.name ?? "").toLowerCase().includes(search) || String(item.id ?? "").toLowerCase().includes(search);
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;
@@ -43,7 +46,14 @@ const InventoryList = () => {
       render: (row) => `${row.quantity} ${row.unit}`
     },
     { key: "expirationDate", header: "Expiration Date" },
-    { key: "warehouse", header: "Warehouse" },
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      render: (row) => <div>
+          <p className="font-medium text-foreground">{row.warehouse}</p>
+          <p className="text-xs text-muted-foreground">{row.storageSection}</p>
+        </div>
+    },
     {
       key: "status",
       header: "Status",
@@ -72,6 +82,16 @@ const InventoryList = () => {
           Delete
         </button>
     }
+  ];
+  const exportColumns = [
+    { key: "id", header: "Item ID" },
+    { key: "name", header: "Item Name" },
+    { key: "category", header: "Category" },
+    { header: "Quantity", value: (row) => `${row.quantity} ${row.unit}` },
+    { key: "expirationDate", header: "Expiration Date" },
+    { key: "warehouse", header: "Warehouse" },
+    { key: "storageSection", header: "Storage Section" },
+    { key: "status", header: "Status" }
   ];
   return <div className="p-6 lg:p-8 space-y-6">
       <PageHeader
@@ -124,16 +144,9 @@ const InventoryList = () => {
                   {inventoryData.length} items
                 </>}
         </p>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="w-3.5 h-3.5" />
-            Filters
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-3.5 h-3.5" />
-            Export
-          </Button>
-        </div>
+        <ExportCsvButton filenamePrefix="inventory-export" columns={exportColumns} rows={loading ? [] : filteredData}>
+          Export
+        </ExportCsvButton>
       </div>
 
       <Table

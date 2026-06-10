@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BrandLogo } from "./BrandLogo";
+import { clearStoredAuth } from "../lib/auth";
+import { useNotifications } from "../context/NotificationContext";
 const adminNavGroups = [
   {
     label: "MAIN",
@@ -103,9 +105,13 @@ const userNavGroups = [
 ];
 const Sidebar = ({ userRole }) => {
   const location = useLocation();
+  const { unreadCount } = useNotifications();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
-  const navGroups = userRole === "admin" ? adminNavGroups : userNavGroups;
+  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+    ...group,
+    items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
+  }));
   const toggleExpand = (path) => {
     setExpandedItems(
       (prev) => prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
@@ -232,7 +238,7 @@ const Sidebar = ({ userRole }) => {
           {!collapsed && <span className="text-sm">Profile</span>}
         </Link>
         <Link
-    to="/ar/admin/dashboard"
+    to={userRole === "admin" ? "/ar/admin/dashboard" : "/ar/user/dashboard"}
     title={collapsed ? "\u0627\u0644\u0639\u0631\u0628\u064A\u0629" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10 transition-colors"
   >
@@ -241,6 +247,7 @@ const Sidebar = ({ userRole }) => {
         </Link>
         <Link
     to="/login"
+    onClick={clearStoredAuth}
     title={collapsed ? "Logout" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15 hover:text-[#ff8a80] transition-colors"
   >

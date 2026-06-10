@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { Shield, Lock, User, Globe, BarChart3 } from "lucide-react";
 import { api } from "../lib/api";
 import { BrandLogo } from "../components/BrandLogo";
+import { getRoleHomePath } from "../lib/auth";
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -28,15 +29,16 @@ const LoginPage = () => {
       };
       localStorage.setItem("milstock_token", "frontend-test-admin-token");
       localStorage.setItem("milstock_user", JSON.stringify(testUser));
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard", { replace: true });
       setLoading(false);
       return;
     }
     try {
       const response = await api.auth.login({ email, password });
       localStorage.setItem("milstock_token", response.token);
-      localStorage.setItem("milstock_user", JSON.stringify(response.data));
-      navigate(response.data.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+      const user = response.user || response.data;
+      localStorage.setItem("milstock_user", JSON.stringify(user));
+      navigate(getRoleHomePath(user?.role), { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "Unable to sign in");
     } finally {

@@ -1,14 +1,15 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { Search, Filter, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { Badge } from "../../components/Badge";
 import { Input } from "../../components/Input";
 import { Select } from "../../components/Select";
-import { Button } from "../../components/Button";
+import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
+import { normalizeArray, sameId } from "../../lib/normalize";
 
 const statusLabels = {
   pending: "قيد المراجعة",
@@ -37,13 +38,14 @@ const RequestsListAr = () => {
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
 
+  const orderItemsArray = normalizeArray(orderItems);
   const requestRows = orders.map((order) => {
-    const items = orderItems.filter((item) => item.order_id?._id === order._id || item.order_id === order._id);
+    const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
     return {
       id: order._id.slice(-8).toUpperCase(),
       mongoId: order._id,
       kitchen: order.user_id?.name || order.user_id?.military_number || "مستخدم",
-      item: items.map((item) => item.product_id?.name).filter(Boolean).join(", ") || "طلب توريد",
+      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "طلب توريد",
       quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       requestedDate: formatDate(order.date),
@@ -53,15 +55,25 @@ const RequestsListAr = () => {
   });
 
   const filtered = requestRows.filter((request) => {
-    const search = searchTerm.toLowerCase();
+    const search = String(searchTerm ?? "").toLowerCase();
     const matchSearch =
-      request.id.toLowerCase().includes(search) ||
-      request.kitchen.toLowerCase().includes(search) ||
-      request.item.toLowerCase().includes(search) ||
-      request.supplier.toLowerCase().includes(search);
+      String(request.id ?? "").toLowerCase().includes(search) ||
+      String(request.kitchen ?? "").toLowerCase().includes(search) ||
+      String(request.item ?? "").toLowerCase().includes(search) ||
+      String(request.supplier ?? "").toLowerCase().includes(search);
     const matchStatus = statusFilter === "all" || request.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const exportColumns = [
+    { key: "id", header: "\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628" },
+    { key: "kitchen", header: "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645" },
+    { key: "item", header: "\u0627\u0644\u0623\u0635\u0646\u0627\u0641" },
+    { key: "quantity", header: "\u0627\u0644\u0643\u0645\u064a\u0629" },
+    { key: "supplier", header: "\u0627\u0644\u0645\u0648\u0631\u062f" },
+    { header: "\u0627\u0644\u062d\u0627\u0644\u0629", value: (row) => statusLabels[row.status] || row.status },
+    { key: "requestedDate", header: "\u0627\u0644\u062a\u0627\u0631\u064a\u062e" },
+    { key: "requestedBy", header: "\u0645\u0642\u062f\u0645 \u0627\u0644\u0637\u0644\u0628" }
+  ];
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
@@ -103,10 +115,9 @@ const RequestsListAr = () => {
       <p className="text-muted-foreground text-sm">
         {ordersLoading ? "جاري تحميل الطلبات من MongoDB..." : ordersError || `عرض ${filtered.length} من ${requestRows.length} طلب`}
       </p>
-      <Button variant="outline" size="sm" className="flex items-center gap-2">
-        <Filter className="w-4 h-4" />
-        فلاتر إضافية
-      </Button>
+      <ExportCsvButton filenamePrefix="requests-export" columns={exportColumns} rows={ordersLoading ? [] : filtered} className="flex items-center gap-2">
+        {"\u062a\u0635\u062f\u064a\u0631"}
+      </ExportCsvButton>
     </div>
 
     <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
@@ -158,3 +169,4 @@ const RequestsListAr = () => {
 export {
   RequestsListAr
 };
+

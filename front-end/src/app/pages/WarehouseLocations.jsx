@@ -1,6 +1,7 @@
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/Card";
 import { Badge } from "../components/Badge";
+import { ExportCsvButton } from "../components/ExportCsvButton";
 import { MapPin, Package, AlertTriangle, TrendingUp } from "lucide-react";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
@@ -33,13 +34,28 @@ const WarehouseLocations = () => {
       }).length
     };
   });
+  const exportColumns = [
+    { key: "name", header: "Warehouse" },
+    { key: "location", header: "Location" },
+    { header: "Manager", value: (row) => row.user_id?.name || "Unassigned" },
+    { key: "currentStock", header: "Current Stock" },
+    { key: "capacity", header: "Capacity" },
+    { key: "sections", header: "Stored Categories" },
+    { key: "alerts", header: "Active Alerts" },
+    { key: "status", header: "Status" }
+  ];
   const loading = warehousesLoading || stockLoading;
   return <div className="p-6 lg:p-8 space-y-6">
       <PageHeader title="Warehouse Locations" subtitle="Monitor storage facilities and capacity utilization" />
 
-      <p className="text-sm text-[#5A6B50]">
-        {loading ? "Loading warehouses from MongoDB..." : warehousesError || `${warehouseCards.length} warehouses loaded`}
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-[#5A6B50]">
+          {loading ? "Loading warehouses from MongoDB..." : warehousesError || `${warehouseCards.length} warehouses loaded`}
+        </p>
+        <ExportCsvButton filenamePrefix="warehouses-export" columns={exportColumns} rows={loading ? [] : warehouseCards}>
+          Export
+        </ExportCsvButton>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {!loading && warehouseCards.map((warehouse) => {

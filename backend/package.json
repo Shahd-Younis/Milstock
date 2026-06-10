@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node seed/seed.js"
+    "seed": "node seed/seed.js",
+    "migrate:items-fields": "node scripts/migrateItemFields.js",
+    "migrate:users-status": "node scripts/migrateUserStatus.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

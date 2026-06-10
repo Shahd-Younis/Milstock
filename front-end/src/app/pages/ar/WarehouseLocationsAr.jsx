@@ -1,7 +1,8 @@
-import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
+﻿import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
 import { StatCardAr } from "../../components/ar/StatCardAr";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card";
 import { Badge } from "../../components/Badge";
+import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { MapPin, Package, AlertTriangle, CheckCircle, Plus } from "lucide-react";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
@@ -31,6 +32,16 @@ const WarehouseLocationsAr = () => {
   const total = warehouseCards.reduce((sum, warehouse) => sum + warehouse.capacity, 0);
   const totalUsed = warehouseCards.reduce((sum, warehouse) => sum + warehouse.used, 0);
   const operational = warehouseCards.filter((warehouse) => warehouse.status === "operational").length;
+  const exportColumns = [
+    { key: "name", header: "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639" },
+    { key: "location", header: "\u0627\u0644\u0645\u0648\u0642\u0639" },
+    { key: "manager", header: "\u0645\u062f\u064a\u0631 \u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639" },
+    { key: "used", header: "\u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u062d\u0627\u0644\u064a" },
+    { key: "capacity", header: "\u0627\u0644\u0633\u0639\u0629" },
+    { key: "usagePercent", header: "\u0646\u0633\u0628\u0629 \u0627\u0644\u0625\u0634\u063a\u0627\u0644" },
+    { header: "\u0627\u0644\u0641\u0626\u0627\u062a", value: (row) => row.categories.join(", ") },
+    { key: "status", header: "\u0627\u0644\u062d\u0627\u0644\u0629" }
+  ];
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
@@ -38,6 +49,12 @@ const WarehouseLocationsAr = () => {
       subtitle="نفس مستودعات MongoDB المستخدمة في الواجهة الإنجليزية"
       action={{ label: "إضافة مستودع", onClick: () => {}, icon: Plus }}
     />
+
+    <div className="flex justify-start">
+      <ExportCsvButton filenamePrefix="warehouses-export" columns={exportColumns} rows={warehousesLoading ? [] : warehouseCards}>
+        {"\u062a\u0635\u062f\u064a\u0631"}
+      </ExportCsvButton>
+    </div>
 
     <p className="text-sm text-[#5A6B50] text-right">
       {warehousesLoading ? "جاري تحميل المستودعات من MongoDB..." : warehousesError || `${warehouseCards.length} مستودعات محملة`}
@@ -114,3 +131,4 @@ const WarehouseLocationsAr = () => {
 export {
   WarehouseLocationsAr
 };
+

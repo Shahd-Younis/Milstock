@@ -36,8 +36,46 @@ const productSchema = new mongoose.Schema(
       ref: 'Warehouse',
       required: true,
     },
+    warehouse_name: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    storage_section: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     expiry_date: {
       type: Date,
+    },
+    expiration_date: {
+      type: Date,
+      default: null,
+    },
+    manufacturing_date: {
+      type: Date,
+      default: null,
+    },
+    batch_number: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    serial_number: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: '',
     },
   },
   {
