@@ -29,10 +29,11 @@ const getExpirationInfo = (product) => {
   const daysRemaining = Math.ceil((expires.getTime() - today.getTime()) / MS_PER_DAY);
 
   if (daysRemaining < 0) return { status: 'expired', severity: 'critical', daysRemaining, window: 'expired' };
-  if (daysRemaining <= 1) return { status: 'expiring_soon', severity: 'warning', daysRemaining, window: '1_day' };
-  if (daysRemaining <= 7) return { status: 'expiring_soon', severity: 'warning', daysRemaining, window: '7_days' };
-  if (daysRemaining <= 14) return { status: 'expiring_soon', severity: 'warning', daysRemaining, window: '14_days' };
-  if (daysRemaining <= 30) return { status: 'expiring_soon', severity: 'warning', daysRemaining, window: '30_days' };
+  const settings = product.alert_settings || {};
+  const warningDays = Number(settings.expiration_warning_days ?? 30);
+  const criticalDays = Number(settings.critical_expiration_days ?? 7);
+  if (daysRemaining <= criticalDays) return { status: 'expiring_soon', severity: 'critical', daysRemaining, window: `${criticalDays}_critical_days` };
+  if (daysRemaining <= warningDays) return { status: 'expiring_soon', severity: 'warning', daysRemaining, window: `${warningDays}_warning_days` };
   return null;
 };
 

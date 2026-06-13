@@ -16,8 +16,10 @@ const RequestsList = () => {
   const isAdmin = location.pathname.startsWith("/admin");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems, loading: itemsLoading } = useApiResource(() => api.orderItems.list(), []);
+  const warehouseFilter = new URLSearchParams(location.search).get("warehouse_id");
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
     if (urlStatus) setStatusFilter(urlStatus);
@@ -32,7 +34,10 @@ const RequestsList = () => {
         kitchen: order.user_id?.military_number || order.user_id?.role || "Kitchen",
         item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
         quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
-        supplier: order.supplier_id?.name || "No supplier",
+        supplier: order.supplier_id?.name || order.provider_id?.name || "",
+        sourceWarehouseId: order.source_warehouse?._id || order.source_warehouse || "",
+        destinationWarehouseId: order.destination_warehouse?._id || order.destination_warehouse || "",
+        requestType: order.request_type === "provider" ? "supplier_request" : order.request_type === "warehouse_transfer" ? "warehouse_request" : order.request_type || "warehouse_request",
         status: order.status,
         requestedDate: new Date(order.date).toLocaleDateString(),
         requestedBy: order.user_id?.name || "Unknown"
@@ -43,14 +48,17 @@ const RequestsList = () => {
     const search = String(searchTerm ?? "").toLowerCase();
     const matchesSearch = String(req.id ?? "").toLowerCase().includes(search) || String(req.kitchen ?? "").toLowerCase().includes(search) || String(req.item ?? "").toLowerCase().includes(search) || String(req.supplier ?? "").toLowerCase().includes(search);
     const matchesStatus = statusFilter === "all" || req.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesType = typeFilter === "all" || req.requestType === typeFilter;
+    const matchesWarehouse = !warehouseFilter || [req.sourceWarehouseId, req.destinationWarehouseId].some((warehouseId) => String(warehouseId || "") === String(warehouseFilter));
+    return matchesSearch && matchesStatus && matchesType && matchesWarehouse;
   });
   const columns = [
     { key: "id", header: "Request ID" },
     { key: "kitchen", header: "Kitchen" },
     { key: "item", header: "Item" },
     { key: "quantity", header: "Quantity" },
-    { key: "supplier", header: "Supplier" },
+    { key: "requestType", header: "Type", render: (row) => row.requestType === "supplier_request" ? "Supplier Request" : "Warehouse Request" },
+    { key: "supplier", header: "Supplier", render: (row) => row.supplier || "N/A" },
     {
       key: "status",
       header: "Status",
@@ -95,7 +103,7 @@ const RequestsList = () => {
   />
 
       <div className="bg-white rounded-2xl border border-[#4E4631]/10 p-4 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A6B50]" />
@@ -111,6 +119,10 @@ const RequestsList = () => {
     options={[
       { value: "all", label: "All Status" },
       { value: "pending", label: "Pending" },
+      { value: "accepted", label: "Accepted" },
+      { value: "in_delivery", label: "In Delivery" },
+      { value: "delivered", label: "Delivered" },
+      { value: "rejected", label: "Rejected" },
       { value: "approved", label: "Approved" },
       { value: "completed", label: "Completed" },
       { value: "cancelled", label: "Cancelled" }
@@ -118,6 +130,15 @@ const RequestsList = () => {
     value={statusFilter}
     onChange={(e) => setStatusFilter(e.target.value)}
   />
+          <Select
+            options={[
+              { value: "all", label: "All Types" },
+              { value: "warehouse_request", label: "Warehouse Request" },
+              { value: "supplier_request", label: "Supplier Request" }
+            ]}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          />
         </div>
       </div>
 

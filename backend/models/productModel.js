@@ -31,6 +31,33 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    alert_settings: {
+      low_stock_threshold: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      critical_stock_threshold: {
+        type: Number,
+        min: 0,
+        default: 0,
+      },
+      expiration_warning_days: {
+        type: Number,
+        min: 0,
+        default: 30,
+      },
+      critical_expiration_days: {
+        type: Number,
+        min: 0,
+        default: 7,
+      },
+    },
+    unit_price: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     warehouse_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Warehouse',

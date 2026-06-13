@@ -41,6 +41,7 @@ const adminNavGroups = [
           { label: "All Items", path: "/admin/inventory", icon: Package },
           { label: "Add Item", path: "/admin/inventory/add", icon: Package },
           { label: "Movement Logs", path: "/admin/inventory/logs", icon: Clock },
+          { label: "Consumption Monitor", path: "/admin/consumptions", icon: FileText },
           { label: "Expiration Monitor", path: "/admin/inventory/expiration", icon: Calendar },
           { label: "Warehouses", path: "/admin/inventory/warehouses", icon: MapPin }
         ]
@@ -86,7 +87,8 @@ const userNavGroups = [
   {
     label: "INVENTORY",
     items: [
-      { label: "Available Stock", path: "/user/inventory", icon: Package }
+      { label: "Available Stock", path: "/user/inventory", icon: Package },
+      { label: "Consumption", path: "/user/consumptions", icon: FileText }
     ]
   },
   {
@@ -103,12 +105,23 @@ const userNavGroups = [
     ]
   }
 ];
+const supplierNavGroups = [
+  {
+    label: "MAIN",
+    items: [
+      { label: "Dashboard", path: "/supplier/dashboard", icon: LayoutDashboard },
+      { label: "Orders", path: "/supplier/orders", icon: FileText },
+      { label: "Notifications", path: "/supplier/notifications", icon: Bell, badge: 3 }
+    ]
+  }
+];
 const Sidebar = ({ userRole }) => {
   const location = useLocation();
   const { unreadCount } = useNotifications();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
-  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+  const baseNavGroups = userRole === "admin" ? adminNavGroups : userRole === "supplier" ? supplierNavGroups : userNavGroups;
+  const navGroups = baseNavGroups.map((group) => ({
     ...group,
     items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
   }));
@@ -130,7 +143,7 @@ const Sidebar = ({ userRole }) => {
     /* Brand */
   }
       <div className="h-16 flex items-center justify-between px-4 border-b border-white/[0.06] flex-shrink-0">
-        {!collapsed && <BrandLogo subtitle={userRole === "admin" ? "Admin Portal" : "Kitchen Portal"} />}
+        {!collapsed && <BrandLogo subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"} />}
         {collapsed && <BrandLogo compact className="mx-auto" />}
         {!collapsed && <button
     onClick={() => setCollapsed(true)}
@@ -238,7 +251,7 @@ const Sidebar = ({ userRole }) => {
           {!collapsed && <span className="text-sm">Profile</span>}
         </Link>
         <Link
-    to={userRole === "admin" ? "/ar/admin/dashboard" : "/ar/user/dashboard"}
+    to={userRole === "admin" ? "/ar/admin/dashboard" : userRole === "supplier" ? "/ar/supplier/dashboard" : "/ar/user/dashboard"}
     title={collapsed ? "\u0627\u0644\u0639\u0631\u0628\u064A\u0629" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10 transition-colors"
   >

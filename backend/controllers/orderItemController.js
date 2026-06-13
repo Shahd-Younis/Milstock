@@ -21,11 +21,16 @@ const recalculateOrderTotal = async (orderId) => {
   await Order.findByIdAndUpdate(orderId, { total_price }, { runValidators: true });
 };
 
+const getProductUnitPrice = (product) =>
+  Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
+
 const createOrderItem = asyncHandler(async (req, res) => {
   const payload = {
     ...req.body,
-    total_price: req.body.total_price ?? Number(req.body.quantity) * Number(req.body.unit_price),
   };
+  const selectedProduct = await Product.findById(payload.product_id);
+  payload.unit_price = getProductUnitPrice(selectedProduct);
+  payload.total_price = Number(payload.quantity) * payload.unit_price;
   if (req.user?.role === 'unit') {
     const warehouseId = requireAssignedWarehouse(req);
     const product = await Product.findById(payload.product_id);
@@ -52,8 +57,9 @@ const updateOrderItem = asyncHandler(async (req, res) => {
   await assertWarehouseAccess(req, OrderItem, existing);
   if (payload.quantity !== undefined || payload.unit_price !== undefined) {
     const quantity = payload.quantity ?? existing.quantity;
-    const unit_price = payload.unit_price ?? existing.unit_price;
-    payload.total_price = payload.total_price ?? Number(quantity) * Number(unit_price);
+    const product = await Product.findById(payload.product_id || existing.product_id);
+    payload.unit_price = getProductUnitPrice(product);
+    payload.total_price = Number(quantity) * payload.unit_price;
   }
   if (req.user?.role === 'unit' && payload.product_id) {
     const warehouseId = requireAssignedWarehouse(req);

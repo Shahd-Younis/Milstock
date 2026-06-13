@@ -43,6 +43,7 @@ const adminNavGroups = [
           { label: "\u062C\u0645\u064A\u0639 \u0627\u0644\u0623\u0635\u0646\u0627\u0641", path: "/ar/admin/inventory", icon: Package },
           { label: "\u0625\u0636\u0627\u0641\u0629 \u0635\u0646\u0641", path: "/ar/admin/inventory/add", icon: Package },
           { label: "\u0633\u062C\u0644 \u0627\u0644\u062D\u0631\u0643\u0629", path: "/ar/admin/inventory/logs", icon: Clock },
+          { label: "\u0645\u062A\u0627\u0628\u0639\u0629 \u0627\u0644\u0627\u0633\u062A\u0647\u0644\u0627\u0643", path: "/ar/admin/consumptions", icon: FileText },
           { label: "\u0645\u062A\u0627\u0628\u0639\u0629 \u0627\u0644\u0635\u0644\u0627\u062D\u064A\u0629", path: "/ar/admin/inventory/expiration", icon: Calendar },
           { label: "\u0627\u0644\u0645\u0633\u062A\u0648\u062F\u0639\u0627\u062A", path: "/ar/admin/inventory/warehouses", icon: MapPin }
         ]
@@ -88,7 +89,8 @@ const userNavGroups = [
   {
     label: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646",
     items: [
-      { label: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646 \u0627\u0644\u0645\u062A\u0627\u062D", path: "/ar/user/inventory", icon: Package }
+      { label: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646 \u0627\u0644\u0645\u062A\u0627\u062D", path: "/ar/user/inventory", icon: Package },
+      { label: "\u0627\u0644\u0627\u0633\u062A\u0647\u0644\u0627\u0643", path: "/ar/user/consumptions", icon: FileText }
     ]
   },
   {
@@ -105,12 +107,23 @@ const userNavGroups = [
     ]
   }
 ];
+const supplierNavGroups = [
+  {
+    label: "\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629",
+    items: [
+      { label: "\u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645", path: "/ar/supplier/dashboard", icon: LayoutDashboard },
+      { label: "\u0637\u0644\u0628\u0627\u062A \u0627\u0644\u0645\u0648\u0631\u062F", path: "/ar/supplier/orders", icon: FileText },
+      { label: "\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062A", path: "/ar/supplier/notifications", icon: Bell, badge: 3 }
+    ]
+  }
+];
 const SidebarAr = ({ userRole }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const { unreadCount } = useNotifications();
-  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+  const baseNavGroups = userRole === "admin" ? adminNavGroups : userRole === "supplier" ? supplierNavGroups : userNavGroups;
+  const navGroups = baseNavGroups.map((group) => ({
     ...group,
     items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
   }));
@@ -137,7 +150,7 @@ const SidebarAr = ({ userRole }) => {
   }
         {!collapsed && <BrandLogo
     className="flex-row-reverse text-right"
-    subtitle={userRole === "admin" ? "Admin Portal" : "Kitchen Portal"}
+    subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
   />}
         {!collapsed && <button
     onClick={() => setCollapsed(true)}
@@ -256,7 +269,7 @@ const SidebarAr = ({ userRole }) => {
           {!collapsed && <span className="flex-1 text-sm text-right">الملف الشخصي</span>}
         </Link>
         <Link
-    to={userRole === "admin" ? "/admin/dashboard" : "/user/dashboard"}
+    to={userRole === "admin" ? "/admin/dashboard" : userRole === "supplier" ? "/supplier/dashboard" : "/user/dashboard"}
     title={collapsed ? "English" : void 0}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10 transition-colors"
   >
@@ -279,7 +292,8 @@ const MobileNavAr = ({ userRole }) => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { unreadCount } = useNotifications();
-  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+  const baseNavGroups = userRole === "admin" ? adminNavGroups : userRole === "supplier" ? supplierNavGroups : userNavGroups;
+  const navGroups = baseNavGroups.map((group) => ({
     ...group,
     items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
   }));
@@ -296,7 +310,7 @@ const MobileNavAr = ({ userRole }) => {
   }
       <div className="lg:hidden fixed top-0 right-0 left-0 z-50 h-14 bg-[#2E3A24] text-[#E0E1B7] border-b border-white/[0.08] px-4 flex items-center justify-between">
         <Link
-    to={userRole === "admin" ? "/ar/admin/notifications" : "/ar/user/notifications"}
+    to={userRole === "admin" ? "/ar/admin/notifications" : userRole === "supplier" ? "/ar/supplier/notifications" : "/ar/user/notifications"}
     className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
   >
           <Bell className="w-5 h-5" />
@@ -305,7 +319,7 @@ const MobileNavAr = ({ userRole }) => {
           </span>}
         </Link>
         <BrandLogo
-    subtitle={userRole === "admin" ? "Admin" : "Kitchen"}
+    subtitle={userRole === "admin" ? "Admin" : userRole === "supplier" ? "supplier" : "Kitchen"}
     className="flex-row-reverse text-right [&>div:first-child]:w-7 [&>div:first-child]:h-7"
   />
         <button
@@ -333,7 +347,7 @@ const MobileNavAr = ({ userRole }) => {
                 <X className="w-5 h-5" />
               </button>
               <BrandLogo
-    subtitle={userRole === "admin" ? "Admin Portal" : "Kitchen Portal"}
+    subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
     className="flex-row-reverse text-right [&>div:first-child]:w-7 [&>div:first-child]:h-7"
   />
             </div>
@@ -364,7 +378,7 @@ const MobileNavAr = ({ userRole }) => {
                 <User className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">الملف الشخصي</span>
               </Link>
-              <Link to={userRole === "admin" ? "/admin/dashboard" : "/user/dashboard"} onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
+              <Link to={userRole === "admin" ? "/admin/dashboard" : userRole === "supplier" ? "/supplier/dashboard" : "/user/dashboard"} onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
                 <Globe className="w-[18px] h-[18px]" />
                 <span className="flex-1 text-sm text-right">English</span>
               </Link>

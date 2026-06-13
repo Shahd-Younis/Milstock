@@ -13,7 +13,7 @@ const userRules = [
   body('password').optional().isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
   body('military_number').optional().notEmpty().withMessage('Employee code cannot be empty'),
-  body('role').optional().isIn(['admin', 'unit']).withMessage('Role must be admin or unit'),
+  body('role').optional().isIn(['admin', 'unit', 'supplier']).withMessage('Role must be admin, unit, or supplier'),
   body('status').optional().isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
   body('assigned_warehouse').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Valid assigned_warehouse is required'),
 ];
@@ -24,7 +24,7 @@ const createUserRules = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').notEmpty().withMessage('Phone cannot be empty'),
   body('military_number').notEmpty().withMessage('Employee code cannot be empty'),
-  body('role').isIn(['admin', 'unit']).withMessage('Role must be admin or unit'),
+  body('role').isIn(['admin', 'unit', 'supplier']).withMessage('Role must be admin, unit, or supplier'),
   body('status').optional().isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
   body('assigned_warehouse').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Valid assigned_warehouse is required'),
 ];
@@ -209,6 +209,13 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
+const getSupplierUsers = asyncHandler(async (_req, res) => {
+  const suppliers = await User.find({ role: 'supplier', status: { $ne: 'inactive' } })
+    .select('_id name email phone status role')
+    .sort('name');
+  res.json({ success: true, count: suppliers.length, data: suppliers });
+});
+
 module.exports = {
   userRules,
   createUserRules,
@@ -221,4 +228,5 @@ module.exports = {
   updateUserStatus,
   resetUserPassword,
   deleteUser,
+  getSupplierUsers,
 };

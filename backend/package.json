@@ -9,7 +9,11 @@
     "start": "node server.js",
     "seed": "node seed/seed.js",
     "migrate:items-fields": "node scripts/migrateItemFields.js",
-    "migrate:users-status": "node scripts/migrateUserStatus.js"
+    "migrate:users-status": "node scripts/migrateUserStatus.js",
+    "migrate:request-types": "node scripts/migrateRequestTypes.js",
+    "migrate:provider-to-supplier": "node scripts/migrateProviderToSupplier.js",
+    "seed:warehouses-suppliers": "node scripts/seedWarehousesAndSuppliers.js",
+    "migrate:product-alert-settings": "node scripts/migrateProductAlertSettings.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -4,6 +4,7 @@ const validate = require('../middleware/validate');
 const {
   warehouseRules,
   getWarehouses,
+  getWarehouseDashboard,
   getWarehouse,
   createWarehouse,
   updateWarehouse,
@@ -18,6 +19,7 @@ router
   .route('/')
   .get(getWarehouses)
   .post(authorize('admin'), warehouseRules, validate, createWarehouse);
+router.get('/:id/dashboard', getWarehouseDashboard);
 router
   .route('/:id')
   .get(getWarehouse)

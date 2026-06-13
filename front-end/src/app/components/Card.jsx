@@ -1,11 +1,12 @@
 import { clsx } from "clsx";
-const Card = ({ children, className, padding = true }) => {
+const Card = ({ children, className, padding = true, ...props }) => {
   return <div
     className={clsx(
       "bg-card rounded-2xl border border-border shadow-sm",
       padding && "p-5 sm:p-6",
       className
     )}
+    {...props}
   >
       {children}
     </div>;

@@ -138,7 +138,7 @@ const UserManagement = () => {
     {
       key: "role",
       header: "Role",
-      render: (row) => <Badge variant={row.role === "admin" ? "info" : "neutral"}>{row.role === "admin" ? "Admin" : "Kitchen"}</Badge>
+      render: (row) => <Badge variant={row.role === "admin" ? "info" : row.role === "supplier" ? "success" : "neutral"}>{row.role === "admin" ? "Admin" : row.role === "supplier" ? "Supplier" : "Kitchen"}</Badge>
     },
     { key: "warehouse", header: "Warehouse", render: (row) => getAssignedWarehouseName(row) },
     {

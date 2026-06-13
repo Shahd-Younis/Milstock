@@ -11,15 +11,33 @@ import { useApiResource } from "../lib/useApiResource";
 import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
 const CreateRequest = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState([{ product_id: "", quantity: "", unit_price: "" }]);
+  const [items, setItems] = useState([{ product_id: "", quantity: "" }]);
   const [supplierId, setSupplierId] = useState("");
+  const [sourceWarehouseId, setSourceWarehouseId] = useState("");
+  const [requestType, setRequestType] = useState("warehouse_request");
+  const [notes, setNotes] = useState("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const assignedWarehouse = getStoredAssignedWarehouse();
   const { data: products, loading: productsLoading, error: productsError } = useApiResource(() => api.products.list(), []);
-  const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useApiResource(() => api.suppliers.list(), []);
+  const { data: supplierUsers, loading: suppliersLoading, error: suppliersError } = useApiResource(() => api.supplierUsers.list(), []);
+  const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
+  const activeWarehouses = warehouses.filter((warehouse) => !warehouse.status || warehouse.status === "active");
+  const activeSuppliers = supplierUsers.filter((supplier) => (!supplier.status || supplier.status === "active") && (!supplier.role || supplier.role === "supplier"));
+  const selectableWarehouses = activeWarehouses.filter((warehouse) => warehouse._id !== assignedWarehouse.id);
+  const warehousePlaceholder = warehousesLoading
+    ? "Loading warehouses..."
+    : selectableWarehouses.length ? "Select warehouse..." : "No source warehouses available";
+  const supplierPlaceholder = suppliersLoading
+    ? "Loading suppliers..."
+    : activeSuppliers.length ? "Select supplier..." : "No active suppliers found";
+  const getProductPrice = (productId) => {
+    const product = products.find((entry) => entry._id === productId);
+    return Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
+  };
   const addItem = () => {
-    setItems([...items, { product_id: "", quantity: "", unit_price: "" }]);
+    setItems([...items, { product_id: "", quantity: "" }]);
   };
   const removeItem = (index) => {
     setItems(items.filter((_, i) => i !== index));
@@ -29,21 +47,39 @@ const CreateRequest = () => {
       (current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item)
     );
   };
+  const handleRequestTypeChange = (value) => {
+    setRequestType(value);
+    setSupplierId("");
+    setSourceWarehouseId("");
+    setMessage("");
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!assignedWarehouse.id) {
       setMessage("No warehouse assigned to this user. Please contact admin.");
       return;
     }
+    if (requestType === "supplier_request" && !supplierId) {
+      setMessage("Please select a supplier.");
+      return;
+    }
+    if (requestType === "warehouse_request" && !sourceWarehouseId) {
+      setMessage("Please select the source warehouse.");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
       await api.orders.create({
-        supplier_id: supplierId,
+        request_type: requestType,
+        supplier_id: requestType === "supplier_request" ? supplierId : undefined,
+        source_warehouse: requestType === "warehouse_request" ? sourceWarehouseId : undefined,
+        destination_warehouse: assignedWarehouse.id,
+        notes,
+        expected_delivery_date: expectedDeliveryDate || undefined,
         items: items.map((item) => ({
           product_id: item.product_id,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.unit_price || 0)
+          quantity: Number(item.quantity)
         }))
       });
       navigate("/user/requests");
@@ -62,16 +98,39 @@ const CreateRequest = () => {
             {message && <p className="text-sm text-[#D4183D]">{message}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
-    label="Supplier *"
+                label="Request Type"
+                value={requestType}
+                onChange={(event) => handleRequestTypeChange(event.target.value)}
+                options={[
+                  { value: "warehouse_request", label: "Warehouse Request" },
+                  { value: "supplier_request", label: "Supplier Request" }
+                ]}
+              />
+              {requestType === "supplier_request" ? <Select
+                label="Supplier *"
+                options={[
+                  { value: "", label: supplierPlaceholder, disabled: !activeSuppliers.length },
+                  ...activeSuppliers.map((supplier) => ({ value: supplier._id, label: supplier.name || supplier.email }))
+                ]}
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                disabled={suppliersLoading}
+                error={suppliersError ? "Failed to load suppliers" : ""}
+                required
+              /> : <>
+              <Select
+    label="Source Warehouse / Request From Warehouse *"
     options={[
-      { value: "", label: suppliersLoading ? "Loading suppliers..." : suppliersError || "Select supplier..." },
-      ...suppliers.map((supplier) => ({ value: supplier._id, label: supplier.name }))
+      { value: "", label: warehousePlaceholder, disabled: !selectableWarehouses.length },
+      ...selectableWarehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
     ]}
-    value={supplierId}
-    onChange={(e) => setSupplierId(e.target.value)}
-    disabled={suppliersLoading}
+    value={sourceWarehouseId}
+    onChange={(e) => setSourceWarehouseId(e.target.value)}
+    disabled={warehousesLoading}
+    error={warehousesError ? "Failed to load warehouses" : ""}
     required
   />
+              </>}
               <div>
                 <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Delivery Warehouse</p>
                 <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
@@ -84,7 +143,7 @@ const CreateRequest = () => {
               <label className="block mb-4 text-foreground font-semibold">Requested Items</label>
               <div className="space-y-4">
                 {items.map((item, index) => <div key={index} className="p-4 bg-background rounded-xl border border-border">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                       <div className="md:col-span-2">
                         <Select
     label="Product *"
@@ -110,15 +169,18 @@ const CreateRequest = () => {
     onChange={(e) => updateItem(index, "quantity", e.target.value)}
     required
   />
-                      <Input
-    label="Unit Price *"
-    type="number"
-    placeholder="0"
-    min="0"
-    value={item.unit_price}
-    onChange={(e) => updateItem(index, "unit_price", e.target.value)}
-    required
-  />
+                      <div>
+                        <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Unit Price</p>
+                        <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
+                          {getProductPrice(item.product_id) || "N/A"}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Total</p>
+                        <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
+                          {(Number(item.quantity || 0) * getProductPrice(item.product_id)).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
                     {items.length > 1 && <button
     type="button"
@@ -140,7 +202,16 @@ const CreateRequest = () => {
               <textarea
     className="w-full px-4 py-3 rounded-xl border-2 border-border bg-input-background text-foreground min-h-[120px] focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
     placeholder="Add any additional information or special requirements..."
+    value={notes}
+    onChange={(event) => setNotes(event.target.value)}
   />
+              {requestType === "supplier_request" && <Input
+                label="Expected Delivery Date"
+                type="date"
+                value={expectedDeliveryDate}
+                onChange={(event) => setExpectedDeliveryDate(event.target.value)}
+                className="mt-4"
+              />}
             </div>
 
             <div className="flex gap-4 pt-4">

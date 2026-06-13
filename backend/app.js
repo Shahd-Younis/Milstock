@@ -20,6 +20,8 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const consumptionRoutes = require('./routes/consumptionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const auditLogRoutes = require('./routes/auditLogRoutes');
+const providerRoutes = require('./routes/providerRoutes');
+const supplierOrderRoutes = require('./routes/supplierOrderRoutes');
 
 const app = express();
 
@@ -51,16 +53,20 @@ app.get('/', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/providers', providerRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/supplier', supplierOrderRoutes);
 app.use('/api/orders/items', orderItemRoutes);
 app.use('/api/order-items', orderItemRoutes);
 app.use('/api/inventory/product-warehouses', productWarehouseRoutes);
 app.use('/api/product-warehouses', productWarehouseRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/movements', inventoryRoutes);
 app.use('/api/consumption', consumptionRoutes);
+app.use('/api/consumptions', consumptionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 

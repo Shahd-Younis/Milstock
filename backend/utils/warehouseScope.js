@@ -21,13 +21,34 @@ const requireAssignedWarehouse = (req) => {
 };
 
 const buildWarehouseScopeFilter = async (req, Model) => {
-  if (req.user?.role !== 'unit') return {};
+  if (!['unit', 'supplier'].includes(req.user?.role)) return {};
+
+  if (req.user.role === 'supplier') {
+    if (Model.modelName === 'Order') {
+      return {
+        request_type: { $in: ['supplier_request', 'provider'] },
+        $or: [{ supplier_id: req.user._id }, { provider_id: req.user._id }],
+      };
+    }
+    if (Model.modelName === 'OrderItem') {
+      const Order = require('../models/orderModel');
+      const orderIds = await Order.find({
+        request_type: { $in: ['supplier_request', 'provider'] },
+        $or: [{ supplier_id: req.user._id }, { provider_id: req.user._id }],
+      }).distinct('_id');
+      return { order_id: { $in: orderIds } };
+    }
+    if (['InventoryMovement', 'Consumption', 'Product', 'ProductWarehouse', 'Warehouse'].includes(Model.modelName)) {
+      return { _id: null };
+    }
+    return {};
+  }
 
   const warehouseId = requireAssignedWarehouse(req);
   const warehouseObjectId = new mongoose.Types.ObjectId(warehouseId);
 
   if (['Warehouse'].includes(Model.modelName)) {
-    return { _id: warehouseObjectId };
+    return {};
   }
 
   if (['Product', 'ProductWarehouse', 'Consumption'].includes(Model.modelName)) {
@@ -46,7 +67,13 @@ const buildWarehouseScopeFilter = async (req, Model) => {
 
   if (Model.modelName === 'Order') {
     const userIds = await User.find({ assigned_warehouse: warehouseObjectId }).distinct('_id');
-    return { user_id: { $in: userIds } };
+    return {
+      $or: [
+        { user_id: req.user._id },
+        { requested_by: req.user._id },
+        { user_id: { $in: userIds } },
+      ],
+    };
   }
 
   if (Model.modelName === 'OrderItem') {
@@ -68,7 +95,21 @@ const buildWarehouseScopeFilter = async (req, Model) => {
 };
 
 const assertWarehouseAccess = async (req, Model, doc) => {
-  if (req.user?.role !== 'unit' || !doc) return;
+  if (!['unit', 'supplier'].includes(req.user?.role) || !doc) return;
+
+  if (req.user.role === 'supplier') {
+    if (Model.modelName === 'Order') {
+      const isSupplierRequest = ['supplier_request', 'provider'].includes(doc.request_type);
+      const isAssigned = [getId(doc.supplier_id), getId(doc.provider_id)].some((id) => String(id || '') === String(req.user._id));
+      if (!isSupplierRequest || !isAssigned) {
+        throw new AppError('You do not have permission to access this supplier order', 403);
+      }
+    }
+    if (['InventoryMovement', 'Consumption', 'Product', 'ProductWarehouse', 'Warehouse'].includes(Model.modelName)) {
+      throw new AppError('You do not have permission to access this warehouse data', 403);
+    }
+    return;
+  }
   const warehouseId = requireAssignedWarehouse(req);
 
   if (Model.modelName === 'Warehouse' && String(doc._id) !== warehouseId) {

@@ -51,7 +51,7 @@ const UserDetails = () => {
               ["Email", user.email, Mail],
               ["Employee Code", user.military_number, Shield],
               ["Phone", user.phone, Phone],
-              ["Role", user.role === "admin" ? "Admin" : "Kitchen / Unit", Shield],
+              ["Role", user.role === "admin" ? "Admin" : user.role === "supplier" ? "Supplier" : "Kitchen / Unit", Shield],
               ["Warehouse", getAssignedWarehouseName(user), MapPin],
               ["Created", formatDate(user.createdAt), UserIcon],
             ].map(([label, value, Icon]) => <div key={label} className="flex items-start gap-3">

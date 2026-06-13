@@ -6,8 +6,9 @@ const DashboardLayoutAr = () => {
   const location = useLocation();
   const isAdmin = location.pathname.includes("/ar/admin");
   const isUser = location.pathname.includes("/ar/user");
+  const isSupplier = location.pathname.includes("/ar/supplier");
   const storedRole = getStoredAuth().role;
-  const userRole = isAdmin ? "admin" : isUser ? "user" : storedRole || "user";
+  const userRole = isAdmin ? "admin" : isUser ? "user" : isSupplier ? "supplier" : storedRole || "user";
   return <div
     dir="rtl"
     className="flex min-h-screen bg-[#ECEEE2]"

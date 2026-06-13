@@ -107,7 +107,8 @@ const AddUserAr = () => {
               onChange={(event) => updateField("role", event.target.value)}
               options={[
                 { value: "unit", label: "مستخدم وحدة" },
-                { value: "admin", label: "مسؤول" }
+                { value: "admin", label: "مسؤول" },
+                { value: "supplier", label: "المورد" }
               ]}
               className="text-right"
             />

@@ -15,14 +15,9 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, Package, AlertCircle } from "lucide-react";
 import { StatCard } from "../components/StatCard";
-const consumptionData = [
-  { month: "Dec", food: 1200, medical: 450, equipment: 320, supplies: 280 },
-  { month: "Jan", food: 1350, medical: 520, equipment: 380, supplies: 310 },
-  { month: "Feb", food: 1180, medical: 480, equipment: 350, supplies: 290 },
-  { month: "Mar", food: 1420, medical: 550, equipment: 410, supplies: 340 },
-  { month: "Apr", food: 1280, medical: 510, equipment: 370, supplies: 300 },
-  { month: "May", food: 1390, medical: 540, equipment: 395, supplies: 325 }
-];
+import { api } from "../lib/api";
+import { useApiResource } from "../lib/useApiResource";
+const COLORS = ["#4B5B3A", "#6A7B4D", "#8A9B6D", "#C9A961"];
 const wasteData = [
   { month: "Dec", expired: 45, damaged: 12 },
   { month: "Jan", expired: 38, damaged: 8 },
@@ -30,13 +25,6 @@ const wasteData = [
   { month: "Mar", expired: 41, damaged: 9 },
   { month: "Apr", expired: 36, damaged: 11 },
   { month: "May", expired: 29, damaged: 7 }
-];
-const consumptionExportColumns = [
-  { key: "month", header: "Month" },
-  { key: "food", header: "Food" },
-  { key: "medical", header: "Dairy" },
-  { key: "equipment", header: "Bakery" },
-  { key: "supplies", header: "Pantry" }
 ];
 const wasteExportColumns = [
   { key: "month", header: "Month" },
@@ -56,6 +44,29 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 const ReportsPage = () => {
+  const { data: consumptions } = useApiResource(() => api.consumptions.list(), []);
+  const activeConsumptions = consumptions.filter((item) => item.status !== "cancelled");
+  const categoryNames = Array.from(new Set(activeConsumptions.map((item) => item.product_id?.category || "Uncategorized"))).slice(0, 4);
+  const chartKeys = categoryNames.map((name, index) => ({ key: `category${index}`, name, color: COLORS[index % COLORS.length] }));
+  const groupedConsumption = activeConsumptions.reduce((totals, item) => {
+    const date = new Date(item.consumption_date || item.createdAt);
+    const month = Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleDateString("en", { month: "short" });
+    const category = item.product_id?.category || "Uncategorized";
+    const categoryIndex = categoryNames.indexOf(category);
+    if (!totals[month]) totals[month] = { month };
+    if (categoryIndex >= 0) {
+      const key = `category${categoryIndex}`;
+      totals[month][key] = Number(totals[month][key] || 0) + Number(item.consumed_quantity || item.quantity || 0);
+    }
+    return totals;
+  }, {});
+  const consumptionData = Object.values(groupedConsumption).slice(-6);
+  const totalConsumption = activeConsumptions.reduce((sum, item) => sum + Number(item.consumed_quantity || item.quantity || 0), 0);
+  const avgMonthlyConsumption = consumptionData.length ? Math.round(totalConsumption / consumptionData.length) : 0;
+  const consumptionExportColumns = [
+    { key: "month", header: "Month" },
+    ...chartKeys.map((item) => ({ key: item.key, header: item.name })),
+  ];
   return <div className="p-6 lg:p-8 space-y-8">
       <PageHeader
     title="Reports & Analytics"
@@ -78,7 +89,7 @@ const ReportsPage = () => {
     /* KPI Stats */
   }
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard title="Avg Monthly Consumption" value="3,450" icon={Package} trend={{ value: "+8% vs last quarter", isPositive: true }} color="primary" />
+        <StatCard title="Avg Monthly Consumption" value={avgMonthlyConsumption.toLocaleString()} icon={Package} trend={{ value: `${activeConsumptions.length} records`, isPositive: true }} color="primary" />
         <StatCard title="Waste Reduction" value="15%" icon={TrendingDown} trend={{ value: "Since last month", isPositive: true }} color="success" />
         <StatCard title="Supply Efficiency" value="94.2%" icon={TrendingUp} trend={{ value: "+2.1% improvement", isPositive: true }} color="primary" />
         <StatCard title="Critical Shortages" value="3" icon={AlertCircle} trend={{ value: "-2 from last week", isPositive: true }} color="warning" />
@@ -101,10 +112,7 @@ const ReportsPage = () => {
                 <YAxis key="rpt-bc-yaxis" stroke="#5A6B50" tick={{ fontSize: 11, fill: "#5A6B50" }} axisLine={false} tickLine={false} width={40} />
                 <Tooltip key="rpt-bc-tooltip" content={<CustomTooltip />} />
                 <Legend key="rpt-bc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5A6B50" }} />
-                <Bar key="rpt-bc-food" dataKey="food" fill="#4B5B3A" name="Food" radius={[3, 3, 0, 0]} />
-                <Bar key="rpt-bc-medical" dataKey="medical" fill="#6A7B4D" name="Dairy" radius={[3, 3, 0, 0]} />
-                <Bar key="rpt-bc-equipment" dataKey="equipment" fill="#8A9B6D" name="Bakery" radius={[3, 3, 0, 0]} />
-                <Bar key="rpt-bc-supplies" dataKey="supplies" fill="#C9A961" name="Pantry" radius={[3, 3, 0, 0]} />
+                {chartKeys.map((item) => <Bar key={`rpt-bc-${item.key}`} dataKey={item.key} fill={item.color} name={item.name} radius={[3, 3, 0, 0]} />)}
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

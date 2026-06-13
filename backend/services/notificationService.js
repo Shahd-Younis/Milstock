@@ -3,7 +3,10 @@ const Notification = require('../models/notificationModel');
 const createNotification = (payload) => Notification.create(payload);
 
 const createLowStockNotification = async (product, userId) => {
-  if (product.quantity > product.min_quantity) return null;
+  const settings = product.alert_settings || {};
+  const lowStockThreshold = Number(settings.low_stock_threshold ?? product.min_quantity ?? 0);
+  const criticalStockThreshold = Number(settings.critical_stock_threshold ?? 0);
+  if (!lowStockThreshold || product.quantity > lowStockThreshold) return null;
   const notificationKey = `low_stock:${product._id}`;
 
   const existing = await Notification.findOne({
@@ -16,7 +19,7 @@ const createLowStockNotification = async (product, userId) => {
   return createNotification({
     title: 'Low Stock Alert',
     type: 'low_stock',
-    severity: 'warning',
+    severity: criticalStockThreshold && product.quantity <= criticalStockThreshold ? 'critical' : 'warning',
     message: `The stock level for ${product.name} is below the configured minimum threshold.`,
     user_id: userId,
     item_id: product._id,
@@ -29,7 +32,8 @@ const createLowStockNotification = async (product, userId) => {
       item_id: product._id,
       item_name: product.name,
       current_stock: product.quantity,
-      minimum_stock: product.min_quantity,
+      minimum_stock: lowStockThreshold,
+      critical_stock_threshold: criticalStockThreshold,
       unit: product.unit,
     },
   });

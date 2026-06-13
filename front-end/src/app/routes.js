@@ -3,11 +3,17 @@ import { createElement } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { UserDashboard } from "./pages/UserDashboard";
+import { SupplierDashboard } from "./pages/SupplierDashboard";
+import { SupplierOrders } from "./pages/SupplierOrders";
 import { InventoryList } from "./pages/InventoryList";
 import { ItemDetails } from "./pages/ItemDetails";
 import { AddInventoryItem } from "./pages/AddInventoryItem";
 import { MovementLogs } from "./pages/MovementLogs";
+import { ConsumptionList } from "./pages/ConsumptionList";
+import { CreateConsumption } from "./pages/CreateConsumption";
+import { ConsumptionDetails } from "./pages/ConsumptionDetails";
 import { WarehouseLocations } from "./pages/WarehouseLocations";
+import { WarehouseDashboard } from "./pages/WarehouseDashboard";
 import { CreateRequest } from "./pages/CreateRequest";
 import { RequestsList } from "./pages/RequestsList";
 import { RequestDetails } from "./pages/RequestDetails";
@@ -32,8 +38,12 @@ import { InventoryListAr } from "./pages/ar/InventoryListAr";
 import { ItemDetailsAr } from "./pages/ar/ItemDetailsAr";
 import { AddInventoryItemAr } from "./pages/ar/AddInventoryItemAr";
 import { MovementLogsAr } from "./pages/ar/MovementLogsAr";
+import { ConsumptionListAr } from "./pages/ar/ConsumptionListAr";
+import { CreateConsumptionAr } from "./pages/ar/CreateConsumptionAr";
+import { ConsumptionDetailsAr } from "./pages/ar/ConsumptionDetailsAr";
 import { ExpirationMonitorAr } from "./pages/ar/ExpirationMonitorAr";
 import { WarehouseLocationsAr } from "./pages/ar/WarehouseLocationsAr";
+import { WarehouseDashboardAr } from "./pages/ar/WarehouseDashboardAr";
 import { RequestsListAr } from "./pages/ar/RequestsListAr";
 import { CreateRequestAr } from "./pages/ar/CreateRequestAr";
 import { RequestDetailsAr } from "./pages/ar/RequestDetailsAr";
@@ -52,9 +62,11 @@ import { DashboardLayoutAr } from "./components/ar/DashboardLayoutAr";
 import { LanguageSelect } from "./pages/LanguageSelect";
 const AdminLayout = () => createElement(ProtectedRoute, { allowedRole: "admin" }, createElement(DashboardLayout));
 const UserLayout = () => createElement(ProtectedRoute, { allowedRole: "user" }, createElement(DashboardLayout));
+const supplierLayout = () => createElement(ProtectedRoute, { allowedRole: "supplier" }, createElement(DashboardLayout));
 const ProfileLayout = () => createElement(ProtectedRoute, null, createElement(DashboardLayout));
 const AdminLayoutAr = () => createElement(ProtectedRoute, { allowedRole: "admin" }, createElement(DashboardLayoutAr));
 const UserLayoutAr = () => createElement(ProtectedRoute, { allowedRole: "user" }, createElement(DashboardLayoutAr));
+const supplierLayoutAr = () => createElement(ProtectedRoute, { allowedRole: "supplier" }, createElement(DashboardLayoutAr));
 const ProfileLayoutAr = () => createElement(ProtectedRoute, null, createElement(DashboardLayoutAr));
 const router = createBrowserRouter([
   // ── Root: language selector ────────────────────────
@@ -70,8 +82,11 @@ const router = createBrowserRouter([
       { path: "inventory", Component: InventoryList },
       { path: "inventory/add", Component: AddInventoryItem },
       { path: "inventory/logs", Component: MovementLogs },
+      { path: "consumptions", Component: ConsumptionList },
+      { path: "consumptions/:id", Component: ConsumptionDetails },
       { path: "inventory/expiration", Component: ExpirationMonitor },
       { path: "inventory/warehouses", Component: WarehouseLocations },
+      { path: "warehouses/:id/dashboard", Component: WarehouseDashboard },
       { path: "inventory/:id", Component: ItemDetails },
       { path: "inventory/:id/edit", Component: AddInventoryItem },
       { path: "requests", Component: RequestsList },
@@ -93,9 +108,22 @@ const router = createBrowserRouter([
     children: [
       { path: "dashboard", Component: UserDashboard },
       { path: "inventory", Component: InventoryList },
+      { path: "consumptions", Component: ConsumptionList },
+      { path: "consumptions/new", Component: CreateConsumption },
+      { path: "consumptions/:id", Component: ConsumptionDetails },
       { path: "requests", Component: RequestsList },
       { path: "requests/create", Component: CreateRequest },
       { path: "requests/:id", Component: RequestDetails },
+      { path: "notifications", Component: NotificationsPage }
+    ]
+  },
+  {
+    path: "/supplier",
+    Component: supplierLayout,
+    children: [
+      { path: "dashboard", Component: SupplierDashboard },
+      { path: "orders", Component: SupplierOrders },
+      { path: "orders/:id", Component: RequestDetails },
       { path: "notifications", Component: NotificationsPage }
     ]
   },
@@ -117,8 +145,11 @@ const router = createBrowserRouter([
       { path: "inventory", Component: InventoryListAr },
       { path: "inventory/add", Component: AddInventoryItemAr },
       { path: "inventory/logs", Component: MovementLogsAr },
+      { path: "consumptions", Component: ConsumptionListAr },
+      { path: "consumptions/:id", Component: ConsumptionDetailsAr },
       { path: "inventory/expiration", Component: ExpirationMonitorAr },
       { path: "inventory/warehouses", Component: WarehouseLocationsAr },
+      { path: "warehouses/:id/dashboard", Component: WarehouseDashboardAr },
       { path: "inventory/:id", Component: ItemDetailsAr },
       { path: "inventory/:id/edit", Component: AddInventoryItemAr },
       { path: "requests", Component: RequestsListAr },
@@ -141,9 +172,22 @@ const router = createBrowserRouter([
     children: [
       { path: "dashboard", Component: UserDashboardAr },
       { path: "inventory", Component: InventoryListAr },
+      { path: "consumptions", Component: ConsumptionListAr },
+      { path: "consumptions/new", Component: CreateConsumptionAr },
+      { path: "consumptions/:id", Component: ConsumptionDetailsAr },
       { path: "requests", Component: RequestsListAr },
       { path: "requests/create", Component: CreateRequestAr },
       { path: "requests/:id", Component: RequestDetailsAr },
+      { path: "notifications", Component: NotificationsPageAr }
+    ]
+  },
+  {
+    path: "/ar/supplier",
+    Component: supplierLayoutAr,
+    children: [
+      { path: "dashboard", Component: SupplierDashboard },
+      { path: "orders", Component: SupplierOrders },
+      { path: "orders/:id", Component: RequestDetails },
       { path: "notifications", Component: NotificationsPageAr }
     ]
   },

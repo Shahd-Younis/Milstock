@@ -37,6 +37,7 @@ const RequestsListAr = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const { data: orders, loading: ordersLoading, error: ordersError } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
+  const warehouseFilter = new URLSearchParams(location.search).get("warehouse_id");
 
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
@@ -55,7 +56,9 @@ const RequestsListAr = () => {
       status: order.status,
       requestedDate: formatDate(order.date),
       requestedBy: order.user_id?.name || "غير محدد",
-      supplier: order.supplier_id?.name || "غير محدد"
+      supplier: order.supplier_id?.name || "غير محدد",
+      sourceWarehouseId: order.source_warehouse?._id || order.source_warehouse || "",
+      destinationWarehouseId: order.destination_warehouse?._id || order.destination_warehouse || ""
     };
   });
 
@@ -67,7 +70,8 @@ const RequestsListAr = () => {
       String(request.item ?? "").toLowerCase().includes(search) ||
       String(request.supplier ?? "").toLowerCase().includes(search);
     const matchStatus = statusFilter === "all" || request.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchWarehouse = !warehouseFilter || [request.sourceWarehouseId, request.destinationWarehouseId].some((warehouseId) => String(warehouseId || "") === String(warehouseFilter));
+    return matchSearch && matchStatus && matchWarehouse;
   });
 
   const exportColumns = [

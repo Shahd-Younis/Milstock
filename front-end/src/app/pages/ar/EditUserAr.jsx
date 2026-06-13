@@ -77,7 +77,7 @@ const EditUserAr = () => {
             <Input label="البريد الإلكتروني" type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} required className="text-right" />
             <Input label="كود الموظف" value={form.military_number} onChange={(event) => updateField("military_number", event.target.value)} required className="text-right" />
             <Input label="الهاتف" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} required className="text-right" />
-            <Select label="الدور" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "مستخدم وحدة" }, { value: "admin", label: "مسؤول" }]} className="text-right" />
+            <Select label="الدور" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "مستخدم وحدة" }, { value: "admin", label: "مسؤول" }, { value: "supplier", label: "??????" }]} className="text-right" />
             <Select label="الحالة" value={form.status} onChange={(event) => updateField("status", event.target.value)} options={[{ value: "active", label: "نشط" }, { value: "inactive", label: "غير نشط" }]} className="text-right" />
             <Select
               label="المخزن المسؤول عنه"

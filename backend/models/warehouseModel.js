@@ -8,15 +8,31 @@ const warehouseSchema = new mongoose.Schema(
       trim: true,
       minlength: 2,
     },
+    code: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+    },
     location: {
       type: String,
       required: true,
       trim: true,
     },
+    capacity: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active',
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      default: null,
     },
   },
   {

@@ -7,6 +7,7 @@ const {
   getInventoryMovement,
   createInventoryMovement,
   updateInventoryMovement,
+  completeTransfer,
   deleteInventoryMovement,
 } = require('../controllers/inventoryMovementController');
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.use(authenticate);
 
+router.patch('/complete-transfer/:orderId', authorize('admin'), completeTransfer);
 router
   .route('/')
   .get(getInventoryMovements)

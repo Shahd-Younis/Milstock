@@ -3,8 +3,11 @@ const { authenticate, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const {
   productRules,
+  alertSettingsRules,
   getProducts,
   getProduct,
+  getProductAlertSettings,
+  updateProductAlertSettings,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -15,6 +18,10 @@ const router = express.Router();
 router.use(authenticate);
 
 router.route('/').get(getProducts).post(authorize('admin'), productRules, validate, createProduct);
+router
+  .route('/:id/alert-settings')
+  .get(getProductAlertSettings)
+  .patch(authorize('admin'), alertSettingsRules, validate, updateProductAlertSettings);
 router
   .route('/:id')
   .get(getProduct)

@@ -23,6 +23,25 @@ const isItemNotification = (notification) => {
   return Boolean(getNotificationItemId(notification)) || types.includes(notification.type);
 };
 
+const getNotificationRequestId = (notification) => {
+  const requestId =
+    notification.order_id?._id ||
+    notification.order_id ||
+    notification.request_id?._id ||
+    notification.request_id ||
+    notification.metadata?.order_id ||
+    notification.metadata?.orderId ||
+    notification.metadata?.request_id ||
+    notification.metadata?.requestId ||
+    (["order", "request", "orders", "requests"].includes(notification.entity_type) ? notification.entity_id : null);
+  return requestId ? String(requestId) : "";
+};
+
+const isRequestNotification = (notification) => {
+  const type = String(notification.type || "");
+  return Boolean(getNotificationRequestId(notification)) || type.includes("order") || type.includes("request");
+};
+
 const getItemName = (notification) =>
   notification.item_id?.name ||
   notification.item?.name ||
@@ -72,7 +91,7 @@ const getCardStyle = (notification) => {
       badge: "warning",
     };
   }
-  if (notification.type?.includes("order")) {
+  if (notification.type?.includes("order") || notification.type?.includes("request")) {
     return {
       icon: CheckCircle,
       iconClass: "bg-[#5B8A4A]/10 text-[#5B8A4A]",
@@ -115,6 +134,20 @@ const NotificationsPage = () => {
     const itemId = getNotificationItemId(notification);
     if (!itemId) return;
     if (isAdminPath) navigate(`/admin/inventory/${itemId}`);
+  };
+
+  const viewRequest = (notification) => {
+    const requestId = getNotificationRequestId(notification);
+    if (!requestId) return;
+    if (location.pathname.startsWith("/supplier")) {
+      navigate(`/supplier/orders/${requestId}`);
+      return;
+    }
+    if (location.pathname.startsWith("/user")) {
+      navigate(`/user/requests/${requestId}`);
+      return;
+    }
+    navigate(`/admin/requests/${requestId}`);
   };
 
   return <div className="p-6 lg:p-8 space-y-6">
@@ -173,13 +206,21 @@ const NotificationsPage = () => {
         const style = getCardStyle(notification);
         const Icon = style.icon;
         const itemId = getNotificationItemId(notification);
+        const requestId = getNotificationRequestId(notification);
         const itemName = getItemName(notification);
         const canOpenItem = Boolean(itemId && isAdminPath && isItemNotification(notification));
+        const canOpenRequest = Boolean(requestId && isRequestNotification(notification));
+        const canOpenNotification = canOpenItem || canOpenRequest;
         const handleOpen = () => {
+          if (!read) markOneAsRead(notification._id);
+          if (canOpenRequest) {
+            viewRequest(notification);
+            return;
+          }
           if (canOpenItem) viewItem(notification);
         };
         const handleKeyDown = (event) => {
-          if (!canOpenItem) return;
+          if (!canOpenNotification) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             handleOpen();
@@ -187,11 +228,11 @@ const NotificationsPage = () => {
         };
         return <article
           key={notification._id}
-          role={canOpenItem ? "button" : void 0}
-          tabIndex={canOpenItem ? 0 : void 0}
+          role={canOpenNotification ? "button" : void 0}
+          tabIndex={canOpenNotification ? 0 : void 0}
           onClick={handleOpen}
           onKeyDown={handleKeyDown}
-          className={`rounded-2xl border border-[#4E4631]/10 border-l-4 ${style.border} p-4 shadow-sm transition-all ${canOpenItem ? "cursor-pointer hover:bg-[#FBFCF5] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30" : ""} ${read ? "bg-white opacity-75" : "bg-[#FBFCF5] ring-1 ring-[#4B5B3A]/10"}`}
+          className={`rounded-2xl border border-[#4E4631]/10 border-l-4 ${style.border} p-4 shadow-sm transition-all ${canOpenNotification ? "cursor-pointer hover:bg-[#FBFCF5] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30" : ""} ${read ? "bg-white opacity-75" : "bg-[#FBFCF5] ring-1 ring-[#4B5B3A]/10"}`}
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${style.iconClass}`}>

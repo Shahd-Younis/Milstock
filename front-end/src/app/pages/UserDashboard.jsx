@@ -46,7 +46,7 @@ const UserDashboard = () => {
       return totals;
     }, {})
   ).map(([category, items]) => {
-    const hasLowStock = products.some((product) => product.category === category && getProductStatus(product) === "low-stock");
+    const hasLowStock = products.some((product) => product.category === category && ["low-stock", "critical"].includes(getProductStatus(product)));
     return { category, items, status: hasLowStock ? "Low Stock" : "In Stock" };
   });
   const pendingRequests = orders.filter((order) => order.status === "pending").length;

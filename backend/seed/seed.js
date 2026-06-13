@@ -80,6 +80,15 @@ const run = async () => {
     assigned_warehouse_name: warehouses[0].name,
   });
 
+  const supplierUser = await User.create({
+    name: 'Prime Food Supplier',
+    email: 'supplier@milstock.local',
+    password: hashedPassword,
+    phone: '+966555000400',
+    military_number: 'EMP-0301',
+    role: 'supplier',
+  });
+
   const suppliers = await Supplier.insertMany([
     { name: 'Golden Grain Foods', phone: '+966555100001' },
     { name: 'Fresh Valley Produce', phone: '+966555100002' },

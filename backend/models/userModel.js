@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: ['admin', 'unit'],
+      enum: ['admin', 'unit', 'supplier'],
       default: 'unit',
     },
     status: {

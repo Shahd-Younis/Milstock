@@ -94,7 +94,7 @@ const EditUser = () => {
             <Input label="Email" type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} required />
             <Input label="Employee Code" value={form.military_number} onChange={(event) => updateField("military_number", event.target.value)} required />
             <Input label="Phone" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} required />
-            <Select label="Role" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "Kitchen / Unit" }, { value: "admin", label: "Admin" }]} />
+            <Select label="Role" value={form.role} onChange={(event) => updateField("role", event.target.value)} options={[{ value: "unit", label: "Kitchen / Unit" }, { value: "admin", label: "Admin" }, { value: "supplier", label: "Supplier" }]} />
             <Select label="Status" value={form.status} onChange={(event) => updateField("status", event.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
             <Select
               label="Assigned Warehouse"

@@ -4,6 +4,7 @@ const TOKEN_STORAGE_KEY = "milstock_token";
 const normalizeRole = (role) => {
   const normalized = String(role || "").toLowerCase();
   if (normalized === "admin") return "admin";
+  if (["supplier", "provider"].includes(normalized)) return "supplier";
   if (["unit", "kitchen", "user"].includes(normalized)) return "user";
   return "";
 };
@@ -29,7 +30,10 @@ const clearStoredAuth = () => {
 
 const getRoleHomePath = (role, isArabic = false) => {
   const prefix = isArabic ? "/ar" : "";
-  return normalizeRole(role) === "admin" ? `${prefix}/admin/dashboard` : `${prefix}/user/dashboard`;
+  const normalized = normalizeRole(role);
+  if (normalized === "admin") return `${prefix}/admin/dashboard`;
+  if (normalized === "supplier") return `${prefix}/supplier/dashboard`;
+  return `${prefix}/user/dashboard`;
 };
 
 const getLoginPath = (isArabic = false) => isArabic ? "/ar/login" : "/login";

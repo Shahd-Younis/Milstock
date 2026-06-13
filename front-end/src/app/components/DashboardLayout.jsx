@@ -7,8 +7,9 @@ const DashboardLayout = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const isUser = location.pathname.startsWith("/user");
+  const isSupplier = location.pathname.startsWith("/supplier");
   const storedRole = getStoredAuth().role;
-  const userRole = isAdmin ? "admin" : isUser ? "user" : storedRole || "user";
+  const userRole = isAdmin ? "admin" : isUser ? "user" : isSupplier ? "supplier" : storedRole || "user";
   return <div dir="ltr" className="flex min-h-screen bg-[#ECEEE2]">
       {
     /* Desktop sidebar */

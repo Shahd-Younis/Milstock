@@ -18,9 +18,21 @@ const {
 const router = express.Router();
 
 router.use(authenticate);
+
+router.get('/', (req, res, next) => {
+  if (req.query.role === 'supplier') {
+    req.query.status = req.query.status || 'active';
+    return getUsers(req, res, next);
+  }
+  return authorize('admin')(req, res, (error) => {
+    if (error) return next(error);
+    return getUsers(req, res, next);
+  });
+});
+
 router.use(authorize('admin'));
 
-router.route('/').get(getUsers).post(createUserRules, validate, createUser);
+router.route('/').post(createUserRules, validate, createUser);
 router.patch('/:id/status', statusRules, validate, updateUserStatus);
 router.patch('/:id/password', passwordRules, validate, resetUserPassword);
 router.route('/:id').get(getUser).put(userRules, validate, updateUser).patch(userRules, validate, updateUser).delete(deleteUser);

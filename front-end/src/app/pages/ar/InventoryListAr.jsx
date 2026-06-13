@@ -13,6 +13,7 @@ import { formatDate, getProductStatus, uniqueOptions } from "../../lib/format";
 
 const statusLabels = {
   "in-stock": "متوفر",
+  critical: "حرج",
   "low-stock": "مخزون منخفض",
   "out-of-stock": "نفد المخزون",
   "expiring-soon": "ينتهي قريباً"
@@ -20,6 +21,7 @@ const statusLabels = {
 
 const variantMap = {
   "in-stock": "success",
+  critical: "danger",
   "low-stock": "warning",
   "out-of-stock": "danger",
   "expiring-soon": "warning"
@@ -34,6 +36,7 @@ const InventoryListAr = () => {
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
   const query = new URLSearchParams(location.search);
   const urlFilter = query.get("filter");
+  const warehouseFilter = query.get("warehouse_id");
 
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
@@ -63,6 +66,7 @@ const InventoryListAr = () => {
       expirationRaw: product.expiration_date || product.expiry_date,
       expirationDate: formatDate(product.expiration_date || product.expiry_date),
       warehouse: product.warehouse_id?.name || "غير محدد",
+      warehouseId: product.warehouse_id?._id || product.warehouse_id || "",
       storageSection: product.storage_section || "غير محدد",
       status
     };
@@ -74,7 +78,8 @@ const InventoryListAr = () => {
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
-    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter;
+    const matchesWarehouse = !warehouseFilter || String(item.warehouseId) === String(warehouseFilter);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse;
   });
 
   const columns = [
@@ -156,6 +161,7 @@ const InventoryListAr = () => {
           options={[
             { value: "all", label: "جميع الحالات" },
             { value: "in-stock", label: "متوفر" },
+            { value: "critical", label: "حرج" },
             { value: "low-stock", label: "مخزون منخفض" },
             { value: "expiring-soon", label: "ينتهي قريباً" },
             { value: "out-of-stock", label: "نفد المخزون" }

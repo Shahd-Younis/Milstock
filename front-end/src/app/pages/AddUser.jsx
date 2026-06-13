@@ -142,7 +142,8 @@ const AddUser = () => {
               onChange={(event) => updateField("role", event.target.value)}
               options={[
                 { value: "unit", label: "Kitchen / Unit" },
-                { value: "admin", label: "Admin" }
+                { value: "admin", label: "Admin" },
+                { value: "supplier", label: "Supplier" }
               ]}
             />
             <Select

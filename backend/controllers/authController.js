@@ -25,7 +25,7 @@ const registerRules = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').notEmpty().withMessage('Phone is required'),
   body('military_number').notEmpty().withMessage('Employee code is required'),
-  body('role').optional().isIn(['admin', 'unit']).withMessage('Role must be admin or unit'),
+  body('role').optional().isIn(['admin', 'unit', 'supplier']).withMessage('Role must be admin, unit, or supplier'),
 ];
 
 const loginRules = [

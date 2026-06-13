@@ -19,6 +19,7 @@ const ItemDetails = () => {
   const [deleteError, setDeleteError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
+  const { data: productWarehouseRows } = useApiResource(() => api.productWarehouses.list(), []);
   const product = useMemo(() => products.find((entry) => entry._id === id), [id, products]);
 
   if (loading) {
@@ -36,9 +37,80 @@ const ItemDetails = () => {
   }
 
   const expirationDate = product.expiration_date || product.expiry_date;
+  const normalizeIdentity = (value) => String(value || "").trim().toLowerCase();
+  const sameItemProducts = products.filter((entry) =>
+    normalizeIdentity(entry.name) === normalizeIdentity(product.name)
+    && normalizeIdentity(entry.unit) === normalizeIdentity(product.unit)
+    && normalizeIdentity(entry.category) === normalizeIdentity(product.category)
+  );
+  const sameItemProductIds = new Set(sameItemProducts.map((entry) => String(entry._id)));
+  const mergeWarehouseRows = (rows) => {
+    const byWarehouse = new Map();
+    rows.forEach((warehouse) => {
+      const key = String(warehouse.id || warehouse._id || warehouse.name || "");
+      const existing = byWarehouse.get(key);
+      if (existing) {
+        existing.quantity += Number(warehouse.quantity || 0);
+      } else {
+        byWarehouse.set(key, { ...warehouse, quantity: Number(warehouse.quantity || 0) });
+      }
+    });
+    return Array.from(byWarehouse.values());
+  };
+  const rowWarehouseStock = mergeWarehouseRows(productWarehouseRows
+    .filter((row) => sameItemProductIds.has(String(row.product_id?._id || row.product_id || "")))
+    .map((row) => {
+      const rowProduct = row.product_id && typeof row.product_id === "object" ? row.product_id : sameItemProducts.find((entry) => entry._id === (row.product_id?._id || row.product_id));
+      return {
+        id: row.warehouse_id?._id || row.warehouse_id,
+        _id: row.warehouse_id?._id || row.warehouse_id,
+        name: row.warehouse_id?.name || rowProduct?.warehouse_id?.name || rowProduct?.warehouse_name || "Unassigned",
+        code: row.warehouse_id?.code || rowProduct?.warehouse_id?.code || "",
+        location: row.warehouse_id?.location || rowProduct?.warehouse_id?.location || "",
+        quantity: Number(row.quantity || 0),
+        unit: rowProduct?.unit || product.unit,
+      };
+    }));
+  const sameItemProductStock = mergeWarehouseRows(sameItemProducts
+    .filter((entry) => entry.warehouse_id || entry.warehouse_name)
+    .map((entry) => ({
+      id: entry.warehouse_id?._id || entry.warehouse_id || entry.warehouse_name,
+      _id: entry.warehouse_id?._id || entry.warehouse_id,
+      name: entry.warehouse_id?.name || entry.warehouse_name || "Unassigned",
+      code: entry.warehouse_id?.code || "",
+      location: entry.warehouse_id?.location || "",
+      quantity: Number(entry.quantity || 0),
+      unit: entry.unit,
+    })));
+  const hasWarehouseArray = Array.isArray(product.warehouses);
+  const warehouseStock = rowWarehouseStock.length
+    ? rowWarehouseStock
+    : sameItemProductStock.length
+    ? sameItemProductStock
+    : hasWarehouseArray
+    ? product.warehouses
+    : (product.warehouse_id || product.warehouse_name ? [{
+      id: product.warehouse_id?._id || product.warehouse_id || "legacy-warehouse",
+      name: product.warehouse_id?.name || product.warehouse_name || "Unassigned",
+      code: product.warehouse_id?.code,
+      location: product.warehouse_id?.location,
+      quantity: product.quantity ?? 0,
+      unit: product.unit,
+    }] : []);
+  const totalStock = warehouseStock.length
+    ? warehouseStock.reduce((sum, warehouse) => sum + Number(warehouse.quantity || 0), 0)
+    : Number(product.totalStock ?? product.quantity ?? 0);
+  const primaryWarehouse = warehouseStock[0] || {
+    name: product.warehouse_id?.name || product.warehouse_name || "Unassigned",
+    code: product.warehouse_id?.code,
+    location: product.warehouse_id?.location,
+    quantity: product.quantity ?? 0,
+    unit: product.unit,
+  };
   const status = getProductStatus(product);
   const statusVariant = {
     "in-stock": "success",
+    critical: "danger",
     "low-stock": "warning",
     "out-of-stock": "danger",
     "expiring-soon": "warning"
@@ -79,7 +151,7 @@ const ItemDetails = () => {
           <Package className="w-8 h-8 text-[#6A7B4D]" />
           <div>
             <p className="text-sm text-muted-foreground">Current Stock</p>
-            <p className="text-3xl font-bold text-foreground">{product.quantity ?? 0}</p>
+            <p className="text-3xl font-bold text-foreground">{totalStock}</p>
             <p className="text-sm text-muted-foreground">{product.unit || ""}</p>
           </div>
         </div>
@@ -89,8 +161,8 @@ const ItemDetails = () => {
           <MapPin className="w-8 h-8 text-[#6A7B4D]" />
           <div>
             <p className="text-sm text-muted-foreground">Warehouse</p>
-            <p className="text-2xl font-bold text-foreground">{product.warehouse_id?.name || product.warehouse_name || "Unassigned"}</p>
-            <p className="text-sm text-muted-foreground">{product.storage_section || "No storage section"}</p>
+            <p className="text-2xl font-bold text-foreground">{warehouseStock.length > 1 ? `${warehouseStock.length} warehouses` : primaryWarehouse.name}</p>
+            <p className="text-sm text-muted-foreground">{warehouseStock.length > 1 ? "See stock distribution below" : primaryWarehouse.location || product.storage_section || "No storage section"}</p>
           </div>
         </div>
       </Card>
@@ -114,11 +186,12 @@ const ItemDetails = () => {
               {[
                 ["Category", product.category],
                 ["Unit", product.unit],
-                ["Low Stock Threshold", product.min_quantity],
+                ["Low Stock Threshold", product.alert_settings?.low_stock_threshold ?? product.min_quantity],
+                ["Critical Stock Threshold", product.alert_settings?.critical_stock_threshold ?? 0],
                 ["Manufacturing Date", formatDate(product.manufacturing_date)],
                 ["Batch Number", product.batch_number],
                 ["Serial Number", product.serial_number],
-                ["Warehouse Location", product.warehouse_id?.location],
+                ["Warehouse Location", warehouseStock.length > 1 ? `${warehouseStock.length} warehouse locations` : primaryWarehouse.location],
                 ["Storage Section", product.storage_section]
               ].map(([label, value]) => <div key={label}>
                 <p className="text-sm text-muted-foreground mb-1">{label}</p>
@@ -127,6 +200,36 @@ const ItemDetails = () => {
             </div>
           </CardContent>
         </Card>
+
+        {(warehouseStock.length !== 1) && <Card>
+          <CardHeader><CardTitle>Stock by Warehouse</CardTitle></CardHeader>
+          <CardContent>
+            {warehouseStock.length === 0 ? <div className="rounded-xl border border-[#4E4631]/10 bg-[#ECEEE2]/50 px-4 py-6 text-center text-sm text-[#5A6B50]">
+              No warehouse stock available
+            </div> : <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#4E4631]/10 text-left text-[#5A6B50]">
+                    <th className="py-2 pr-3">Warehouse</th>
+                    <th className="py-2 pr-3">Code / Location</th>
+                    <th className="py-2 pr-3">Stock Quantity</th>
+                    <th className="py-2 pr-3">Unit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {warehouseStock.map((warehouse) => <tr key={warehouse.id || warehouse._id || warehouse.name} className="border-b border-[#4E4631]/5">
+                    <td className="py-2 pr-3 font-medium text-[#2E3A24]">{warehouse.name || "Unnamed warehouse"}</td>
+                    <td className="py-2 pr-3 text-[#5A6B50]">
+                      {[warehouse.code, warehouse.location].filter(Boolean).join(" / ") || "N/A"}
+                    </td>
+                    <td className="py-2 pr-3 font-semibold text-[#2E3A24]">{warehouse.quantity ?? 0}</td>
+                    <td className="py-2 pr-3">{warehouse.unit || product.unit || "N/A"}</td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>}
+          </CardContent>
+        </Card>}
 
         <Card>
           <CardHeader><CardTitle>Additional Details</CardTitle></CardHeader>

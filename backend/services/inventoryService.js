@@ -64,7 +64,12 @@ const adjustStock = async ({
   );
 
   if (product && user_id) {
-    await createLowStockNotification(product, user_id);
+    const productForWarehouseStock = product.toObject ? product.toObject() : product;
+    await createLowStockNotification({
+      ...productForWarehouseStock,
+      quantity: stockRow.quantity,
+      warehouse_id,
+    }, user_id);
   }
 
   return product;

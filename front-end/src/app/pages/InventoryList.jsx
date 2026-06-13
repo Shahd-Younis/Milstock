@@ -20,6 +20,7 @@ const InventoryList = () => {
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
   const query = new URLSearchParams(location.search);
   const urlFilter = query.get("filter");
+  const warehouseFilter = query.get("warehouse_id");
 
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
@@ -46,6 +47,7 @@ const InventoryList = () => {
     expirationRaw: product.expiration_date || product.expiry_date,
     expirationDate: formatDate(product.expiration_date || product.expiry_date),
     warehouse: product.warehouse_id?.name || "Unassigned",
+    warehouseId: product.warehouse_id?._id || product.warehouse_id || "",
     storageSection: product.storage_section || "N/A",
     status: getProductStatus(product)
   }));
@@ -55,7 +57,8 @@ const InventoryList = () => {
     const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
-    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter;
+    const matchesWarehouse = !warehouseFilter || String(item.warehouseId) === String(warehouseFilter);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse;
   });
   const columns = [
     { key: "id", header: "Item ID" },
@@ -81,6 +84,7 @@ const InventoryList = () => {
       render: (row) => {
         const variantMap = {
           "in-stock": "success",
+          critical: "danger",
           "low-stock": "warning",
           "out-of-stock": "danger",
           "expiring-soon": "warning"
@@ -148,6 +152,7 @@ const InventoryList = () => {
     options={[
       { value: "all", label: "All Status" },
       { value: "in-stock", label: "In Stock" },
+      { value: "critical", label: "Critical" },
       { value: "low-stock", label: "Low Stock" },
       { value: "expiring-soon", label: "Expiring Soon" },
       { value: "out-of-stock", label: "Out of Stock" }

@@ -12,6 +12,11 @@ import { getDocumentId, normalizeArray, normalizeRecord, sameId } from "../lib/n
 const statusVariants = {
   pending: "pending",
   approved: "success",
+  accepted: "success",
+  rejected: "danger",
+  in_transfer: "info",
+  in_delivery: "info",
+  delivered: "success",
   completed: "info",
   cancelled: "danger"
 };
@@ -19,6 +24,11 @@ const statusVariants = {
 const statusLabels = {
   pending: "Pending",
   approved: "Approved",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  in_transfer: "In Transfer",
+  in_delivery: "In Delivery",
+  delivered: "Delivered",
   completed: "Completed",
   cancelled: "Cancelled"
 };
@@ -33,7 +43,8 @@ const RequestDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
-  const backPath = isAdmin ? "/admin/requests" : "/user/requests";
+  const isSupplier = location.pathname.startsWith("/supplier");
+  const backPath = isAdmin ? "/admin/requests" : isSupplier ? "/supplier/orders" : "/user/requests";
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,9 +68,10 @@ const RequestDetails = () => {
         api.orders.get(id),
         api.orderItems.list()
       ]);
+      const normalizedOrder = normalizeRecord(orderData);
       const orderItemsArray = normalizeArray(orderItems);
       const relatedItems = orderItemsArray.filter((item) => sameId(item.order_id, id));
-      setOrder(orderData || null);
+      setOrder(normalizedOrder || null);
       setItems(relatedItems);
     } catch (requestError) {
       setError(requestError.message || "Failed to load request details.");
@@ -80,7 +92,9 @@ const RequestDetails = () => {
     setError("");
     setMessage("");
     try {
-      const response = await api.orders.updateStatus(id, status, `Status changed to ${status} from request details`);
+      const response = isSupplier
+        ? await api.supplierUsers.updateStatus(id, status, `Supplier changed status to ${status}`)
+        : await api.orders.updateStatus(id, status, `Status changed to ${status} from request details`);
       const updatedOrder = normalizeRecord(response);
       setOrder(updatedOrder || { ...order, status });
       setMessage(`Request status updated to ${statusLabels[status] || status}.`);
@@ -92,16 +106,38 @@ const RequestDetails = () => {
     }
   };
 
+  const decideWarehouseRequest = async (decision) => {
+    if (!id || !order) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await api.orders.adminDecision(id, decision, `${decision} from request details`);
+      const updatedOrder = normalizeRecord(response);
+      setOrder(updatedOrder || { ...order, status: decision === "approve" ? "approved" : "rejected" });
+      setMessage(decision === "approve" ? "Request approved. Complete the stock movement from Movement Logs." : "Request rejected.");
+      await loadRequest();
+    } catch (requestError) {
+      setError(requestError.message || "Failed to update request decision.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const requestId = useMemo(() => {
     const rawId = order?._id || id || "";
     return rawId ? rawId.slice(-8).toUpperCase() : "N/A";
   }, [id, order?._id]);
 
   const notes = order?.notes || order?.note || order?.description || order?.justification || "";
-  const requesterName = order?.user_id?.name || "Unknown requester";
-  const requesterCode = order?.user_id?.military_number || order?.user_id?.email || "N/A";
-  const supplierName = order?.supplier_id?.name || "No supplier";
+  const requester = order?.requested_by || order?.user_id || {};
+  const requesterName = requester?.name || "Unknown requester";
+  const requesterCode = requester?.military_number || requester?.email || "N/A";
+  const supplierNameForRequest = order?.supplier_id?.name || order?.provider_id?.name || "No supplier";
+  const requestType = order?.request_type === "warehouse_transfer" ? "warehouse_request" : order?.request_type || "warehouse_request";
   const currentStatus = order?.status || "pending";
+  const isWarehouseRequest = ["warehouse_request", "warehouse_transfer"].includes(requestType);
+  const isSupplierRequest = ["supplier_request", "provider"].includes(requestType);
   const adminUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("milstock_user") || "null");
@@ -109,11 +145,12 @@ const RequestDetails = () => {
       return null;
     }
   }, []);
-  const canManageRequest = isAdmin && (!adminUser?.role || adminUser.role === "admin");
+  const canManageRequest = isAdmin && (!adminUser?.role || adminUser.role === "admin") && isWarehouseRequest;
+  const canSupplierManage = isSupplier && ["supplier_request", "provider"].includes(requestType);
   const createdDate = formatDate(order?.date || order?.createdAt);
   const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
-  const timeline = [
+  const timeline = isWarehouseRequest ? [
     {
       title: "Request Created",
       description: `Created by ${requesterName}`,
@@ -122,18 +159,40 @@ const RequestDetails = () => {
       icon: Package
     },
     {
-      title: "Approved",
-      description: "Request approved for preparation",
-      complete: ["approved", "completed"].includes(currentStatus),
-      active: currentStatus === "approved",
-      icon: CheckCircle
+      title: currentStatus === "rejected" ? "Rejected" : "Admin Decision",
+      description: currentStatus === "rejected" ? "Admin rejected this request" : currentStatus === "pending" ? "Waiting for admin approval" : "Request approved and waiting for movement completion",
+      complete: ["approved", "in_transfer", "completed", "rejected"].includes(currentStatus),
+      active: ["pending", "approved", "in_transfer"].includes(currentStatus),
+      icon: currentStatus === "rejected" ? XCircle : CheckCircle
     },
     {
-      title: currentStatus === "cancelled" ? "Cancelled" : "Delivered",
-      description: currentStatus === "cancelled" ? "Request was rejected or cancelled" : "Request marked as delivered",
-      complete: ["completed", "cancelled"].includes(currentStatus),
-      active: ["completed", "cancelled"].includes(currentStatus),
-      icon: currentStatus === "cancelled" ? XCircle : Truck
+      title: currentStatus === "completed" ? "Transfer Completed" : "Movement Logs",
+      description: currentStatus === "completed" ? "Stock movement was completed from Movement Logs" : "Complete stock movement from Movement Logs",
+      complete: currentStatus === "completed",
+      active: ["approved", "in_transfer"].includes(currentStatus),
+      icon: Truck
+    }
+  ] : [
+    {
+      title: "Request Created",
+      description: `Created by ${requesterName}`,
+      complete: Boolean(order),
+      active: currentStatus === "pending",
+      icon: Package
+    },
+    {
+      title: currentStatus === "rejected" ? "Rejected" : "Accepted",
+      description: currentStatus === "rejected" ? "Supplier rejected this request" : "Supplier accepted the request",
+      complete: ["accepted", "in_delivery", "delivered", "rejected"].includes(currentStatus),
+      active: currentStatus === "accepted",
+      icon: currentStatus === "rejected" ? XCircle : CheckCircle
+    },
+    {
+      title: currentStatus === "delivered" ? "Delivered" : "Delivery",
+      description: currentStatus === "delivered" ? "Supplier marked the request as delivered" : "Waiting for supplier delivery update",
+      complete: currentStatus === "delivered",
+      active: currentStatus === "in_delivery",
+      icon: Truck
     }
   ];
 
@@ -184,7 +243,9 @@ const RequestDetails = () => {
 
     <PageHeader
       title={`Request ${requestId}`}
-      subtitle={`${supplierName} - ${createdDate}`}
+      subtitle={isSupplierRequest
+        ? `${supplierNameForRequest} - ${createdDate}`
+        : `${order.source_warehouse?.name || "Source warehouse"} to ${order.destination_warehouse?.name || "Destination warehouse"} - ${createdDate}`}
     />
 
     {error && <div className="rounded-xl border border-[#D4183D]/20 bg-[#D4183D]/10 px-4 py-3 text-sm text-[#D4183D]">{error}</div>}
@@ -277,7 +338,13 @@ const RequestDetails = () => {
                 { label: "Request ID", value: requestId, icon: Package },
                 { label: "Requested By", value: requesterName, icon: User },
                 { label: "Employee Code", value: requesterCode, icon: User },
-                { label: "Supplier", value: supplierName, icon: Truck },
+                ...(isSupplierRequest
+                  ? [{ label: "Supplier", value: supplierNameForRequest, icon: Truck }]
+                  : [
+                    { label: "Source Warehouse", value: order.source_warehouse?.name || "N/A", icon: Truck },
+                    { label: "Destination Warehouse", value: order.destination_warehouse?.name || "N/A", icon: Truck },
+                  ]),
+                { label: "Request Type", value: isSupplierRequest ? "Supplier Request" : "Warehouse Request", icon: Package },
                 { label: "Request Date", value: createdDate, icon: Calendar },
                 { label: "Total Quantity", value: totalQuantity || "N/A", icon: Package },
                 { label: "Total Price", value: money(order.total_price), icon: Package }
@@ -311,19 +378,59 @@ const RequestDetails = () => {
             <CardTitle>Admin Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <Button className="w-full" onClick={() => updateStatus("approved")} disabled={saving || ["approved", "completed", "cancelled"].includes(currentStatus)}>
+            {currentStatus === "approved" && <div className="space-y-3">
+              <p className="text-sm text-[#5A6B50]">This request is approved. Complete the stock movement from Movement Logs.</p>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/admin/inventory/logs")}>
+                Go to Movement Logs
+              </Button>
+            </div>}
+            {currentStatus === "in_transfer" && <div className="space-y-3">
+              <p className="text-sm text-[#5A6B50]">This request is currently in transfer. Finish it from Movement Logs.</p>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/admin/inventory/logs")}>
+                Go to Movement Logs
+              </Button>
+            </div>}
+            {currentStatus === "pending" && <div className="space-y-3">
+              <Button className="w-full" onClick={() => decideWarehouseRequest("approve")} disabled={saving}>
                 <CheckCircle className="w-4 h-4" />
                 Approve Request
               </Button>
-              <Button variant="danger" className="w-full" onClick={() => updateStatus("cancelled")} disabled={saving || ["completed", "cancelled"].includes(currentStatus)}>
+              <Button variant="danger" className="w-full" onClick={() => decideWarehouseRequest("reject")} disabled={saving}>
                 <XCircle className="w-4 h-4" />
                 Reject Request
               </Button>
-              <Button variant="outline" className="w-full" onClick={() => updateStatus("completed")} disabled={saving || currentStatus === "completed" || currentStatus === "cancelled"}>
+            </div>}
+            {currentStatus === "rejected" && <p className="text-sm text-[#5A6B50]">This request has already been rejected.</p>}
+            {currentStatus === "completed" && <p className="text-sm text-[#5A6B50]">This warehouse transfer has already been completed.</p>}
+            {currentStatus === "cancelled" && <p className="text-sm text-[#5A6B50]">No admin movement action is available for this request status.</p>}
+          </CardContent>
+        </Card>}
+
+        {canSupplierManage && <Card>
+          <CardHeader>
+            <CardTitle>Supplier Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {currentStatus === "pending" && <>
+                <Button className="w-full" onClick={() => updateStatus("accepted")} disabled={saving}>
+                  <CheckCircle className="w-4 h-4" />
+                  Accept Order
+                </Button>
+                <Button variant="danger" className="w-full" onClick={() => updateStatus("rejected")} disabled={saving}>
+                  <XCircle className="w-4 h-4" />
+                  Reject Order
+                </Button>
+              </>}
+              {currentStatus === "accepted" && <Button className="w-full" onClick={() => updateStatus("in_delivery")} disabled={saving}>
                 <Truck className="w-4 h-4" />
-                Mark as Delivered
-              </Button>
+                Mark In Delivery
+              </Button>}
+              {currentStatus === "in_delivery" && <Button className="w-full" onClick={() => updateStatus("delivered")} disabled={saving}>
+                <Truck className="w-4 h-4" />
+                Mark Delivered
+              </Button>}
+              {["rejected", "delivered"].includes(currentStatus) && <p className="text-sm text-[#5A6B50]">No further supplier actions are available.</p>}
             </div>
           </CardContent>
         </Card>}

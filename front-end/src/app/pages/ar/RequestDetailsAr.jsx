@@ -12,6 +12,8 @@ import { getDocumentId, normalizeArray, normalizeRecord, sameId } from "../../li
 const statusVariants = {
   pending: "pending",
   approved: "success",
+  rejected: "danger",
+  in_transfer: "info",
   completed: "info",
   cancelled: "danger"
 };
@@ -19,6 +21,8 @@ const statusVariants = {
 const statusLabels = {
   pending: "قيد المراجعة",
   approved: "موافق عليه",
+  rejected: "مرفوض",
+  in_transfer: "قيد النقل",
   completed: "مكتمل",
   cancelled: "ملغي"
 };
@@ -91,6 +95,23 @@ const RequestDetailsAr = () => {
       setSaving(false);
     }
   };
+  const decideWarehouseRequest = async (decision) => {
+    if (!id || !order) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await api.orders.adminDecision(id, decision, `${decision} from Arabic request details`);
+      const updatedOrder = normalizeRecord(response);
+      setOrder(updatedOrder || { ...order, status: decision === "approve" ? "approved" : "rejected" });
+      setMessage(decision === "approve" ? "تمت الموافقة على الطلب. يتم إتمام حركة المخزون من سجلات الحركة." : "تم رفض الطلب.");
+      await loadRequest();
+    } catch (requestError) {
+      setError(requestError.message || "تعذر تحديث قرار الطلب.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const requestId = useMemo(() => {
     const rawId = order?._id || id || "";
@@ -102,6 +123,7 @@ const RequestDetailsAr = () => {
   const requesterCode = order?.user_id?.military_number || order?.user_id?.email || "غير محدد";
   const supplierName = order?.supplier_id?.name || "بدون مورد";
   const currentStatus = order?.status || "pending";
+  const isWarehouseRequest = ["warehouse_request", "warehouse_transfer"].includes(order?.request_type || "warehouse_request");
   const adminUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("milstock_user") || "null");
@@ -109,7 +131,7 @@ const RequestDetailsAr = () => {
       return null;
     }
   }, []);
-  const canManageRequest = isAdmin && (!adminUser?.role || adminUser.role === "admin");
+  const canManageRequest = isAdmin && (!adminUser?.role || adminUser.role === "admin") && isWarehouseRequest;
   const createdDate = formatDate(order?.date || order?.createdAt);
   const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
@@ -311,20 +333,24 @@ const RequestDetailsAr = () => {
             <CardTitle className="text-right">إجراءات المسؤول</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <Button className="w-full" onClick={() => updateStatus("approved")} disabled={saving || ["approved", "completed", "cancelled"].includes(currentStatus)}>
+            {currentStatus === "approved" && <div className="space-y-3">
+              <p className="text-sm text-[#5A6B50] text-right">تمت الموافقة على الطلب. يتم إتمام حركة المخزون من سجلات الحركة.</p>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/ar/admin/inventory/logs")}>
+                سجلات الحركة
+              </Button>
+            </div>}
+            {currentStatus === "pending" && <div className="space-y-3">
+              <Button className="w-full" onClick={() => decideWarehouseRequest("approve")} disabled={saving}>
                 <CheckCircle className="w-4 h-4" />
                 الموافقة على الطلب
               </Button>
-              <Button variant="danger" className="w-full" onClick={() => updateStatus("cancelled")} disabled={saving || ["completed", "cancelled"].includes(currentStatus)}>
+              <Button variant="danger" className="w-full" onClick={() => decideWarehouseRequest("reject")} disabled={saving}>
                 <XCircle className="w-4 h-4" />
                 رفض الطلب
               </Button>
-              <Button variant="outline" className="w-full" onClick={() => updateStatus("completed")} disabled={saving || currentStatus === "completed" || currentStatus === "cancelled"}>
-                <Truck className="w-4 h-4" />
-                تأكيد التسليم
-              </Button>
-            </div>
+            </div>}
+            {currentStatus === "completed" && <p className="text-sm text-[#5A6B50] text-right">تم إتمام النقل.</p>}
+            {["rejected", "cancelled"].includes(currentStatus) && <p className="text-sm text-[#5A6B50] text-right">تم رفض الطلب أو إلغاؤه.</p>}
           </CardContent>
         </Card>}
       </div>

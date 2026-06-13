@@ -19,12 +19,20 @@ const formatDateTime = (value, locale = "en") => {
   return `${dateText} - ${timeText}`;
 };
 const getProductStatus = (product) => {
-  if (product.quantity <= 0) return "out-of-stock";
-  if (product.quantity <= product.min_quantity) return "low-stock";
+  const quantity = Number(product?.quantity ?? 0);
+  const settings = product?.alert_settings || {};
+  const lowThreshold = Number(settings.low_stock_threshold ?? product?.min_quantity ?? 0);
+  const criticalThreshold = Number(settings.critical_stock_threshold ?? 0);
+  const warningDays = Number(settings.expiration_warning_days ?? 30);
+  const criticalDays = Number(settings.critical_expiration_days ?? 7);
+
+  if (quantity <= 0) return "out-of-stock";
+  if (criticalThreshold > 0 && quantity <= criticalThreshold) return "critical";
+  if (lowThreshold > 0 && quantity <= lowThreshold) return "low-stock";
   const expirationDate = product.expiration_date || product.expiry_date;
   if (expirationDate) {
     const days = (new Date(expirationDate).getTime() - Date.now()) / (1e3 * 60 * 60 * 24);
-    if (days <= 45) return "expiring-soon";
+    if (days >= 0 && days <= Math.max(warningDays, criticalDays)) return "expiring-soon";
   }
   return "in-stock";
 };

@@ -8,6 +8,7 @@ const {
   createOrder,
   updateOrder,
   updateOrderStatus,
+  adminDecision,
   getOrderStatusLogs,
   deleteOrder,
 } = require('../controllers/orderController');
@@ -18,6 +19,7 @@ router.use(authenticate);
 
 router.route('/').get(getOrders).post(orderRules, validate, createOrder);
 router.patch('/:id/status', authorize('admin'), updateOrderStatus);
+router.patch('/:id/admin-decision', authorize('admin'), adminDecision);
 router.get('/:id/status-logs', getOrderStatusLogs);
 router
   .route('/:id')

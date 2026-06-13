@@ -19,7 +19,12 @@ const moduleForModel = (modelName = '') => {
 const getAll = (Model, populate = []) =>
   asyncHandler(async (req, res) => {
     const scopeFilter = await buildWarehouseScopeFilter(req, Model);
-    let query = Model.find(scopeFilter);
+    const queryFilter = { ...req.query };
+    delete queryFilter.sort;
+    delete queryFilter.limit;
+    delete queryFilter.page;
+    delete queryFilter.fields;
+    let query = Model.find({ ...queryFilter, ...scopeFilter });
     populate.forEach((field) => {
       query = query.populate(field);
     });

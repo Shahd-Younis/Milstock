@@ -15,6 +15,9 @@ const ExpirationMonitor = () => {
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
   const expiringItems = products.filter((product) => product.expiry_date).map((product) => {
     const daysRemaining = daysUntil(product.expiry_date);
+    const settings = product.alert_settings || {};
+    const warningDays = Number(settings.expiration_warning_days ?? 30);
+    const criticalDays = Number(settings.critical_expiration_days ?? 7);
     return {
       id: product._id.slice(-8).toUpperCase(),
       name: product.name,
@@ -24,9 +27,9 @@ const ExpirationMonitor = () => {
       expirationDate: formatDate(product.expiry_date),
       daysRemaining,
       warehouse: product.warehouse_id?.name || "Unassigned",
-      severity: daysRemaining <= 7 ? "critical" : daysRemaining <= 30 ? "warning" : "normal"
+      severity: daysRemaining <= criticalDays ? "critical" : daysRemaining <= warningDays ? "warning" : "normal"
     };
-  }).filter((item) => item.daysRemaining <= 90).sort((a, b) => a.daysRemaining - b.daysRemaining);
+  }).filter((item) => item.severity !== "normal").sort((a, b) => a.daysRemaining - b.daysRemaining);
   const criticalItems = expiringItems.filter((item) => item.severity === "critical");
   const warningItems = expiringItems.filter((item) => item.severity === "warning");
   const columns = [

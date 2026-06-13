@@ -88,11 +88,22 @@ const userNavGroups = [
     ]
   }
 ];
+const supplierNavGroups = [
+  {
+    label: "MAIN",
+    items: [
+      { label: "Dashboard", path: "/supplier/dashboard", icon: LayoutDashboard },
+      { label: "Orders", path: "/supplier/orders", icon: FileText },
+      { label: "Notifications", path: "/supplier/notifications", icon: Bell, badge: 3 }
+    ]
+  }
+];
 const MobileNav = ({ userRole }) => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { unreadCount } = useNotifications();
-  const navGroups = (userRole === "admin" ? adminNavGroups : userNavGroups).map((group) => ({
+  const baseNavGroups = userRole === "admin" ? adminNavGroups : userRole === "supplier" ? supplierNavGroups : userNavGroups;
+  const navGroups = baseNavGroups.map((group) => ({
     ...group,
     items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
   }));
@@ -110,11 +121,11 @@ const MobileNav = ({ userRole }) => {
           <Menu className="w-5 h-5" />
         </button>
         <BrandLogo
-    subtitle={userRole === "admin" ? "Admin" : "Kitchen"}
+    subtitle={userRole === "admin" ? "Admin" : userRole === "supplier" ? "supplier" : "Kitchen"}
     className="[&>div:first-child]:w-7 [&>div:first-child]:h-7"
   />
         <Link
-    to={userRole === "admin" ? "/admin/notifications" : "/user/notifications"}
+    to={userRole === "admin" ? "/admin/notifications" : userRole === "supplier" ? "/supplier/notifications" : "/user/notifications"}
     className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
   >
           <Bell className="w-5 h-5" />
@@ -131,7 +142,7 @@ const MobileNav = ({ userRole }) => {
           <div className="w-72 bg-[#2E3A24] text-[#E0E1B7] h-full overflow-y-auto flex flex-col shadow-2xl">
             <div className="h-14 flex items-center justify-between px-4 border-b border-white/[0.08]">
               <BrandLogo
-    subtitle={userRole === "admin" ? "Admin Portal" : "Kitchen Portal"}
+    subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
     className="[&>div:first-child]:w-7 [&>div:first-child]:h-7"
   />
               <button
@@ -173,7 +184,7 @@ const MobileNav = ({ userRole }) => {
                 <span className="text-sm">Help</span>
               </Link>
               <Link
-    to={userRole === "admin" ? "/ar/admin/dashboard" : "/ar/user/dashboard"}
+    to={userRole === "admin" ? "/ar/admin/dashboard" : userRole === "supplier" ? "/ar/supplier/dashboard" : "/ar/user/dashboard"}
     onClick={() => setDrawerOpen(false)}
     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10"
   >

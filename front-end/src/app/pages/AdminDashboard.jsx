@@ -6,7 +6,8 @@ import {
   AlertTriangle,
   Calendar,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Utensils
 } from "lucide-react";
 import {
   LineChart,
@@ -44,14 +45,19 @@ const AdminDashboard = () => {
   const { data: products } = useApiResource(() => api.products.list(), []);
   const { data: orders } = useApiResource(() => api.orders.list(), []);
   const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
+  const { data: consumptions } = useApiResource(() => api.consumptions.list(), []);
   const { data: notifications } = useApiResource(async () => {
     await api.notifications.expiration().catch(() => {});
     return api.notifications.list();
   }, []);
   const orderItemsArray = normalizeArray(orderItems);
-  const lowStockItems = products.filter((product) => getProductStatus(product) === "low-stock");
+  const lowStockItems = products.filter((product) => ["low-stock", "critical"].includes(getProductStatus(product)));
   const expiringSoon = products.filter((product) => getProductStatus(product) === "expiring-soon");
   const pendingOrders = orders.filter((order) => order.status === "pending");
+  const todayKey = new Date().toDateString();
+  const consumedToday = consumptions
+    .filter((item) => item.status !== "cancelled" && new Date(item.consumption_date || item.createdAt).toDateString() === todayKey)
+    .reduce((sum, item) => sum + Number(item.consumed_quantity || item.quantity || 0), 0);
   const categoryData = Object.entries(
     products.reduce((totals, product) => {
       totals[product.category] = (totals[product.category] || 0) + product.quantity;
@@ -84,11 +90,12 @@ const AdminDashboard = () => {
       {
     /* KPI stats */
   }
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
         <StatCard title="Total Inventory Items" value={products.reduce((sum, product) => sum + product.quantity, 0).toLocaleString()} icon={Package} trend={{ value: `${products.length} products`, isPositive: true }} color="primary" to="/admin/inventory" />
         <StatCard title="Low Stock Items" value={lowStockItems.length.toString()} icon={AlertTriangle} trend={{ value: "From MongoDB thresholds", isPositive: false }} color="warning" to="/admin/inventory?status=low_stock" />
-        <StatCard title="Expiring Soon" value={expiringSoon.length.toString()} icon={Calendar} trend={{ value: "Next 45 days", isPositive: false }} color="danger" to="/admin/inventory?filter=expiring" />
+        <StatCard title="Expiring Soon" value={expiringSoon.length.toString()} icon={Calendar} trend={{ value: "Product thresholds", isPositive: false }} color="danger" to="/admin/inventory?filter=expiring" />
         <StatCard title="Pending Requests" value={pendingOrders.length.toString()} icon={FileText} trend={{ value: "Open orders", isPositive: true }} color="success" to="/admin/requests?status=pending" />
+        <StatCard title="Consumed Today" value={consumedToday.toLocaleString()} icon={Utensils} trend={{ value: `${consumptions.length} records`, isPositive: true }} color="primary" to="/admin/consumptions" />
       </div>
 
       {

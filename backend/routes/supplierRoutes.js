@@ -9,11 +9,13 @@ const {
   updateSupplier,
   deleteSupplier,
 } = require('../controllers/supplierController');
+const { getSupplierUsers } = require('../controllers/userController');
 
 const router = express.Router();
 
 router.use(authenticate);
 
+router.get('/users', getSupplierUsers);
 router.route('/').get(getSuppliers).post(authorize('admin'), supplierRules, validate, createSupplier);
 router
   .route('/:id')
