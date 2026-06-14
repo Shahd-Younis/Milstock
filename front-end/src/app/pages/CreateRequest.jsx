@@ -9,6 +9,7 @@ import { useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
+import { getLocalizedValue } from "../lib/localization";
 const CreateRequest = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState([{ product_id: "", quantity: "" }]);
@@ -122,7 +123,7 @@ const CreateRequest = () => {
     label="Source Warehouse / Request From Warehouse *"
     options={[
       { value: "", label: warehousePlaceholder, disabled: !selectableWarehouses.length },
-      ...selectableWarehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
+      ...selectableWarehouses.map((warehouse) => ({ value: warehouse._id, label: getLocalizedValue(warehouse, "name", "en") }))
     ]}
     value={sourceWarehouseId}
     onChange={(e) => setSourceWarehouseId(e.target.value)}
@@ -151,7 +152,7 @@ const CreateRequest = () => {
       { value: "", label: productsLoading ? "Loading products..." : productsError || "Select product..." },
       ...products.map((product) => ({
         value: product._id,
-        label: `${product.name} (${product.quantity} ${product.unit})`
+        label: `${getLocalizedValue(product, "name", "en")} (${product.quantity} ${product.unit})`
       }))
     ]}
     value={item.product_id}

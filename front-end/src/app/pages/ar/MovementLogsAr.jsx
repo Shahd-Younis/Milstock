@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
+import { Table } from "../../components/Table";
 import { Badge } from "../../components/Badge";
 import { Input } from "../../components/Input";
 import { Select } from "../../components/Select";
@@ -10,6 +11,7 @@ import { useLocation } from "react-router";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
+import { getLocalizedDisplayName, getLocalizedValue, localizeText } from "../../lib/localization";
 
 const actionLabels = {
   in: "وارد",
@@ -21,7 +23,7 @@ const actionLabels = {
 
 const actionVariants = {
   in: "success",
-  out: "danger",
+  out: "warning",
   transfer: "info",
   consumption: "warning",
   consumption_cancelled: "success"
@@ -34,11 +36,12 @@ const MovementLogsAr = () => {
   const [activeTab, setActiveTab] = useState("pending");
   const [busyOrderId, setBusyOrderId] = useState("");
   const [message, setMessage] = useState("");
-  const { data: movements, loading, error } = useApiResource(() => api.movements.list(), []);
-  const { data: productWarehouses } = useApiResource(() => api.productWarehouses.list(), []);
+  const { data: movements, loading, error, refresh: refreshMovements } = useApiResource(() => api.movements.list(), []);
+  const { data: productWarehouses, refresh: refreshProductWarehouses } = useApiResource(() => api.productWarehouses.list(), []);
   const query = new URLSearchParams(location.search);
   const warehouseFilter = query.get("warehouse_id");
   const statusQueryFilter = query.get("status");
+
   const matchesWarehouseFilter = (movement) => {
     if (!warehouseFilter) return true;
     return [
@@ -58,43 +61,48 @@ const MovementLogsAr = () => {
         byOrder.set(orderId, {
           orderId,
           requestId: String(orderId).slice(-8).toUpperCase(),
-          requester: movement.requested_by?.name || movement.user_id?.name || "غير معروف",
+          requester: getLocalizedDisplayName(movement.requested_by, "ar") || getLocalizedDisplayName(movement.user_id, "ar") || "غير معروف",
           approvedAt: movement.approved_at || movement.createdAt,
-          source: movement.from_warehouse?.name || movement.reference_id?.name || "المخزن المصدر",
-          destination: movement.to_warehouse?.name || "المخزن المستلم",
+          source: getLocalizedValue(movement.from_warehouse, "name", "ar") || getLocalizedValue(movement.reference_id, "name", "ar") || "المخزن المصدر",
+          destination: getLocalizedValue(movement.to_warehouse, "name", "ar") || "المخزن المستلم",
           rows: []
         });
       }
 
-      const productId = movement.product_id?._id || movement.product_id;
-      const sourceWarehouseId = movement.from_warehouse?._id || movement.from_warehouse;
-      const destinationWarehouseId = movement.to_warehouse?._id || movement.to_warehouse;
-      const sourceStock = productWarehouses.find((row) => (row.product_id?._id || row.product_id) === productId && (row.warehouse_id?._id || row.warehouse_id) === sourceWarehouseId);
-      const destinationStock = productWarehouses.find((row) => (row.product_id?._id || row.product_id) === productId && (row.warehouse_id?._id || row.warehouse_id) === destinationWarehouseId);
+      const productId = String(movement.product_id?._id || movement.product_id || "");
+      const sourceWarehouseId = String(movement.from_warehouse?._id || movement.from_warehouse || "");
+      const destinationWarehouseId = String(movement.to_warehouse?._id || movement.to_warehouse || "");
+      const sourceStock = productWarehouses.find((row) => String(row.product_id?._id || row.product_id || "") === productId && String(row.warehouse_id?._id || row.warehouse_id || "") === sourceWarehouseId);
+      const destinationStock = productWarehouses.find((row) => String(row.product_id?._id || row.product_id || "") === productId && String(row.warehouse_id?._id || row.warehouse_id || "") === destinationWarehouseId);
+      const requestedQuantity = Number(movement.requested_quantity || movement.stock || 0);
+      const sourceQuantity = Number(sourceStock?.quantity || 0);
 
       byOrder.get(orderId).rows.push({
         movementId: movement._id,
-        productName: movement.product_id?.name || "صنف غير معروف",
-        quantity: movement.requested_quantity || movement.stock,
-        sourceStock: sourceStock?.quantity ?? 0,
-        destinationStock: destinationStock?.quantity ?? 0
+        productName: getLocalizedValue(movement.product_id, "name", "ar") || localizeText(movement.product_name || movement.name, "ar") || "صنف غير معروف",
+        quantity: requestedQuantity,
+        sourceStock: sourceQuantity,
+        destinationStock: destinationStock?.quantity ?? 0,
+        insufficient: sourceQuantity < requestedQuantity
       });
     });
 
-    return Array.from(byOrder.values());
+    return Array.from(byOrder.values()).map((transfer) => ({
+      ...transfer,
+      hasInsufficientStock: transfer.rows.some((row) => row.insufficient)
+    }));
   }, [movements, productWarehouses, warehouseFilter]);
 
   const movementData = movements.filter((movement) => matchesWarehouseFilter(movement) && movement.status !== "pending").map((movement) => ({
     id: movement._id.slice(-8).toUpperCase(),
     date: formatDate(movement.createdAt),
     itemId: movement.product_id?._id?.slice(-8).toUpperCase() || "N/A",
-    itemName: movement.product_id?.name || "صنف غير معروف",
+    itemName: getLocalizedValue(movement.product_id, "name", "ar") || localizeText(movement.product_name || movement.name, "ar") || "صنف غير معروف",
     action: movement.movement_type === "consumption" || movement.movement_type === "consumption_cancelled" ? movement.movement_type : movement.change_type,
     status: movement.status,
     quantity: `${movement.change_type === "in" ? "+" : movement.change_type === "out" ? "-" : ""}${movement.stock}`,
-    source: movement.from_warehouse?.name || movement.to_warehouse?.name || movement.reference_id?.name || "غير محدد",
-    destination: movement.to_warehouse?.name || "غير محدد",
-    user: movement.performed_by?.name || movement.completed_by?.name || movement.user_id?.name || "غير معروف",
+    location: getLocalizedValue(movement.from_warehouse, "name", "ar") || getLocalizedValue(movement.to_warehouse, "name", "ar") || getLocalizedValue(movement.reference_id, "name", "ar") || "لا يوجد مخزن",
+    user: getLocalizedDisplayName(movement.performed_by, "ar") || getLocalizedDisplayName(movement.user_id, "ar") || "مستخدم غير معروف",
     reason: movement.reference_type || "حركة مخزون"
   }));
 
@@ -111,8 +119,9 @@ const MovementLogsAr = () => {
     setMessage("");
     try {
       await api.movements.completeTransfer(orderId, "تم إتمام النقل من سجلات الحركة");
-      setMessage("تم إتمام النقل بنجاح. سيتم تحديث الصفحة لعرض سجل الحركة.");
-      window.setTimeout(() => window.location.reload(), 500);
+      setMessage("تم إتمام النقل بنجاح.");
+      refreshMovements();
+      refreshProductWarehouses();
     } catch (requestError) {
       setMessage(requestError.message || "تعذر إتمام النقل.");
     } finally {
@@ -120,129 +129,167 @@ const MovementLogsAr = () => {
     }
   };
 
+  const cancelTransfer = async (orderId) => {
+    setBusyOrderId(orderId);
+    setMessage("");
+    try {
+      await api.orders.updateStatus(orderId, "cancelled", "Cancelled from Movement Logs because source stock is insufficient");
+      setMessage("تم إلغاء التحويل وإلغاء سجلات الحركة المعلقة.");
+      refreshMovements();
+      refreshProductWarehouses();
+    } catch (requestError) {
+      setMessage(requestError.message || "تعذر إلغاء التحويل.");
+    } finally {
+      setBusyOrderId("");
+    }
+  };
+
+  const columns = [
+    { key: "id", header: "رقم الحركة" },
+    { key: "date", header: "التاريخ" },
+    {
+      key: "item",
+      header: "الصنف",
+      render: (row) => <div>
+        <p className="font-medium text-foreground">{row.itemName}</p>
+        <p className="text-sm text-muted-foreground">{row.itemId}</p>
+      </div>
+    },
+    {
+      key: "action",
+      header: "الإجراء",
+      render: (row) => <Badge variant={actionVariants[row.action] || "info"}>
+        {actionLabels[row.action] || row.action}
+      </Badge>
+    },
+    {
+      key: "quantity",
+      header: "الكمية",
+      render: (row) => <span className={`font-semibold ${row.action === "in" ? "text-[#6A7B4D]" : row.action === "out" ? "text-[#B85C50]" : "text-[#4B5B3A]"}`}>
+        {row.quantity}
+      </span>
+    },
+    { key: "location", header: "المخزن" },
+    { key: "user", header: "تم بواسطة" },
+    { key: "reason", header: "المرجع" }
+  ];
+
   const exportColumns = [
     { key: "id", header: "رقم الحركة" },
     { key: "date", header: "التاريخ" },
-    { key: "itemId", header: "رمز الصنف" },
-    { key: "itemName", header: "الصنف" },
-    { header: "النوع", value: (row) => actionLabels[row.action] || row.action },
+    { key: "itemId", header: "رقم الصنف" },
+    { key: "itemName", header: "اسم الصنف" },
+    { header: "الإجراء", value: (row) => actionLabels[row.action] || row.action },
     { key: "quantity", header: "الكمية" },
-    { key: "source", header: "المخزن المصدر" },
-    { key: "destination", header: "المخزن المستلم" },
-    { key: "user", header: "منفذ بواسطة" },
+    { key: "location", header: "المخزن" },
+    { key: "user", header: "تم بواسطة" },
     { key: "reason", header: "المرجع" }
   ];
 
   return <div className="p-6 lg:p-8 space-y-6" dir="rtl">
-      <PageHeaderAr title="سجلات الحركة" subtitle="إتمام التحويلات المعلقة ومراجعة سجل حركات المخزون" />
+    <PageHeaderAr title="سجلات حركة المخزون" subtitle="السجل الكامل لكل معاملات المخزون" />
+    {message && <div className="rounded-xl border border-[#4E4631]/10 bg-white px-4 py-3 text-sm text-[#2E3A24]">{message}</div>}
 
-      {message && <div className="rounded-xl border border-[#4E4631]/10 bg-white px-4 py-3 text-sm text-[#2E3A24]">{message}</div>}
+    <div className="flex gap-2">
+      <Button type="button" variant={activeTab === "pending" ? "primary" : "outline"} onClick={() => setActiveTab("pending")}>التحويلات المعلقة</Button>
+      <Button type="button" variant={activeTab === "history" ? "primary" : "outline"} onClick={() => setActiveTab("history")}>سجل الحركة</Button>
+    </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant={activeTab === "pending" ? "primary" : "outline"} onClick={() => setActiveTab("pending")}>التحويلات المعلقة</Button>
-        <Button type="button" variant={activeTab === "history" ? "primary" : "outline"} onClick={() => setActiveTab("history")}>سجل الحركات</Button>
-      </div>
-
-      {activeTab === "pending" && <div className="space-y-4">
-        {loading && <p className="text-sm text-[#5A6B50]">جاري تحميل التحويلات المعلقة...</p>}
-        {!loading && pendingTransfers.length === 0 && <div className="rounded-xl border border-[#4E4631]/10 bg-white p-6 text-sm text-[#5A6B50]">لا توجد تحويلات معلقة بانتظار الإتمام.</div>}
-        {pendingTransfers.map((transfer) => <div key={transfer.orderId} className="rounded-2xl border border-[#4E4631]/10 bg-white p-5 shadow-sm space-y-4">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-              <div className="text-right">
-                <p className="text-xs text-[#5A6B50]">رقم الطلب</p>
-                <h3 className="font-semibold text-[#2E3A24]">{transfer.requestId}</h3>
-                <p className="text-sm text-[#5A6B50]">{transfer.source} ← {transfer.destination}</p>
-                <p className="text-xs text-[#5A6B50]">مقدم الطلب: {transfer.requester} | تاريخ الموافقة: {formatDate(transfer.approvedAt)}</p>
-              </div>
-              <Button type="button" onClick={() => completeMovement(transfer.orderId)} disabled={busyOrderId === transfer.orderId}>
-                <CheckCircle className="w-4 h-4" />
-                {busyOrderId === transfer.orderId ? "جاري الإتمام..." : "إتمام النقل"}
-              </Button>
+    {activeTab === "pending" && <div className="space-y-4">
+      {loading && <p className="text-sm text-[#5A6B50]">جاري تحميل التحويلات المعلقة...</p>}
+      {!loading && pendingTransfers.length === 0 && <div className="rounded-xl border border-[#4E4631]/10 bg-white p-6 text-sm text-[#5A6B50]">لا توجد تحويلات معلقة في انتظار الإتمام.</div>}
+      {pendingTransfers.map((transfer) => <div key={transfer.orderId} className="rounded-2xl border border-[#4E4631]/10 bg-white p-5 shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="text-right">
+            <p className="text-xs text-[#5A6B50]">رقم الطلب</p>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {transfer.hasInsufficientStock && <Badge variant="danger">مخزون غير كاف</Badge>}
+              <h3 className="font-semibold text-[#2E3A24]">{transfer.requestId}</h3>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-right">
-                <thead>
-                  <tr className="border-b border-[#4E4631]/10 text-[#5A6B50]">
-                    <th className="py-2 pl-3">الصنف</th>
-                    <th className="py-2 pl-3">الكمية المطلوبة</th>
-                    <th className="py-2 pl-3">الكمية الحالية في المخزن المصدر</th>
-                    <th className="py-2 pl-3">الكمية الحالية في المخزن المستلم</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transfer.rows.map((row) => <tr key={row.movementId} className="border-b border-[#4E4631]/5">
-                      <td className="py-2 pl-3 font-medium text-[#2E3A24]">{row.productName}</td>
-                      <td className="py-2 pl-3">{row.quantity}</td>
-                      <td className="py-2 pl-3">{row.sourceStock}</td>
-                      <td className="py-2 pl-3">{row.destinationStock}</td>
-                    </tr>)}
-                </tbody>
-              </table>
-            </div>
-          </div>)}
-      </div>}
-
-      {activeTab === "history" && <>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
-            <div className="relative">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input placeholder="ابحث برقم الحركة أو اسم الصنف..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-12 text-right" />
-            </div>
+            <p className="text-sm text-[#5A6B50]">{transfer.source} ← {transfer.destination}</p>
+            <p className="text-xs text-[#5A6B50]">مقدم الطلب: {transfer.requester} | تاريخ الموافقة: {formatDate(transfer.approvedAt)}</p>
+            {transfer.hasInsufficientStock && <p className="mt-2 text-sm text-[#D4183D]">المخزن المصدر لا يحتوي على كمية كافية. قم بتغذية المخزن المصدر أو إلغاء هذا التحويل.</p>}
           </div>
-          <Select
-            options={[
-              { value: "all", label: "كل الحركات" },
-              { value: "in", label: "وارد" },
-              { value: "out", label: "صادر" },
-              { value: "transfer", label: "نقل" },
-              { value: "consumption", label: "استهلاك" },
-              { value: "consumption_cancelled", label: "إلغاء استهلاك" }
-            ]}
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-          />
-          <Input type="date" />
+          <div className="flex flex-wrap gap-2">
+            {transfer.hasInsufficientStock && <Button type="button" variant="danger" onClick={() => cancelTransfer(transfer.orderId)} disabled={busyOrderId === transfer.orderId}>
+              {busyOrderId === transfer.orderId ? "جاري الإلغاء..." : "إلغاء التحويل"}
+            </Button>}
+            <Button type="button" onClick={() => completeMovement(transfer.orderId)} disabled={busyOrderId === transfer.orderId || transfer.hasInsufficientStock}>
+              <CheckCircle className="w-4 h-4" />
+              {busyOrderId === transfer.orderId ? "جاري الإتمام..." : "إتمام النقل"}
+            </Button>
+          </div>
         </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">
-            {loading ? "جاري تحميل سجلات الحركة..." : error || `عرض ${filteredData.length} من ${movementData.length} حركة`}
-          </p>
-          <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={loading ? [] : filteredData}>
-            تصدير السجل
-          </ExportCsvButton>
-        </div>
-
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <table className="w-full text-right">
-            <thead className="bg-muted/30 border-b border-border">
-              <tr>
-                {["رقم الحركة", "التاريخ", "الصنف", "النوع", "الكمية", "المخزن المصدر", "المخزن المستلم", "منفذ بواسطة", "المرجع"].map((heading) => <th key={heading} className="px-4 py-3 text-sm font-medium text-muted-foreground">{heading}</th>)}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-right">
+            <thead>
+              <tr className="border-b border-[#4E4631]/10 text-right text-[#5A6B50]">
+                <th className="py-2 pl-3">الصنف</th>
+                <th className="py-2 pl-3">الكمية المطلوبة</th>
+                <th className="py-2 pl-3">المخزون الحالي في المصدر</th>
+                <th className="py-2 pl-3">المخزون الحالي في المستلم</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {(loading ? [] : filteredData).map((movement) => <tr key={movement.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-mono text-sm font-medium">{movement.id}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{movement.date}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{movement.itemName}</p>
-                    <p className="text-xs text-muted-foreground">{movement.itemId}</p>
-                  </td>
-                  <td className="px-4 py-3"><Badge variant={actionVariants[movement.action] || "default"}>{actionLabels[movement.action] || movement.action}</Badge></td>
-                  <td className="px-4 py-3 font-semibold">{movement.quantity}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{movement.source}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{movement.destination}</td>
-                  <td className="px-4 py-3">{movement.user}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{movement.reason}</td>
-                </tr>)}
+            <tbody>
+              {transfer.rows.map((row) => <tr key={row.movementId} className="border-b border-[#4E4631]/5">
+                <td className="py-2 pl-3 font-medium text-[#2E3A24]">{row.productName}</td>
+                <td className="py-2 pl-3">{row.quantity}</td>
+                <td className={`py-2 pl-3 ${row.insufficient ? "font-semibold text-[#D4183D]" : ""}`}>
+                  {row.sourceStock}
+                  {row.insufficient && <span className="mr-2 text-xs">(المطلوب {row.quantity})</span>}
+                </td>
+                <td className="py-2 pl-3">{row.destinationStock}</td>
+              </tr>)}
             </tbody>
           </table>
-          {!loading && filteredData.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">{error || "لا توجد حركات مطابقة."}</p>}
         </div>
-      </>}
-    </div>;
+      </div>)}
+    </div>}
+
+    {activeTab === "history" && <>
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="md:col-span-2">
+          <div className="relative">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="ابحث برقم الحركة أو اسم الصنف..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-12 text-right"
+            />
+          </div>
+        </div>
+        <Select
+          options={[
+            { value: "all", label: "كل الإجراءات" },
+            { value: "in", label: "وارد" },
+            { value: "out", label: "صادر" },
+            { value: "transfer", label: "نقل" },
+            { value: "consumption", label: "استهلاك" },
+            { value: "consumption_cancelled", label: "إلغاء استهلاك" }
+          ]}
+          value={actionFilter}
+          onChange={(e) => setActionFilter(e.target.value)}
+        />
+        <Input type="date" />
+      </div>
+
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-muted-foreground">
+          {loading ? "جاري تحميل سجلات الحركة من MongoDB..." : error || `عرض ${filteredData.length} من ${movementData.length} حركة`}
+        </p>
+        <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={loading ? [] : filteredData}>
+          تصدير السجلات
+        </ExportCsvButton>
+      </div>
+
+      <Table
+        columns={columns}
+        data={loading ? [] : filteredData}
+        emptyMessage={error || "لا توجد حركات مخزون في MongoDB. شغّل seed في backend."}
+      />
+    </>}
+  </div>;
 };
 
 export {

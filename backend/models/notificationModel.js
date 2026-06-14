@@ -7,6 +7,11 @@ const notificationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    titleAr: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     type: {
       type: String,
       required: true,
@@ -16,6 +21,25 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    messageAr: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    titleKey: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    messageKey: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    params: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     is_read: {
       type: Boolean,

@@ -8,6 +8,7 @@ import { Select } from "../components/Select";
 import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
+import { getLocalizedValue } from "../lib/localization";
 
 const initialForm = {
   name: "",
@@ -154,7 +155,7 @@ const AddUser = () => {
               disabled={warehousesLoading}
               options={[
                 { value: "", label: form.role === "admin" ? "All Warehouses" : warehousesLoading ? "Loading warehouses..." : warehousesError || "Select warehouse..." },
-                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
+                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: getLocalizedValue(warehouse, "name", "en") }))
               ]}
             />
           </div>

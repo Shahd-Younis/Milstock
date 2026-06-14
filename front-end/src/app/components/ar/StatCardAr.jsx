@@ -61,11 +61,11 @@ const StatCardAr = ({
       {
     /* Top row — RTL: icon on left (trailing), text on right (leading) */
   }
-      <div className="flex items-start justify-between mb-4">
+      <div dir="rtl" className="flex items-start justify-between mb-4">
+        <p className="text-sm text-muted-foreground leading-snug text-right pl-2">{title}</p>
         <div className={clsx("p-2.5 rounded-xl flex-shrink-0", config.iconBg)}>
           <Icon className={clsx("w-5 h-5", config.iconColor)} />
         </div>
-        <p className="text-sm text-muted-foreground leading-snug text-right pl-2">{title}</p>
       </div>
 
       {

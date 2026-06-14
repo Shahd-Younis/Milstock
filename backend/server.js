@@ -8,28 +8,31 @@ const { generateExpirationNotifications } = require('./services/expirationNotifi
 const PORT = process.env.PORT || 5001;
 
 const start = async () => {
+  let dbConnected = false;
   try {
     await connectDB();
+    dbConnected = true;
     generateExpirationNotifications().catch((error) => {
       console.error('Failed to generate startup expiration notifications:', error.message);
     });
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-
-    const shutdown = async (signal) => {
-      console.log(`${signal} received. Closing server...`);
-      server.close(() => {
-        process.exit(0);
-      });
-    };
-
-    process.on('SIGINT', () => shutdown('SIGINT'));
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
   } catch (error) {
-    console.error('Failed to start server:', error.message);
-    process.exit(1);
+    console.error('MongoDB connection failed:', error.message);
+    console.error('Starting API server without database connection so health checks and clear API errors still work.');
   }
+
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}${dbConnected ? '' : ' (database disconnected)'}`);
+  });
+
+  const shutdown = async (signal) => {
+    console.log(`${signal} received. Closing server...`);
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 };
 
 start();

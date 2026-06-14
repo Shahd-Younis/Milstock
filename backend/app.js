@@ -22,6 +22,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const auditLogRoutes = require('./routes/auditLogRoutes');
 const providerRoutes = require('./routes/providerRoutes');
 const supplierOrderRoutes = require('./routes/supplierOrderRoutes');
+const { getDbState } = require('./config/db');
 
 const app = express();
 
@@ -39,7 +40,12 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'MilStock API running' });
+  const database = getDbState();
+  res.status(database.connected ? 200 : 503).json({
+    success: database.connected,
+    message: database.connected ? 'MilStock API running' : 'MilStock API running, but database is not connected',
+    database,
+  });
 });
 
 app.get('/', (_req, res) => {

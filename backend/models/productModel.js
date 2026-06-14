@@ -9,6 +9,11 @@ const productSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 150,
     },
+    nameAr: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     quantity: {
       type: Number,
       required: true,
@@ -25,6 +30,11 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    categoryAr: {
+      type: String,
+      trim: true,
+      default: '',
     },
     min_quantity: {
       type: Number,
@@ -95,6 +105,11 @@ const productSchema = new mongoose.Schema(
       default: '',
     },
     description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    descriptionAr: {
       type: String,
       trim: true,
       default: '',

@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { ExportCsvButton } from "../components/ExportCsvButton";
 import { useNotifications } from "../context/NotificationContext";
 import { formatDate, formatDateTime } from "../lib/format";
+import { formatNotification, getLocalizedValue } from "../lib/localization";
 
 const getNotificationItemId = (notification) => {
   const itemId =
@@ -42,25 +43,28 @@ const isRequestNotification = (notification) => {
   return Boolean(getNotificationRequestId(notification)) || type.includes("order") || type.includes("request");
 };
 
-const getItemName = (notification) =>
-  notification.item_id?.name ||
-  notification.item?.name ||
+const getItemName = (notification, locale = "en") =>
+  getLocalizedValue(notification.item_id, "name", locale) ||
+  getLocalizedValue(notification.item, "name", locale) ||
   notification.metadata?.item_name ||
   notification.metadata?.product_name ||
   notification.metadata?.name ||
   "";
 
 const getTypeLabel = (notification) => {
+  const formatted = formatNotification(notification, "en");
   if (notification.type === "low_stock") return "Low Stock Alert";
   if (notification.metadata?.expiration_status === "expired" || notification.type === "expired") return "Expired Item";
   if (notification.type === "expiration" || notification.type === "expiration_reminder") return "Expiration Reminder";
   if (String(notification.type || "").includes("order") || String(notification.type || "").includes("request")) return "Request Update";
   if (String(notification.type || "").includes("inventory") || String(notification.type || "").includes("item")) return "Inventory Update";
-  return notification.title || "System Notification";
+  return formatted.title || notification.title || "System Notification";
 };
 
 const getDisplayMessage = (notification) => {
-  const itemName = getItemName(notification);
+  const formatted = formatNotification(notification, "en");
+  if (formatted.message) return formatted.message;
+  const itemName = getItemName(notification, "en");
   const days = notification.metadata?.days_remaining;
   if (notification.type === "low_stock" && itemName) {
     return `The stock level for ${itemName} is below the configured minimum threshold.`;
@@ -207,7 +211,8 @@ const NotificationsPage = () => {
         const Icon = style.icon;
         const itemId = getNotificationItemId(notification);
         const requestId = getNotificationRequestId(notification);
-        const itemName = getItemName(notification);
+        const formatted = formatNotification(notification, "en");
+        const itemName = getItemName(notification, "en");
         const canOpenItem = Boolean(itemId && isAdminPath && isItemNotification(notification));
         const canOpenRequest = Boolean(requestId && isRequestNotification(notification));
         const canOpenNotification = canOpenItem || canOpenRequest;
@@ -243,7 +248,7 @@ const NotificationsPage = () => {
                 <div>
                   <p className={`text-xs font-semibold uppercase tracking-wide ${notification.severity === "critical" ? "text-[#D4183D]" : notification.severity === "warning" ? "text-[#B8862A]" : "text-[#4B5B3A]"}`}>{getTypeLabel(notification)}</p>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || notification.title || "Notification"}</h3>
+                    <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || formatted.title || notification.title || "Notification"}</h3>
                     {!read && <span className="rounded-lg bg-[#D4183D] px-2 py-0.5 text-xs font-semibold text-white">Unread</span>}
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-[#5A6B50]">{getDisplayMessage(notification)}</p>

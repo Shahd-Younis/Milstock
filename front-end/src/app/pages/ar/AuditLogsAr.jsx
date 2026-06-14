@@ -8,6 +8,7 @@ import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
+import { getLocalizedDisplayName, getLocalizedRoleLabel } from "../../lib/localization";
 
 const moduleLabels = {
   inventory: "المخزون",
@@ -28,8 +29,8 @@ const AuditLogsAr = () => {
     action: log.action || "unknown",
     module: log.module || "system",
     moduleLabel: moduleLabels[log.module] || log.module || "النظام",
-    performedBy: log.user_name || log.user_id?.name || "النظام",
-    role: log.user_role || log.user_id?.role || "N/A",
+    performedBy: getLocalizedDisplayName(log.user_id, "ar") || getLocalizedRoleLabel(log.user_name, "ar") || "النظام",
+    role: getLocalizedRoleLabel(log.user_role || log.user_id?.role, "ar") || "N/A",
     ipAddress: log.ip_address || "",
     timestamp: log.createdAt,
     details: log.description || "",

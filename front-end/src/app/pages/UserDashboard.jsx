@@ -10,6 +10,7 @@ import { useApiResource } from "../lib/useApiResource";
 import { getProductStatus } from "../lib/format";
 import { normalizeArray, sameId } from "../lib/normalize";
 import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
+import { getLocalizedValue } from "../lib/localization";
 const statusVariant = {
   pending: "pending",
   approved: "success",
@@ -29,7 +30,7 @@ const UserDashboard = () => {
     return {
       id: order._id.slice(-8).toUpperCase(),
       mongoId: order._id,
-      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+      item: items.map((item) => getLocalizedValue(item.product_id, "name", "en") || getLocalizedValue(item.product, "name", "en") || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
       quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       requestedDate: new Date(order.date).toLocaleDateString(),
@@ -37,16 +38,17 @@ const UserDashboard = () => {
     };
   });
   const stockData = products.slice(0, 7).map((product) => ({
-    day: product.name.slice(0, 8),
+    day: getLocalizedValue(product, "name", "en").slice(0, 8),
     level: product.min_quantity ? Math.min(100, Math.round(product.quantity / (product.min_quantity * 3) * 100)) : 100
   }));
   const availableStock = Object.entries(
     products.reduce((totals, product) => {
-      totals[product.category] = (totals[product.category] || 0) + 1;
+      const category = getLocalizedValue(product, "category", "en") || "Uncategorized";
+      totals[category] = (totals[category] || 0) + 1;
       return totals;
     }, {})
   ).map(([category, items]) => {
-    const hasLowStock = products.some((product) => product.category === category && ["low-stock", "critical"].includes(getProductStatus(product)));
+    const hasLowStock = products.some((product) => (getLocalizedValue(product, "category", "en") || "Uncategorized") === category && ["low-stock", "critical"].includes(getProductStatus(product)));
     return { category, items, status: hasLowStock ? "Low Stock" : "In Stock" };
   });
   const pendingRequests = orders.filter((order) => order.status === "pending").length;

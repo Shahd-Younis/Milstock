@@ -11,6 +11,7 @@ import { useLocation, useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../lib/format";
+import { getLocalizedValue } from "../lib/localization";
 const InventoryList = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,13 +41,13 @@ const InventoryList = () => {
   const inventoryData = products.map((product) => ({
     id: product._id.slice(-8).toUpperCase(),
     mongoId: product._id,
-    name: product.name,
-    category: product.category,
+    name: getLocalizedValue(product, "name", "en"),
+    category: getLocalizedValue(product, "category", "en"),
     quantity: product.quantity,
     unit: product.unit,
     expirationRaw: product.expiration_date || product.expiry_date,
     expirationDate: formatDate(product.expiration_date || product.expiry_date),
-    warehouse: product.warehouse_id?.name || "Unassigned",
+    warehouse: getLocalizedValue(product.warehouse_id, "name", "en") || "Unassigned",
     warehouseId: product.warehouse_id?._id || product.warehouse_id || "",
     storageSection: product.storage_section || "N/A",
     status: getProductStatus(product)
@@ -143,7 +144,7 @@ const InventoryList = () => {
             </div>
           </div>
           <Select
-    options={uniqueOptions(products.map((product) => product.category), "All Categories")}
+    options={uniqueOptions(products.map((product) => getLocalizedValue(product, "category", "en")), "All Categories")}
     value={categoryFilter}
     onChange={(e) => setCategoryFilter(e.target.value)}
     disabled={loading}

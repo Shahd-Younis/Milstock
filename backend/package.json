@@ -13,7 +13,10 @@
     "migrate:request-types": "node scripts/migrateRequestTypes.js",
     "migrate:provider-to-supplier": "node scripts/migrateProviderToSupplier.js",
     "seed:warehouses-suppliers": "node scripts/seedWarehousesAndSuppliers.js",
-    "migrate:product-alert-settings": "node scripts/migrateProductAlertSettings.js"
+    "migrate:product-alert-settings": "node scripts/migrateProductAlertSettings.js",
+    "migrate:arabic-fields": "node scripts/migrateArabicFields.js",
+    "seed:arabic-translations": "node scripts/seedArabicTranslations.js",
+    "backfill:item-translations": "node scripts/backfillItemTranslations.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

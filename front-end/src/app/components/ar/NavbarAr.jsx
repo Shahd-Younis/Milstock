@@ -65,7 +65,7 @@ const NavbarAr = ({ userRole }) => {
     navigate("/ar/login", { replace: true });
   };
 
-  return <div className="h-16 bg-white border-b border-[#4E4631]/10 px-6 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-[0_1px_3px_rgba(46,58,36,0.06)]">
+  return <div dir="rtl" className="h-16 bg-white border-b border-[#4E4631]/10 px-6 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-[0_1px_3px_rgba(46,58,36,0.06)]">
     <div className="min-w-0 text-right">
       <h2 className="text-[#2E3A24] leading-none truncate">{title}</h2>
       {subtitle && <p className="text-xs text-[#5A6B50] mt-0.5">{subtitle}</p>}
@@ -76,7 +76,7 @@ const NavbarAr = ({ userRole }) => {
         <button
           type="button"
           onClick={() => setUserMenuOpen((open) => !open)}
-          className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg hover:bg-[#4B5B3A]/8 transition-colors border-l border-[#4E4631]/10"
+          className="flex items-center gap-2 flex-row-reverse pl-3 pr-2 py-1.5 rounded-lg hover:bg-[#4B5B3A]/8 transition-colors border-l border-[#4E4631]/10"
           aria-haspopup="menu"
           aria-expanded={userMenuOpen}
         >
@@ -94,7 +94,7 @@ const NavbarAr = ({ userRole }) => {
           <Link
             to="/ar/profile"
             onClick={() => setUserMenuOpen(false)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#2E3A24] hover:bg-[#ECEEE2]"
+            className="flex items-center gap-2 flex-row-reverse rounded-lg px-3 py-2 text-sm text-[#2E3A24] hover:bg-[#ECEEE2]"
           >
             <User className="w-4 h-4 text-[#5A6B50]" />
             الملف الشخصي
@@ -102,7 +102,7 @@ const NavbarAr = ({ userRole }) => {
           <button
             type="button"
             onClick={requireLoginForSwitch}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm text-[#2E3A24] hover:bg-[#ECEEE2]"
+            className="flex w-full items-center gap-2 flex-row-reverse rounded-lg px-3 py-2 text-right text-sm text-[#2E3A24] hover:bg-[#ECEEE2]"
           >
             <Repeat className="w-4 h-4 text-[#5A6B50]" />
             تبديل المستخدم
@@ -110,7 +110,7 @@ const NavbarAr = ({ userRole }) => {
           <button
             type="button"
             onClick={requireLoginForSwitch}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-right text-sm text-[#8A1F11] hover:bg-[#D4183D]/10"
+            className="flex w-full items-center gap-2 flex-row-reverse rounded-lg px-3 py-2 text-right text-sm text-[#8A1F11] hover:bg-[#D4183D]/10"
           >
             <LogOut className="w-4 h-4" />
             تسجيل الخروج
@@ -130,7 +130,7 @@ const NavbarAr = ({ userRole }) => {
 
       <Link
         to={enPath}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#4B5B3A]/20 text-[#4B5B3A] hover:bg-[#4B5B3A]/8 transition-colors"
+        className="flex items-center gap-1.5 flex-row-reverse px-3 py-1.5 rounded-lg border border-[#4B5B3A]/20 text-[#4B5B3A] hover:bg-[#4B5B3A]/8 transition-colors"
       >
         <Globe className="w-3.5 h-3.5" />
         <span className="text-xs font-medium">English</span>

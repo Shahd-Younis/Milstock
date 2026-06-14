@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate, getProductStatus } from "../lib/format";
+import { getLocalizedValue } from "../lib/localization";
 
 const fieldValue = (value) => value || "N/A";
 
@@ -37,6 +38,9 @@ const ItemDetails = () => {
   }
 
   const expirationDate = product.expiration_date || product.expiry_date;
+  const productName = getLocalizedValue(product, "name", "en") || "Inventory Item";
+  const productCategory = getLocalizedValue(product, "category", "en");
+  const productDescription = getLocalizedValue(product, "description", "en");
   const normalizeIdentity = (value) => String(value || "").trim().toLowerCase();
   const sameItemProducts = products.filter((entry) =>
     normalizeIdentity(entry.name) === normalizeIdentity(product.name)
@@ -64,9 +68,9 @@ const ItemDetails = () => {
       return {
         id: row.warehouse_id?._id || row.warehouse_id,
         _id: row.warehouse_id?._id || row.warehouse_id,
-        name: row.warehouse_id?.name || rowProduct?.warehouse_id?.name || rowProduct?.warehouse_name || "Unassigned",
+        name: getLocalizedValue(row.warehouse_id, "name", "en") || getLocalizedValue(rowProduct?.warehouse_id, "name", "en") || rowProduct?.warehouse_name || "Unassigned",
         code: row.warehouse_id?.code || rowProduct?.warehouse_id?.code || "",
-        location: row.warehouse_id?.location || rowProduct?.warehouse_id?.location || "",
+        location: getLocalizedValue(row.warehouse_id, "location", "en") || getLocalizedValue(rowProduct?.warehouse_id, "location", "en") || "",
         quantity: Number(row.quantity || 0),
         unit: rowProduct?.unit || product.unit,
       };
@@ -76,9 +80,9 @@ const ItemDetails = () => {
     .map((entry) => ({
       id: entry.warehouse_id?._id || entry.warehouse_id || entry.warehouse_name,
       _id: entry.warehouse_id?._id || entry.warehouse_id,
-      name: entry.warehouse_id?.name || entry.warehouse_name || "Unassigned",
+      name: getLocalizedValue(entry.warehouse_id, "name", "en") || entry.warehouse_name || "Unassigned",
       code: entry.warehouse_id?.code || "",
-      location: entry.warehouse_id?.location || "",
+      location: getLocalizedValue(entry.warehouse_id, "location", "en") || "",
       quantity: Number(entry.quantity || 0),
       unit: entry.unit,
     })));
@@ -91,9 +95,9 @@ const ItemDetails = () => {
     ? product.warehouses
     : (product.warehouse_id || product.warehouse_name ? [{
       id: product.warehouse_id?._id || product.warehouse_id || "legacy-warehouse",
-      name: product.warehouse_id?.name || product.warehouse_name || "Unassigned",
+      name: getLocalizedValue(product.warehouse_id, "name", "en") || product.warehouse_name || "Unassigned",
       code: product.warehouse_id?.code,
-      location: product.warehouse_id?.location,
+      location: getLocalizedValue(product.warehouse_id, "location", "en"),
       quantity: product.quantity ?? 0,
       unit: product.unit,
     }] : []);
@@ -101,9 +105,9 @@ const ItemDetails = () => {
     ? warehouseStock.reduce((sum, warehouse) => sum + Number(warehouse.quantity || 0), 0)
     : Number(product.totalStock ?? product.quantity ?? 0);
   const primaryWarehouse = warehouseStock[0] || {
-    name: product.warehouse_id?.name || product.warehouse_name || "Unassigned",
+    name: getLocalizedValue(product.warehouse_id, "name", "en") || product.warehouse_name || "Unassigned",
     code: product.warehouse_id?.code,
-    location: product.warehouse_id?.location,
+    location: getLocalizedValue(product.warehouse_id, "location", "en"),
     quantity: product.quantity ?? 0,
     unit: product.unit,
   };
@@ -135,7 +139,7 @@ const ItemDetails = () => {
     </button>
 
     <PageHeader
-      title={product.name || "Inventory Item"}
+      title={productName}
       subtitle={`Item ID: ${String(product._id || id).slice(-8).toUpperCase()}`}
       actions={[
         { label: "Edit Item", onClick: () => navigate(`/admin/inventory/${id}/edit`), icon: Edit },
@@ -184,7 +188,7 @@ const ItemDetails = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[
-                ["Category", product.category],
+                ["Category", productCategory],
                 ["Unit", product.unit],
                 ["Low Stock Threshold", product.alert_settings?.low_stock_threshold ?? product.min_quantity],
                 ["Critical Stock Threshold", product.alert_settings?.critical_stock_threshold ?? 0],
@@ -236,7 +240,7 @@ const ItemDetails = () => {
           <CardContent className="space-y-5">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Description</p>
-              <p className="text-foreground">{fieldValue(product.description)}</p>
+              <p className="text-foreground">{fieldValue(productDescription)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-2">Notes</p>

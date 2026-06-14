@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { normalizeArray, sameId } from "../lib/normalize";
+import { getLocalizedDisplayName, getLocalizedRoleLabel, getLocalizedValue } from "../lib/localization";
 const RequestsList = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,16 +32,16 @@ const RequestsList = () => {
       return {
         id: order._id.slice(-8).toUpperCase(),
         mongoId: order._id,
-        kitchen: order.user_id?.military_number || order.user_id?.role || "Kitchen",
-        item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+        kitchen: order.user_id?.military_number || getLocalizedRoleLabel(order.user_id?.role, "en") || "Kitchen",
+        item: items.map((item) => getLocalizedValue(item.product_id, "name", "en") || getLocalizedValue(item.product, "name", "en") || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
         quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
-        supplier: order.supplier_id?.name || order.provider_id?.name || "",
+        supplier: getLocalizedDisplayName(order.supplier_id, "en") || getLocalizedDisplayName(order.provider_id, "en") || "",
         sourceWarehouseId: order.source_warehouse?._id || order.source_warehouse || "",
         destinationWarehouseId: order.destination_warehouse?._id || order.destination_warehouse || "",
         requestType: order.request_type === "provider" ? "supplier_request" : order.request_type === "warehouse_transfer" ? "warehouse_request" : order.request_type || "warehouse_request",
         status: order.status,
         requestedDate: new Date(order.date).toLocaleDateString(),
-        requestedBy: order.user_id?.name || "Unknown"
+        requestedBy: getLocalizedDisplayName(order.user_id, "en") || "Unknown"
       };
     });
   }, [orders, orderItems]);

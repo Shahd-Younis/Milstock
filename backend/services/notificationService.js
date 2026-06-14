@@ -18,9 +18,15 @@ const createLowStockNotification = async (product, userId) => {
 
   return createNotification({
     title: 'Low Stock Alert',
+    titleAr: 'انخفاض في المخزون',
+    titleKey: 'LOW_STOCK_TITLE',
     type: 'low_stock',
     severity: criticalStockThreshold && product.quantity <= criticalStockThreshold ? 'critical' : 'warning',
     message: `The stock level for ${product.name} is below the configured minimum threshold.`,
+    messageAr: product.nameAr
+      ? `مخزون ${product.nameAr} منخفض عن الحد المحدد.`
+      : '',
+    messageKey: 'LOW_STOCK_MESSAGE',
     user_id: userId,
     item_id: product._id,
     entity_id: String(product._id),
@@ -31,9 +37,17 @@ const createLowStockNotification = async (product, userId) => {
     metadata: {
       item_id: product._id,
       item_name: product.name,
+      item_name_ar: product.nameAr || '',
       current_stock: product.quantity,
       minimum_stock: lowStockThreshold,
       critical_stock_threshold: criticalStockThreshold,
+      unit: product.unit,
+    },
+    params: {
+      itemName: product.name,
+      itemNameAr: product.nameAr || '',
+      currentStock: product.quantity,
+      minimumStock: lowStockThreshold,
       unit: product.unit,
     },
   });

@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, CheckCircle, Clock, Package, Truck, User, XCircle 
 import { api } from "../lib/api";
 import { formatDate } from "../lib/format";
 import { getDocumentId, normalizeArray, normalizeRecord, sameId } from "../lib/normalize";
+import { getLocalizedValue } from "../lib/localization";
 
 const statusVariants = {
   pending: "pending",
@@ -293,7 +294,7 @@ const RequestDetails = () => {
               {items.map((item) => {
                 const product = item.product_id || item.product || {};
                 const productId = getDocumentId(product);
-                const productName = product?.name || item.product_name || item.name || "Unknown item";
+                const productName = getLocalizedValue(product, "name", "en") || item.product_name || item.name || "Unknown item";
                 return <div key={item._id || `${productId || productName}-${item.quantity}`} className="p-4 bg-background rounded-xl border border-border">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>

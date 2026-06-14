@@ -11,10 +11,15 @@ const request = async (path, options = {}) => {
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...fetchOptions,
-    headers
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...fetchOptions,
+      headers
+    });
+  } catch (error) {
+    throw new Error(`Unable to reach backend API at ${API_BASE_URL}. Make sure the backend server is running on port 5001.`);
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
     const details = Array.isArray(error.errors) && error.errors.length ? `: ${error.errors.join(", ")}` : "";

@@ -8,6 +8,7 @@ import { AlertTriangle, Bell } from "lucide-react";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { normalizeRecord } from "../lib/normalize";
+import { getLocalizedValue } from "../lib/localization";
 
 const emptyForm = {
   low_stock_threshold: "",
@@ -126,7 +127,7 @@ const SettingsPage = () => {
                     { value: "", label: productsLoading ? "Loading products..." : productsError || "Select product...", disabled: true },
                     ...products.map((product) => ({
                       value: product._id,
-                      label: `${product.name}${product.item_id || product.code || product.serial_number ? ` (${product.item_id || product.code || product.serial_number})` : ""}`
+                      label: `${getLocalizedValue(product, "name", "en")}${product.item_id || product.code || product.serial_number ? ` (${product.item_id || product.code || product.serial_number})` : ""}`
                     }))
                   ]}
                 />

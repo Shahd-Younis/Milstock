@@ -8,6 +8,7 @@ import { ArrowRight, Calendar, CheckCircle, Clock, Package, Truck, User, XCircle
 import { api } from "../../lib/api";
 import { formatDate } from "../../lib/format";
 import { getDocumentId, normalizeArray, normalizeRecord, sameId } from "../../lib/normalize";
+import { getLocalizedDisplayName, getLocalizedRoleLabel, getLocalizedValue, localizeText } from "../../lib/localization";
 
 const statusVariants = {
   pending: "pending",
@@ -119,9 +120,9 @@ const RequestDetailsAr = () => {
   }, [id, order?._id]);
 
   const notes = order?.notes || order?.note || order?.description || order?.justification || "";
-  const requesterName = order?.user_id?.name || "مستخدم غير محدد";
+  const requesterName = getLocalizedDisplayName(order?.user_id, "ar") || getLocalizedRoleLabel(order?.user_id?.role, "ar") || "مستخدم غير محدد";
   const requesterCode = order?.user_id?.military_number || order?.user_id?.email || "غير محدد";
-  const supplierName = order?.supplier_id?.name || "بدون مورد";
+  const supplierName = getLocalizedDisplayName(order?.supplier_id, "ar") || getLocalizedDisplayName(order?.provider_id, "ar") || "بدون مورد";
   const currentStatus = order?.status || "pending";
   const isWarehouseRequest = ["warehouse_request", "warehouse_transfer"].includes(order?.request_type || "warehouse_request");
   const adminUser = useMemo(() => {
@@ -254,10 +255,10 @@ const RequestDetailsAr = () => {
               {items.map((item) => {
                 const product = item.product_id || item.product || {};
                 const productId = getDocumentId(product);
-                const productName = product?.name || item.product_name || item.name || "صنف غير محدد";
+                const productName = getLocalizedValue(product, "name", "ar") || localizeText(item.product_name || item.name, "ar") || "صنف غير محدد";
                 return <div key={item._id || `${productId || productName}-${item.quantity}`} className="p-4 bg-background rounded-xl border border-border text-right">
                   <div className="flex items-start justify-between gap-4 mb-3">
-                    <Badge variant="info">{product?.category || "مواد غذائية"}</Badge>
+                    <Badge variant="info">{getLocalizedValue(product, "category", "ar") || localizeText(product?.category, "ar") || "مواد غذائية"}</Badge>
                     <div>
                       <p className="font-semibold text-foreground">{productName}</p>
                       <p className="text-sm text-muted-foreground">{String(productId || "").slice(-8).toUpperCase() || "غير محدد"}</p>

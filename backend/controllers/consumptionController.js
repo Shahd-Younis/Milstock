@@ -94,9 +94,15 @@ const notifyLowStockAfterConsumption = async ({
 
   await Promise.all(Array.from(recipients.values()).map((userId) => createNotification({
     title: severity === 'critical' ? 'Critical Stock After Consumption' : 'Low Stock After Consumption',
+    titleAr: severity === 'critical' ? 'مخزون حرج بعد الاستهلاك' : 'انخفاض في المخزون بعد الاستهلاك',
+    titleKey: 'LOW_STOCK_TITLE',
     type: 'low_stock',
     severity,
     message: `${product.name} stock in ${warehouse.name} is now ${newQuantity} ${product.unit}.`,
+    messageAr: product.nameAr
+      ? `مخزون ${product.nameAr} في ${warehouse.nameAr || warehouse.name} أصبح ${newQuantity} ${product.unit}.`
+      : '',
+    messageKey: 'LOW_STOCK_MESSAGE',
     user_id: userId,
     item_id: product._id,
     entity_id: String(product._id),
@@ -107,9 +113,21 @@ const notifyLowStockAfterConsumption = async ({
     metadata: {
       product_id: String(product._id),
       warehouse_id: String(warehouse._id),
+      item_name: product.name,
+      item_name_ar: product.nameAr || '',
+      warehouse_name: warehouse.name,
+      warehouse_name_ar: warehouse.nameAr || '',
       old_quantity: oldQuantity,
       new_quantity: newQuantity,
       consumed_quantity: consumedQuantity,
+      unit: product.unit,
+    },
+    params: {
+      itemName: product.name,
+      itemNameAr: product.nameAr || '',
+      warehouseName: warehouse.name,
+      warehouseNameAr: warehouse.nameAr || '',
+      currentStock: newQuantity,
       unit: product.unit,
     },
   })));

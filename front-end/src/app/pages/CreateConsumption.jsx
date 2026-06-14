@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getStoredAuth } from "../lib/auth";
+import { getLocalizedValue } from "../lib/localization";
 
 const labelsEn = {
   title: "Record Consumption",
@@ -74,6 +75,7 @@ const getBasePath = (role, isArabic) => {
 
 const CreateConsumptionView = ({ isArabic = false }) => {
   const labels = isArabic ? labelsAr : labelsEn;
+  const locale = isArabic ? "ar" : "en";
   const navigate = useNavigate();
   const { role, user } = getStoredAuth();
   const assignedWarehouse = user?.assigned_warehouse;
@@ -108,7 +110,7 @@ const CreateConsumptionView = ({ isArabic = false }) => {
     .filter((row) => Number(row.quantity || 0) > 0 && row.product_id)
     .map((row) => ({
       value: getId(row.product_id),
-      label: `${row.product_id?.name || "Unknown product"} (${row.quantity} ${row.product_id?.unit || ""})`,
+      label: `${getLocalizedValue(row.product_id, "name", locale) || "Unknown product"} (${row.quantity} ${row.product_id?.unit || ""})`,
     }));
 
   const selectedStock = useMemo(
@@ -183,7 +185,7 @@ const CreateConsumptionView = ({ isArabic = false }) => {
           error={errors.warehouse_id}
           options={[
             { value: "", label: warehousesLoading ? "Loading warehouses..." : labels.selectWarehouse, disabled: true },
-            ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name })),
+            ...warehouses.map((warehouse) => ({ value: warehouse._id, label: getLocalizedValue(warehouse, "name", locale) })),
           ]}
         /> : <Input label={labels.warehouse} value={assignedWarehouse?.name || user?.assigned_warehouse_name || ""} readOnly />}
         <Select

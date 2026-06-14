@@ -11,8 +11,10 @@ const { getAssignedWarehouseId } = require('../utils/warehouseScope');
 
 const warehouseRules = [
   body('name').optional().trim().isLength({ min: 2 }).withMessage('Warehouse name is required'),
+  body('nameAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('code').optional().trim(),
   body('location').optional().trim().notEmpty().withMessage('Location is required'),
+  body('locationAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('capacity').optional().isFloat({ min: 0 }).withMessage('Capacity must be 0 or greater'),
   body('status').optional().isIn(['active', 'inactive']).withMessage('Status must be active or inactive'),
   body('user_id').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Valid user_id is required'),
@@ -93,7 +95,9 @@ const getWarehouseDashboard = asyncHandler(async (req, res) => {
         _id: row._id,
         product_id: product._id,
         name: product.name,
+        nameAr: product.nameAr,
         category: product.category || 'Uncategorized',
+        categoryAr: product.categoryAr || '',
         quantity: row.quantity,
         unit: product.unit,
         min_quantity: product.min_quantity,
@@ -107,7 +111,7 @@ const getWarehouseDashboard = asyncHandler(async (req, res) => {
   const totalQuantityForDistribution = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const stockDistribution = Object.values(inventory.reduce((totals, item) => {
     const category = item.category || 'Uncategorized';
-    if (!totals[category]) totals[category] = { category, quantity: 0, items: 0 };
+    if (!totals[category]) totals[category] = { category, categoryAr: item.categoryAr || '', quantity: 0, items: 0 };
     totals[category].quantity += Number(item.quantity || 0);
     totals[category].items += 1;
     return totals;
@@ -123,9 +127,9 @@ const getWarehouseDashboard = asyncHandler(async (req, res) => {
       { reference_id: id },
     ],
   })
-    .populate('product_id', '_id name category unit')
-    .populate('from_warehouse', '_id name')
-    .populate('to_warehouse', '_id name')
+    .populate('product_id', '_id name nameAr category categoryAr unit')
+    .populate('from_warehouse', '_id name nameAr')
+    .populate('to_warehouse', '_id name nameAr')
     .populate('user_id completed_by', '_id name')
     .sort('-createdAt')
     .limit(50);
@@ -137,7 +141,7 @@ const getWarehouseDashboard = asyncHandler(async (req, res) => {
     ],
   })
     .populate('requested_by user_id supplier_id', '_id name email role')
-    .populate('source_warehouse destination_warehouse', '_id name')
+    .populate('source_warehouse destination_warehouse', '_id name nameAr')
     .sort('-createdAt')
     .limit(50);
 

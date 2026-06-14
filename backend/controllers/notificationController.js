@@ -9,8 +9,12 @@ const { requireAssignedWarehouse } = require('../utils/warehouseScope');
 
 const notificationRules = [
   body('title').optional().trim().notEmpty().withMessage('Title is required'),
+  body('titleAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('type').optional().trim().notEmpty().withMessage('Type is required'),
   body('message').optional().trim().notEmpty().withMessage('Message is required'),
+  body('messageAr').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('titleKey').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('messageKey').optional({ nullable: true, checkFalsy: true }).trim(),
   body('is_read').optional().isBoolean().withMessage('is_read must be boolean'),
   body('user_id').optional().isMongoId().withMessage('Valid user_id is required'),
 ];

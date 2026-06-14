@@ -10,6 +10,7 @@ import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
 import { normalizeArray, sameId } from "../../lib/normalize";
+import { getLocalizedDisplayName, getLocalizedRoleLabel, getLocalizedValue, localizeText } from "../../lib/localization";
 
 const statusLabels = {
   pending: "قيد المراجعة",
@@ -50,13 +51,13 @@ const RequestsListAr = () => {
     return {
       id: order._id.slice(-8).toUpperCase(),
       mongoId: order._id,
-      kitchen: order.user_id?.name || order.user_id?.military_number || "مستخدم",
-      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "طلب توريد",
+      kitchen: getLocalizedDisplayName(order.user_id, "ar") || getLocalizedRoleLabel(order.user_id?.role, "ar") || order.user_id?.military_number || "مستخدم",
+      item: items.map((item) => getLocalizedValue(item.product_id, "name", "ar") || getLocalizedValue(item.product, "name", "ar") || localizeText(item.product_name || item.name, "ar")).filter(Boolean).join("، ") || "طلب توريد",
       quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       requestedDate: formatDate(order.date),
-      requestedBy: order.user_id?.name || "غير محدد",
-      supplier: order.supplier_id?.name || "غير محدد",
+      requestedBy: getLocalizedDisplayName(order.user_id, "ar") || "غير محدد",
+      supplier: getLocalizedDisplayName(order.supplier_id, "ar") || "غير محدد",
       sourceWarehouseId: order.source_warehouse?._id || order.source_warehouse || "",
       destinationWarehouseId: order.destination_warehouse?._id || order.destination_warehouse || ""
     };

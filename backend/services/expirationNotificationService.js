@@ -77,8 +77,16 @@ const generateExpirationNotifications = async (req = null) => {
 
     const notification = await Notification.create({
       title: info.status === 'expired' ? 'Expired Item' : 'Expiration Reminder',
+      titleAr: info.status === 'expired' ? 'صنف منتهي الصلاحية' : 'تذكير بانتهاء الصلاحية',
+      titleKey: info.status === 'expired' ? 'EXPIRED_ITEM_TITLE' : 'EXPIRATION_REMINDER_TITLE',
       type: 'expiration',
       message: buildMessage(product, info),
+      messageAr: product.nameAr
+        ? (info.status === 'expired'
+          ? `انتهت صلاحية ${product.nameAr} في ${formatDateText(expirationDate)}.`
+          : `تنبيه: ${product.nameAr} ستنتهي صلاحيته خلال ${info.daysRemaining} يوم.`)
+        : '',
+      messageKey: info.status === 'expired' ? 'EXPIRED_ITEM_MESSAGE' : 'EXPIRATION_REMINDER_MESSAGE',
       user_id: null,
       item_id: product._id,
       entity_id: String(product._id),
@@ -90,11 +98,19 @@ const generateExpirationNotifications = async (req = null) => {
       metadata: {
         item_id: product._id,
         item_name: product.name,
+        item_name_ar: product.nameAr || '',
         product_name: product.name,
+        product_name_ar: product.nameAr || '',
         expiration_date: expirationDate,
         expiration_status: info.status,
         days_remaining: info.daysRemaining,
         reminder_window: info.window,
+      },
+      params: {
+        itemName: product.name,
+        itemNameAr: product.nameAr || '',
+        daysRemaining: info.daysRemaining,
+        expirationDate,
       },
     });
     created += 1;

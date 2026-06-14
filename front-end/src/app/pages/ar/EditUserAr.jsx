@@ -9,6 +9,7 @@ import { Button } from "../../components/Button";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { getWarehouseId } from "../../lib/warehouseDisplay";
+import { getLocalizedValue } from "../../lib/localization";
 
 const initialForm = { name: "", email: "", military_number: "", phone: "", role: "unit", status: "active", assigned_warehouse: "" };
 
@@ -87,7 +88,7 @@ const EditUserAr = () => {
               disabled={warehousesLoading}
               options={[
                 { value: "", label: form.role === "admin" ? "كل المخازن" : warehousesLoading ? "جاري تحميل المخازن..." : warehousesError || "اختر المخزن" },
-                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name }))
+                ...warehouses.map((warehouse) => ({ value: warehouse._id, label: getLocalizedValue(warehouse, "name", "ar") }))
               ]}
               className="text-right"
             />

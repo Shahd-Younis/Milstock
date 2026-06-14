@@ -10,6 +10,7 @@ import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../../lib/format";
+import { getLocalizedValue } from "../../lib/localization";
 
 const statusLabels = {
   "in-stock": "متوفر",
@@ -59,13 +60,13 @@ const InventoryListAr = () => {
     return {
       id: product._id.slice(-8).toUpperCase(),
       mongoId: product._id,
-      name: product.name,
-      category: product.category,
+      name: getLocalizedValue(product, "name", "ar"),
+      category: getLocalizedValue(product, "category", "ar"),
       quantity: product.quantity,
       unit: product.unit,
       expirationRaw: product.expiration_date || product.expiry_date,
       expirationDate: formatDate(product.expiration_date || product.expiry_date),
-      warehouse: product.warehouse_id?.name || "غير محدد",
+      warehouse: getLocalizedValue(product.warehouse_id, "name", "ar") || "غير محدد",
       warehouseId: product.warehouse_id?._id || product.warehouse_id || "",
       storageSection: product.storage_section || "غير محدد",
       status
@@ -152,7 +153,7 @@ const InventoryListAr = () => {
           />
         </div>
         <Select
-          options={uniqueOptions(products.map((product) => product.category), "جميع الفئات")}
+          options={uniqueOptions(products.map((product) => getLocalizedValue(product, "category", "ar")), "جميع الفئات")}
           value={categoryFilter}
           onChange={(event) => setCategoryFilter(event.target.value)}
           disabled={loading}

@@ -130,7 +130,11 @@ const Sidebar = ({ userRole }) => {
       (prev) => prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
     );
   };
-  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + "/");
+  const allNavPaths = navGroups.flatMap((group) => group.items.flatMap((item) => [item.path, ...(item.children?.map((child) => child.path) || [])]));
+  const activePath = allNavPaths
+    .filter((path) => location.pathname === path || location.pathname.startsWith(path + "/"))
+    .sort((a, b) => b.length - a.length)[0] || "";
+  const isActive = (path) => path === activePath;
   const isGroupActive = (item) => isActive(item.path) || (item.children?.some((c) => isActive(c.path)) ?? false);
   return <div
     className={clsx(

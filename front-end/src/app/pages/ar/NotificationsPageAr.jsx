@@ -6,6 +6,7 @@ import { Button } from "../../components/Button";
 import { ExportCsvButton } from "../../components/ExportCsvButton";
 import { useNotifications } from "../../context/NotificationContext";
 import { formatDate, formatDateTime } from "../../lib/format";
+import { formatNotification, getLocalizedValue, localizeText } from "../../lib/localization";
 
 const getNotificationItemId = (notification) => {
   const itemId =
@@ -43,23 +44,28 @@ const isRequestNotification = (notification) => {
 };
 
 const getItemName = (notification) =>
-  notification.item_id?.name ||
-  notification.item?.name ||
-  notification.metadata?.item_name ||
-  notification.metadata?.product_name ||
-  notification.metadata?.name ||
+  getLocalizedValue(notification.item_id, "name", "ar") ||
+  getLocalizedValue(notification.item, "name", "ar") ||
+  notification.metadata?.item_name_ar ||
+  notification.metadata?.product_name_ar ||
+  localizeText(notification.metadata?.item_name, "ar") ||
+  localizeText(notification.metadata?.product_name, "ar") ||
+  localizeText(notification.metadata?.name, "ar") ||
   "";
 
 const getTypeLabel = (notification) => {
+  const formatted = formatNotification(notification, "ar");
   if (notification.type === "low_stock") return "تنبيه انخفاض المخزون";
   if (notification.metadata?.expiration_status === "expired" || notification.type === "expired") return "صنف منتهي الصلاحية";
   if (notification.type === "expiration" || notification.type === "expiration_reminder") return "تذكير بانتهاء الصلاحية";
   if (String(notification.type || "").includes("order") || String(notification.type || "").includes("request")) return "تحديث طلب";
   if (String(notification.type || "").includes("inventory") || String(notification.type || "").includes("item")) return "تحديث مخزون";
-  return notification.title || "إشعار نظام";
+  return formatted.title || notification.titleAr || notification.title || "إشعار نظام";
 };
 
 const getDisplayMessage = (notification) => {
+  const formatted = formatNotification(notification, "ar");
+  if (formatted.message) return formatted.message;
   const itemName = getItemName(notification);
   const days = notification.metadata?.days_remaining;
   if (notification.type === "low_stock" && itemName) {
@@ -71,7 +77,7 @@ const getDisplayMessage = (notification) => {
   if ((notification.metadata?.expiration_status === "expired" || notification.type === "expired") && itemName) {
     return `${itemName} انتهت صلاحيته في ${formatDate(notification.metadata?.expiration_date)}.`;
   }
-  return notification.message || "";
+  return notification.messageAr || notification.message || "";
 };
 
 const getCardStyle = (notification) => {
@@ -186,6 +192,7 @@ const NotificationsPageAr = () => {
         const itemId = getNotificationItemId(notification);
         const requestId = getNotificationRequestId(notification);
         const itemName = getItemName(notification);
+        const formatted = formatNotification(notification, "ar");
         const canOpenItem = Boolean(itemId && isAdminPath && isItemNotification(notification));
         const canOpenRequest = Boolean(requestId && isRequestNotification(notification));
         const canOpenNotification = canOpenItem || canOpenRequest;
@@ -213,16 +220,16 @@ const NotificationsPageAr = () => {
           onKeyDown={handleKeyDown}
           className={`rounded-2xl border border-[#4E4631]/10 border-r-4 ${style.border} p-4 shadow-sm transition-all ${canOpenNotification ? "cursor-pointer hover:bg-[#FBFCF5] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30" : ""} ${read ? "bg-white opacity-75" : "bg-[#FBFCF5] ring-1 ring-[#4B5B3A]/10"}`}
         >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div dir="ltr" className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${style.iconClass}`}>
               <Icon className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 text-right">
+            <div dir="rtl" className="min-w-0 flex-1 text-right">
               <div>
                 <p className={`text-xs font-semibold uppercase tracking-wide ${notification.severity === "critical" ? "text-[#D4183D]" : notification.severity === "warning" ? "text-[#B8862A]" : "text-[#4B5B3A]"}`}>{getTypeLabel(notification)}</p>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {!read && <span className="rounded-lg bg-[#D4183D] px-2 py-0.5 text-xs font-semibold text-white">غير مقروء</span>}
-                  <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || notification.title || "إشعار"}</h3>
+                  <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || formatted.title || notification.titleAr || notification.title || "إشعار"}</h3>
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-[#5A6B50]">{getDisplayMessage(notification)}</p>
               </div>

@@ -7,6 +7,7 @@ import { StatCard } from "../components/StatCard";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
+import { getLocalizedValue } from "../lib/localization";
 const daysUntil = (date) => {
   if (!date) return Number.POSITIVE_INFINITY;
   return Math.ceil((new Date(date).getTime() - Date.now()) / (1e3 * 60 * 60 * 24));
@@ -20,13 +21,13 @@ const ExpirationMonitor = () => {
     const criticalDays = Number(settings.critical_expiration_days ?? 7);
     return {
       id: product._id.slice(-8).toUpperCase(),
-      name: product.name,
-      category: product.category,
+      name: getLocalizedValue(product, "name", "en"),
+      category: getLocalizedValue(product, "category", "en"),
       quantity: product.quantity,
       unit: product.unit,
       expirationDate: formatDate(product.expiry_date),
       daysRemaining,
-      warehouse: product.warehouse_id?.name || "Unassigned",
+      warehouse: getLocalizedValue(product.warehouse_id, "name", "en") || "Unassigned",
       severity: daysRemaining <= criticalDays ? "critical" : daysRemaining <= warningDays ? "warning" : "normal"
     };
   }).filter((item) => item.severity !== "normal").sort((a, b) => a.daysRemaining - b.daysRemaining);

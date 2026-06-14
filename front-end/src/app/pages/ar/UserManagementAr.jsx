@@ -11,6 +11,7 @@ import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
 import { getAssignedWarehouseName } from "../../lib/warehouseDisplay";
+import { getLocalizedDisplayName, getLocalizedRoleLabel } from "../../lib/localization";
 
 const getCurrentUser = () => {
   try {
@@ -55,13 +56,13 @@ const UserManagementAr = () => {
 
   const filtered = rows.filter((user) => {
     const search = String(searchTerm ?? "").toLowerCase();
-    return String(user.name ?? "").toLowerCase().includes(search) || String(user.email ?? "").toLowerCase().includes(search) || String(user.military_number ?? "").toLowerCase().includes(search);
+    return String(getLocalizedDisplayName(user, "ar") ?? "").toLowerCase().includes(search) || String(user.email ?? "").toLowerCase().includes(search) || String(user.military_number ?? "").toLowerCase().includes(search);
   });
   const exportColumns = [
     { key: "military_number", header: "\u0643\u0648\u062f \u0627\u0644\u0645\u0648\u0638\u0641" },
-    { key: "name", header: "\u0627\u0644\u0627\u0633\u0645" },
+    { header: "\u0627\u0644\u0627\u0633\u0645", value: (row) => getLocalizedDisplayName(row, "ar") },
     { key: "email", header: "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a" },
-    { header: "\u0627\u0644\u062f\u0648\u0631", value: (row) => row.role === "admin" ? "\u0645\u0633\u0624\u0648\u0644" : "\u0645\u0633\u062a\u062e\u062f\u0645 \u0648\u062d\u062f\u0629" },
+    { header: "\u0627\u0644\u062f\u0648\u0631", value: (row) => getLocalizedRoleLabel(row.role, "ar") },
     { header: "\u0627\u0644\u062d\u0627\u0644\u0629", value: (row) => (row.status || "active") === "active" ? "\u0646\u0634\u0637" : "\u063a\u064a\u0631 \u0646\u0634\u0637" },
     { header: "\u0627\u0644\u0645\u062e\u0632\u0646 \u0627\u0644\u0645\u0633\u0624\u0648\u0644 \u0639\u0646\u0647", value: (row) => getAssignedWarehouseName(row, "\u0643\u0644 \u0627\u0644\u0645\u062e\u0627\u0632\u0646", "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f") },
     { key: "phone", header: "\u0627\u0644\u0647\u0627\u062a\u0641" },
@@ -159,9 +160,9 @@ const UserManagementAr = () => {
         <tbody className="divide-y divide-[#4E4631]/6">
           {(loading ? [] : filtered).map((user) => <tr key={user._id} className="hover:bg-[#ECEEE2]/40 transition-colors">
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{user.military_number || "??? ????"}</td>
-            <td className="px-5 py-3.5 text-sm text-[#2E3A24] font-medium">{user.name || "??? ????"}</td>
+            <td className="px-5 py-3.5 text-sm text-[#2E3A24] font-medium">{getLocalizedDisplayName(user, "ar") || "??? ????"}</td>
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{user.email || "??? ????"}</td>
-            <td className="px-5 py-3.5"><Badge variant={user.role === "admin" ? "info" : "neutral"}>{user.role === "admin" ? "?????" : "?????? ????"}</Badge></td>
+            <td className="px-5 py-3.5"><Badge variant={user.role === "admin" ? "info" : "neutral"}>{getLocalizedRoleLabel(user.role, "ar") || "?????? ????"}</Badge></td>
             <td className="px-5 py-3.5"><Badge variant={(user.status || "active") === "active" ? "success" : "neutral"}>{(user.status || "active") === "active" ? "???" : "??? ???"}</Badge></td>
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{getAssignedWarehouseName(user, "\u0643\u0644 \u0627\u0644\u0645\u062e\u0627\u0632\u0646", "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f")}</td>
             <td className="px-5 py-3.5 text-sm text-[#2E3A24]">{user.phone || "??? ????"}</td>
@@ -194,7 +195,7 @@ const UserManagementAr = () => {
     />}`r`n    {resetUser && <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white border border-[#4E4631]/10 shadow-xl p-6 text-right">
         <h3 className="text-[#2E3A24] font-semibold mb-2">????? ????? ???? ??????</h3>
-        <p className="text-sm text-[#5A6B50] mb-4">???? ???? ???? ????? ???????? {resetUser.name || ""}.</p>
+        <p className="text-sm text-[#5A6B50] mb-4">???? ???? ???? ????? ???????? {getLocalizedDisplayName(resetUser, "ar") || ""}.</p>
         <Input label="???? ?????? ???????" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} className="text-right" />
         <div className="flex justify-end gap-3 mt-5"><Button variant="outline" type="button" onClick={() => setResetUser(null)} disabled={busyId === resetUser._id}>?????</Button><Button type="button" onClick={resetPassword} disabled={busyId === resetUser._id}>{busyId === resetUser._id ? "??? ?????..." : "??? ???? ??????"}</Button></div>
       </div>
@@ -203,7 +204,7 @@ const UserManagementAr = () => {
     {deleteUser && <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white border border-[#4E4631]/10 shadow-xl p-6 text-right">
         <h3 className="text-[#2E3A24] font-semibold mb-2">??? ????????</h3>
-        <p className="text-sm text-[#5A6B50] mb-5">?? ???? ??? {deleteUser.name || "??? ????????"}? ?? ???? ??????? ?? ??? ???????.</p>
+        <p className="text-sm text-[#5A6B50] mb-5">?? ???? ??? {getLocalizedDisplayName(deleteUser, "ar") || "??? ????????"}? ?? ???? ??????? ?? ??? ???????.</p>
         <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setDeleteUser(null)} disabled={busyId === deleteUser._id}>?????</Button><Button variant="danger" type="button" onClick={removeUser} disabled={busyId === deleteUser._id}>{busyId === deleteUser._id ? "??? ?????..." : "??? ????????"}</Button></div>
       </div>
     </div>}

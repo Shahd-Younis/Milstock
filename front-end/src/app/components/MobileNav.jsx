@@ -107,6 +107,11 @@ const MobileNav = ({ userRole }) => {
     ...group,
     items: group.items.map((item) => item.path?.includes("notifications") ? { ...item, badge: unreadCount || void 0 } : item),
   }));
+  const allNavPaths = navGroups.flatMap((group) => group.items.map((item) => item.path));
+  const activePath = allNavPaths
+    .filter((path) => location.pathname === path || location.pathname.startsWith(path + "/"))
+    .sort((a, b) => b.length - a.length)[0] || "";
+  const isActive = (path) => path === activePath;
   const allItems = navGroups.flatMap((g) => g.items);
   const bottomItems = allItems.slice(0, 5);
   return <>
@@ -163,7 +168,7 @@ const MobileNav = ({ userRole }) => {
     onClick={() => setDrawerOpen(false)}
     className={clsx(
       "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
-      location.pathname.startsWith(item.path) ? "bg-[#4B5B3A]/60 text-white" : "text-[#E0E1B7]/70 hover:bg-white/[0.06]"
+      isActive(item.path) ? "bg-[#4B5B3A]/60 text-white" : "text-[#E0E1B7]/70 hover:bg-white/[0.06]"
     )}
   >
                       <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
@@ -209,7 +214,7 @@ const MobileNav = ({ userRole }) => {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#2E3A24] text-[#E0E1B7] border-t border-white/[0.08]">
         <div className="flex items-center justify-around py-1">
           {bottomItems.map((item) => {
-    const active = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+    const active = isActive(item.path);
     return <Link
       key={item.path}
       to={item.path}

@@ -9,6 +9,7 @@ const { createAuditLog } = require('../services/auditLogService');
 
 const userRules = [
   body('name').optional().trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
+  body('nameAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('email').optional().isEmail().withMessage('A valid email is required').normalizeEmail(),
   body('password').optional().isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
@@ -20,6 +21,7 @@ const userRules = [
 
 const createUserRules = [
   body('name').trim().isLength({ min: 3 }).withMessage('Name must be at least 3 characters'),
+  body('nameAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').notEmpty().withMessage('Phone cannot be empty'),

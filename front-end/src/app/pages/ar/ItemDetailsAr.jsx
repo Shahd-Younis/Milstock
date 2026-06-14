@@ -8,6 +8,7 @@ import { Button } from "../../components/Button";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus } from "../../lib/format";
+import { getLocalizedValue, localizeText } from "../../lib/localization";
 
 const fieldValue = (value) => value || "غير محدد";
 
@@ -37,6 +38,9 @@ const ItemDetailsAr = () => {
   }
 
   const expirationDate = product.expiration_date || product.expiry_date;
+  const productName = getLocalizedValue(product, "name", "ar") || "صنف مخزون";
+  const productCategory = getLocalizedValue(product, "category", "ar");
+  const productDescription = getLocalizedValue(product, "description", "ar");
   const normalizeIdentity = (value) => String(value || "").trim().toLowerCase();
   const sameItemProducts = products.filter((entry) =>
     normalizeIdentity(entry.name) === normalizeIdentity(product.name)
@@ -64,9 +68,9 @@ const ItemDetailsAr = () => {
       return {
         id: row.warehouse_id?._id || row.warehouse_id,
         _id: row.warehouse_id?._id || row.warehouse_id,
-        name: row.warehouse_id?.name || rowProduct?.warehouse_id?.name || rowProduct?.warehouse_name || "غير محدد",
+        name: getLocalizedValue(row.warehouse_id, "name", "ar") || getLocalizedValue(rowProduct?.warehouse_id, "name", "ar") || localizeText(rowProduct?.warehouse_name, "ar") || "غير محدد",
         code: row.warehouse_id?.code || rowProduct?.warehouse_id?.code || "",
-        location: row.warehouse_id?.location || rowProduct?.warehouse_id?.location || "",
+        location: getLocalizedValue(row.warehouse_id, "location", "ar") || getLocalizedValue(rowProduct?.warehouse_id, "location", "ar") || "",
         quantity: Number(row.quantity || 0),
         unit: rowProduct?.unit || product.unit,
       };
@@ -76,9 +80,9 @@ const ItemDetailsAr = () => {
     .map((entry) => ({
       id: entry.warehouse_id?._id || entry.warehouse_id || entry.warehouse_name,
       _id: entry.warehouse_id?._id || entry.warehouse_id,
-      name: entry.warehouse_id?.name || entry.warehouse_name || "غير محدد",
+      name: getLocalizedValue(entry.warehouse_id, "name", "ar") || localizeText(entry.warehouse_name, "ar") || "غير محدد",
       code: entry.warehouse_id?.code || "",
-      location: entry.warehouse_id?.location || "",
+      location: getLocalizedValue(entry.warehouse_id, "location", "ar") || "",
       quantity: Number(entry.quantity || 0),
       unit: entry.unit,
     })));
@@ -91,9 +95,9 @@ const ItemDetailsAr = () => {
     ? product.warehouses
     : (product.warehouse_id || product.warehouse_name ? [{
       id: product.warehouse_id?._id || product.warehouse_id || "legacy-warehouse",
-      name: product.warehouse_id?.name || product.warehouse_name || "غير محدد",
+      name: getLocalizedValue(product.warehouse_id, "name", "ar") || localizeText(product.warehouse_name, "ar") || "غير محدد",
       code: product.warehouse_id?.code,
-      location: product.warehouse_id?.location,
+      location: getLocalizedValue(product.warehouse_id, "location", "ar"),
       quantity: product.quantity ?? 0,
       unit: product.unit,
     }] : []);
@@ -101,9 +105,9 @@ const ItemDetailsAr = () => {
     ? warehouseStock.reduce((sum, warehouse) => sum + Number(warehouse.quantity || 0), 0)
     : Number(product.totalStock ?? product.quantity ?? 0);
   const primaryWarehouse = warehouseStock[0] || {
-    name: product.warehouse_id?.name || product.warehouse_name || "غير محدد",
+    name: getLocalizedValue(product.warehouse_id, "name", "ar") || localizeText(product.warehouse_name, "ar") || "غير محدد",
     code: product.warehouse_id?.code,
-    location: product.warehouse_id?.location,
+    location: getLocalizedValue(product.warehouse_id, "location", "ar"),
     quantity: product.quantity ?? 0,
     unit: product.unit,
   };
@@ -135,8 +139,8 @@ const ItemDetailsAr = () => {
     </button>
 
     <PageHeaderAr
-      title={product.name || "صنف مخزون"}
-      subtitle={`${String(product._id || id).slice(-8).toUpperCase()} • ${product.category || "غير محدد"}`}
+      title={productName}
+      subtitle={`${String(product._id || id).slice(-8).toUpperCase()} • ${productCategory || "غير محدد"}`}
       actions={[
         { label: "\u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0635\u0646\u0641", onClick: () => navigate(`/ar/admin/inventory/${id}/edit`), icon: Edit },
         { label: deleting ? "\u062c\u0627\u0631 \u0627\u0644\u062d\u0630\u0641..." : "\u062d\u0630\u0641", onClick: () => setShowDeleteConfirm(true), icon: Trash2, variant: "danger", disabled: deleting }
@@ -157,7 +161,7 @@ const ItemDetailsAr = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-right">
               {[
-                ["الفئة", product.category],
+                ["الفئة", productCategory],
                 ["الوحدة", product.unit],
                 ["حد انخفاض المخزون", product.alert_settings?.low_stock_threshold ?? product.min_quantity],
                 ["حد المخزون الحرج", product.alert_settings?.critical_stock_threshold ?? 0],
@@ -207,7 +211,7 @@ const ItemDetailsAr = () => {
         <Card>
           <CardHeader><CardTitle className="text-right">تفاصيل إضافية</CardTitle></CardHeader>
           <CardContent className="space-y-5 text-right">
-            <div><p className="text-sm text-muted-foreground mb-2">الوصف</p><p className="text-foreground">{fieldValue(product.description)}</p></div>
+            <div><p className="text-sm text-muted-foreground mb-2">الوصف</p><p className="text-foreground">{fieldValue(productDescription)}</p></div>
             <div><p className="text-sm text-muted-foreground mb-2">ملاحظات</p><p className="text-foreground">{fieldValue(product.notes)}</p></div>
           </CardContent>
         </Card>

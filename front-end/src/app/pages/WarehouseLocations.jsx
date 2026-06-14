@@ -10,11 +10,14 @@ import { Input } from "../components/Input";
 import { Select } from "../components/Select";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
+import { getLocalizedValue } from "../lib/localization";
 
 const initialWarehouseForm = {
   name: "",
+  nameAr: "",
   code: "",
   location: "",
+  locationAr: "",
   capacity: "",
   status: "active"
 };
@@ -59,8 +62,10 @@ const WarehouseLocations = () => {
     try {
       await api.warehouses.create({
         name: warehouseForm.name.trim(),
+        nameAr: warehouseForm.nameAr.trim(),
         code: warehouseForm.code.trim() || undefined,
         location: warehouseForm.location.trim(),
+        locationAr: warehouseForm.locationAr.trim(),
         capacity,
         status: warehouseForm.status
       });
@@ -80,7 +85,7 @@ const WarehouseLocations = () => {
     const currentStock = rows.reduce((sum, row) => sum + Number(row.quantity || 0), 0);
     const savedCapacity = Number(warehouse.capacity || 0);
     const categoryTotals = rows.reduce((totals, row) => {
-      const category = row.product_id?.category || "Uncategorized";
+      const category = getLocalizedValue(row.product_id, "category", "en") || "Uncategorized";
       totals[category] = (totals[category] || 0) + Number(row.quantity || 0);
       return totals;
     }, {});
@@ -105,8 +110,8 @@ const WarehouseLocations = () => {
   });
 
   const exportColumns = [
-    { key: "name", header: "Warehouse" },
-    { key: "location", header: "Location" },
+    { header: "Warehouse", value: (row) => getLocalizedValue(row, "name", "en") },
+    { header: "Location", value: (row) => getLocalizedValue(row, "location", "en") },
     { header: "Manager", value: (row) => row.user_id?.name || "Unassigned" },
     { key: "currentStock", header: "Current Stock" },
     { key: "capacity", header: "Capacity" },
@@ -202,6 +207,12 @@ const WarehouseLocations = () => {
             onChange={(event) => updateWarehouseForm("name", event.target.value)}
           />
           <Input
+            label="Arabic Warehouse Name"
+            placeholder="مخزن المواد الجافة"
+            value={warehouseForm.nameAr}
+            onChange={(event) => updateWarehouseForm("nameAr", event.target.value)}
+          />
+          <Input
             label="Code"
             placeholder="WH-DRY"
             value={warehouseForm.code}
@@ -212,6 +223,12 @@ const WarehouseLocations = () => {
             placeholder="Main Storage Zone A"
             value={warehouseForm.location}
             onChange={(event) => updateWarehouseForm("location", event.target.value)}
+          />
+          <Input
+            label="Arabic Location"
+            placeholder="منطقة التخزين الرئيسية أ"
+            value={warehouseForm.locationAr}
+            onChange={(event) => updateWarehouseForm("locationAr", event.target.value)}
           />
           <Input
             label="Capacity"
@@ -278,8 +295,8 @@ const WarehouseLocations = () => {
                   <MapPin className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{warehouse.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">{warehouse.location}</p>
+                  <CardTitle className="text-lg">{getLocalizedValue(warehouse, "name", "en")}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">{getLocalizedValue(warehouse, "location", "en")}</p>
                 </div>
               </div>
               {warehouse.alerts > 0 && <Badge variant="warning" className="flex items-center gap-1">

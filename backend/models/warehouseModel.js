@@ -8,6 +8,11 @@ const warehouseSchema = new mongoose.Schema(
       trim: true,
       minlength: 2,
     },
+    nameAr: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     code: {
       type: String,
       trim: true,
@@ -18,6 +23,11 @@ const warehouseSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    locationAr: {
+      type: String,
+      trim: true,
+      default: '',
     },
     capacity: {
       type: Number,

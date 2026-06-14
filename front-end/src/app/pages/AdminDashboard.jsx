@@ -28,6 +28,7 @@ import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getProductStatus } from "../lib/format";
 import { normalizeArray, sameId } from "../lib/normalize";
+import { formatNotification, getLocalizedValue } from "../lib/localization";
 const COLORS = ["#4B5B3A", "#6A7B4D", "#8A9B6D", "#C9A961"];
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -60,7 +61,8 @@ const AdminDashboard = () => {
     .reduce((sum, item) => sum + Number(item.consumed_quantity || item.quantity || 0), 0);
   const categoryData = Object.entries(
     products.reduce((totals, product) => {
-      totals[product.category] = (totals[product.category] || 0) + product.quantity;
+      const category = getLocalizedValue(product, "category", "en") || "Uncategorized";
+      totals[category] = (totals[category] || 0) + product.quantity;
       return totals;
     }, {})
   ).map(([name, value]) => ({ name, value }));
@@ -74,7 +76,7 @@ const AdminDashboard = () => {
     return {
       id: order._id.slice(-8).toUpperCase(),
       kitchen: order.user_id?.name || "Unknown kitchen",
-      item: items.map((item) => item.product_id?.name || item.product?.name || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
+      item: items.map((item) => getLocalizedValue(item.product_id, "name", "en") || getLocalizedValue(item.product, "name", "en") || item.product_name || item.name).filter(Boolean).join(", ") || "No items",
       quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
       status: order.status,
       priority: order.status === "pending" ? "high" : "normal",
@@ -82,7 +84,7 @@ const AdminDashboard = () => {
     };
   });
   const criticalAlerts = notifications.slice(0, 3).map((notification) => ({
-    message: notification.message,
+    message: formatNotification(notification, "en").message || notification.message,
     severity: notification.type.includes("low") ? "danger" : notification.type.includes("order") ? "success" : "warning",
     time: notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : "Recent"
   }));

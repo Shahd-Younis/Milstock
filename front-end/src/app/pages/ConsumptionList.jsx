@@ -12,6 +12,7 @@ import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
 import { getStoredAuth } from "../lib/auth";
+import { getLocalizedDisplayName, getLocalizedValue } from "../lib/localization";
 
 const labelsEn = {
   title: "Consumption",
@@ -102,15 +103,15 @@ const getBasePath = (role, isArabic) => {
 
 const getId = (value) => value?._id || value || "";
 
-const mapConsumption = (item) => ({
+const mapConsumption = (item, locale = "en") => ({
   raw: item,
   id: item._id,
   shortId: String(item._id || "").slice(-8).toUpperCase(),
-  product: item.product_id?.name || "Unknown product",
-  warehouse: item.warehouse_id?.name || "Unknown warehouse",
+  product: getLocalizedValue(item.product_id, "name", locale) || "Unknown product",
+  warehouse: getLocalizedValue(item.warehouse_id, "name", locale) || "Unknown warehouse",
   quantity: `${item.consumed_quantity ?? item.quantity ?? 0} ${item.unit || item.product_id?.unit || ""}`.trim(),
   reason: item.reason || "N/A",
-  consumedBy: item.consumed_by?.name || item.user_id?.name || "Unknown user",
+  consumedBy: getLocalizedDisplayName(item.consumed_by, locale) || getLocalizedDisplayName(item.user_id, locale) || (locale === "ar" ? "مستخدم غير معروف" : "Unknown user"),
   date: formatDate(item.consumption_date || item.createdAt),
   status: item.status || "completed",
   productId: getId(item.product_id),
@@ -119,6 +120,7 @@ const mapConsumption = (item) => ({
 
 const ConsumptionListView = ({ isArabic = false }) => {
   const labels = isArabic ? labelsAr : labelsEn;
+  const locale = isArabic ? "ar" : "en";
   const navigate = useNavigate();
   const { role } = getStoredAuth();
   const isAdmin = role === "admin";
@@ -145,7 +147,7 @@ const ConsumptionListView = ({ isArabic = false }) => {
   const { data: products } = useApiResource(() => isAdmin ? api.products.list() : Promise.resolve([]), [isAdmin]);
   const { data: users } = useApiResource(() => isAdmin ? api.users.list() : Promise.resolve([]), [isAdmin]);
 
-  const rows = useMemo(() => data.map(mapConsumption), [data]);
+  const rows = useMemo(() => data.map((item) => mapConsumption(item, locale)), [data, locale]);
   const filteredRows = rows.filter((row) => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = [row.shortId, row.product, row.warehouse, row.reason, row.consumedBy]
@@ -266,11 +268,11 @@ const ConsumptionListView = ({ isArabic = false }) => {
     {isAdmin && <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
       <Select label={labels.warehouse} value={warehouseFilter} onChange={(event) => setWarehouseFilter(event.target.value)} options={[
         { value: "", label: labels.allWarehouses },
-        ...warehouses.map((warehouse) => ({ value: warehouse._id, label: warehouse.name })),
+        ...warehouses.map((warehouse) => ({ value: warehouse._id, label: getLocalizedValue(warehouse, "name", locale) })),
       ]} />
       <Select label={labels.product} value={productFilter} onChange={(event) => setProductFilter(event.target.value)} options={[
         { value: "", label: labels.allProducts },
-        ...products.map((product) => ({ value: product._id, label: product.name })),
+        ...products.map((product) => ({ value: product._id, label: getLocalizedValue(product, "name", locale) })),
       ]} />
       <Select label={labels.consumedByFilter} value={userFilter} onChange={(event) => setUserFilter(event.target.value)} options={[
         { value: "", label: labels.allUsers },

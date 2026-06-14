@@ -11,11 +11,14 @@ import { Select } from "../../components/Select";
 import { MapPin, Package, AlertTriangle, CheckCircle, Plus } from "lucide-react";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
+import { getLocalizedDisplayName, getLocalizedValue } from "../../lib/localization";
 
 const initialWarehouseForm = {
   name: "",
+  nameAr: "",
   code: "",
   location: "",
+  locationAr: "",
   capacity: "",
   status: "active"
 };
@@ -60,8 +63,10 @@ const WarehouseLocationsAr = () => {
     try {
       await api.warehouses.create({
         name: warehouseForm.name.trim(),
+        nameAr: warehouseForm.nameAr.trim(),
         code: warehouseForm.code.trim() || undefined,
         location: warehouseForm.location.trim(),
+        locationAr: warehouseForm.locationAr.trim(),
         capacity,
         status: warehouseForm.status
       });
@@ -82,13 +87,13 @@ const WarehouseLocationsAr = () => {
     const savedCapacity = Number(warehouse.capacity || 0);
     const capacity = savedCapacity > 0 ? savedCapacity : Math.max(used + 1000, 5000);
     const usagePercent = capacity ? Math.round(used / capacity * 100) : 0;
-    const categories = Array.from(new Set(rows.map((row) => row.product_id?.category || "غير مصنف")));
+    const categories = Array.from(new Set(rows.map((row) => getLocalizedValue(row.product_id, "category", "ar") || "غير مصنف")));
 
     return {
       id: warehouse._id,
-      name: warehouse.name,
-      location: warehouse.location,
-      manager: warehouse.user_id?.name || "غير محدد",
+      name: getLocalizedValue(warehouse, "name", "ar"),
+      location: getLocalizedValue(warehouse, "location", "ar"),
+      manager: getLocalizedDisplayName(warehouse.user_id, "ar") || "غير محدد",
       used,
       capacity,
       usagePercent,
@@ -167,6 +172,12 @@ const WarehouseLocationsAr = () => {
             onChange={(event) => updateWarehouseForm("name", event.target.value)}
           />
           <Input
+            label="الاسم العربي للمخزن"
+            placeholder="مخزن المواد الجافة"
+            value={warehouseForm.nameAr}
+            onChange={(event) => updateWarehouseForm("nameAr", event.target.value)}
+          />
+          <Input
             label="الكود"
             placeholder="WH-DRY"
             value={warehouseForm.code}
@@ -177,6 +188,12 @@ const WarehouseLocationsAr = () => {
             placeholder="منطقة التخزين الرئيسية A"
             value={warehouseForm.location}
             onChange={(event) => updateWarehouseForm("location", event.target.value)}
+          />
+          <Input
+            label="الموقع بالعربية"
+            placeholder="منطقة التخزين الرئيسية أ"
+            value={warehouseForm.locationAr}
+            onChange={(event) => updateWarehouseForm("locationAr", event.target.value)}
           />
           <Input
             label="السعة"

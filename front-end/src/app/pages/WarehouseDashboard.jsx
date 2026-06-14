@@ -8,6 +8,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/format";
 import { normalizeRecord } from "../lib/normalize";
+import { getLocalizedDisplayName, getLocalizedValue } from "../lib/localization";
 
 const StatCard = ({ title, value, icon: Icon, tone = "info", onClick }) => (
   <Card
@@ -193,6 +194,9 @@ const WarehouseDashboard = () => {
 
   const { warehouse, stats, stockDistribution = [], inventory = [], movements = [], requests = [] } = dashboard;
   const adminPrefix = isArabic ? "/ar/admin" : "/admin";
+  const locale = isArabic ? "ar" : "en";
+  const warehouseName = getLocalizedValue(warehouse, "name", locale);
+  const warehouseLocation = getLocalizedValue(warehouse, "location", locale);
 
   return <div className="p-6 lg:p-8 space-y-6" dir={isArabic ? "rtl" : "ltr"}>
     <Button variant="outline" onClick={() => navigate(isArabic ? "/ar/admin/inventory/warehouses" : "/admin/inventory/warehouses")}>
@@ -201,7 +205,7 @@ const WarehouseDashboard = () => {
     </Button>
 
     <PageHeader
-      title={warehouse.name}
+      title={warehouseName}
       subtitle={labels.dashboard}
       action={canDeleteWarehouse ? {
         label: deleting ? deleteLabels.deleting : deleteLabels.action,
@@ -223,11 +227,11 @@ const WarehouseDashboard = () => {
       <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="md:col-span-2">
           <p className="text-sm text-muted-foreground">{labels.location}</p>
-          <p className="font-semibold text-[#2E3A24] flex items-center gap-2"><MapPin className="w-4 h-4" />{warehouse.location}</p>
+          <p className="font-semibold text-[#2E3A24] flex items-center gap-2"><MapPin className="w-4 h-4" />{warehouseLocation}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{labels.manager}</p>
-          <p className="font-semibold text-[#2E3A24]">{warehouse.user_id?.name || labels.unassigned}</p>
+          <p className="font-semibold text-[#2E3A24]">{getLocalizedDisplayName(warehouse.user_id, locale) || labels.unassigned}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">{labels.status}</p>
@@ -255,9 +259,10 @@ const WarehouseDashboard = () => {
         {stockDistribution.length === 0 && <p className="text-sm text-muted-foreground">{labels.noInventory}</p>}
         {stockDistribution.map((row) => {
           const percentage = totalDistribution ? Math.round(Number(row.quantity || 0) / totalDistribution * 100) : 0;
+          const categoryLabel = isArabic ? row.categoryAr || row.category : row.category;
           return <div key={row.category}>
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="font-medium text-[#2E3A24]">{row.category}</span>
+              <span className="font-medium text-[#2E3A24]">{categoryLabel}</span>
               <span className="text-muted-foreground">{row.quantity} ({percentage}%)</span>
             </div>
             <div className="h-2 bg-[#E0E1B7] rounded-full overflow-hidden">
@@ -277,8 +282,8 @@ const WarehouseDashboard = () => {
               <th className="py-2 pr-3">{labels.item}</th><th className="py-2 pr-3">{labels.category}</th><th className="py-2 pr-3">{labels.quantity}</th><th className="py-2 pr-3">{labels.status}</th><th className="py-2 pr-3">{labels.expiration}</th>
             </tr></thead>
             <tbody>{inventory.map((item) => <tr key={item._id} className="border-b border-border/60">
-              <td className="py-2 pr-3 font-medium text-[#2E3A24]">{item.name}</td>
-              <td className="py-2 pr-3">{item.category}</td>
+              <td className="py-2 pr-3 font-medium text-[#2E3A24]">{getLocalizedValue(item, "name", locale)}</td>
+              <td className="py-2 pr-3">{getLocalizedValue(item, "category", locale)}</td>
               <td className="py-2 pr-3">{item.quantity} {item.unit}</td>
               <td className="py-2 pr-3"><Badge variant={item.status === "critical" ? "danger" : item.status === "low_stock" ? "warning" : "success"}>{item.status === "critical" ? "Critical" : item.status === "low_stock" ? labels.lowStock : labels.inStock}</Badge></td>
               <td className="py-2 pr-3">{formatDate(item.expiration_date)}</td>
@@ -295,7 +300,7 @@ const WarehouseDashboard = () => {
             const incoming = String(movement.to_warehouse?._id || movement.reference_id || "") === String(id);
             return <div key={movement._id} className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
               <div>
-                <p className="font-medium text-[#2E3A24]">{movement.product_id?.name || labels.unknownProduct}</p>
+                <p className="font-medium text-[#2E3A24]">{getLocalizedValue(movement.product_id, "name", locale) || labels.unknownProduct}</p>
                 <p className="text-xs text-muted-foreground">{incoming ? labels.incoming : labels.outgoing} | {formatDate(movement.createdAt)}</p>
               </div>
               <Badge variant={incoming ? "success" : "warning"}>{movement.stock}</Badge>
@@ -311,8 +316,8 @@ const WarehouseDashboard = () => {
         {requests.length === 0 && <p className="text-sm text-muted-foreground">{labels.noRequests}</p>}
         {requests.slice(0, 10).map((request) => <div key={request._id} className="grid grid-cols-1 md:grid-cols-5 gap-3 border-b border-border/60 pb-3 text-sm">
           <p className="font-medium text-[#2E3A24]">{String(request._id).slice(-8).toUpperCase()}</p>
-          <p>{request.source_warehouse?.name || labels.supplier} &rarr; {request.destination_warehouse?.name || warehouse.name}</p>
-          <p>{request.requested_by?.name || request.user_id?.name || labels.unknownRequester}</p>
+          <p>{getLocalizedValue(request.source_warehouse, "name", locale) || labels.supplier} &rarr; {getLocalizedValue(request.destination_warehouse, "name", locale) || warehouseName}</p>
+          <p>{getLocalizedDisplayName(request.requested_by, locale) || getLocalizedDisplayName(request.user_id, locale) || labels.unknownRequester}</p>
           <Badge variant={request.status === "pending" ? "pending" : request.status === "rejected" ? "danger" : "info"}>{request.status}</Badge>
           <p className="text-muted-foreground">{formatDate(request.createdAt)}</p>
         </div>)}

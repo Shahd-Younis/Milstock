@@ -11,9 +11,11 @@ const { buildWarehouseScopeFilter, assertWarehouseAccess } = require('../utils/w
 
 const productRules = [
   body('name').optional().trim().isLength({ min: 2 }).withMessage('Product name is required'),
+  body('nameAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('quantity').optional().isFloat({ min: 0 }).withMessage('Quantity must be 0 or greater'),
   body('unit').optional().isIn(['kg', 'g', 'liter', 'Tons', 'piece', 'box']).withMessage('Invalid unit'),
   body('category').optional().trim().notEmpty().withMessage('Category is required'),
+  body('categoryAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('min_quantity').optional().isFloat({ min: 0 }).withMessage('Minimum quantity must be 0 or greater'),
   body('warehouse_id').optional().isMongoId().withMessage('Valid warehouse_id is required'),
   body('expiry_date').optional({ nullable: true }).isISO8601().withMessage('Expiry date must be a valid date'),
@@ -24,6 +26,7 @@ const productRules = [
   body('batch_number').optional().trim(),
   body('serial_number').optional().trim(),
   body('description').optional().trim(),
+  body('descriptionAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('notes').optional().trim(),
 ];
 
@@ -56,8 +59,37 @@ const alertSettingsRules = [
   }),
 ];
 
+const requireTrimmed = (payload, field, message) => {
+  if (!String(payload[field] || '').trim()) {
+    throw new AppError(message, 400);
+  }
+  payload[field] = String(payload[field]).trim();
+};
+
+const normalizeBilingualProductPayload = (payload, { partial = false } = {}) => {
+  const requiredFields = [
+    ['name', 'English product name is required'],
+    ['nameAr', 'Arabic product name is required'],
+    ['category', 'English category is required'],
+    ['categoryAr', 'Arabic category is required'],
+  ];
+
+  for (const [field, message] of requiredFields) {
+    if (!partial || Object.prototype.hasOwnProperty.call(payload, field)) {
+      requireTrimmed(payload, field, message);
+    }
+  }
+
+  for (const field of ['description', 'descriptionAr', 'warehouse_name', 'storage_section', 'batch_number', 'serial_number', 'notes']) {
+    if (Object.prototype.hasOwnProperty.call(payload, field) && payload[field] !== undefined && payload[field] !== null) {
+      payload[field] = String(payload[field]).trim();
+    }
+  }
+};
+
 const createProduct = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
+  normalizeBilingualProductPayload(payload);
   if (payload.expiration_date && !payload.expiry_date) {
     payload.expiry_date = payload.expiration_date;
   }
@@ -105,6 +137,7 @@ const createProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const previous = await Product.findById(req.params.id);
   const payload = { ...req.body };
+  normalizeBilingualProductPayload(payload, { partial: true });
   if (payload.expiration_date && !payload.expiry_date) {
     payload.expiry_date = payload.expiration_date;
   }
@@ -214,7 +247,7 @@ const attachWarehouseStock = async (products) => {
   const productList = Array.isArray(products) ? products : [products];
   const productIds = productList.map((product) => product._id);
   const stockRows = await ProductWarehouse.find({ product_id: { $in: productIds } })
-    .populate('warehouse_id', '_id name code location status')
+    .populate('warehouse_id', '_id name nameAr code location locationAr status')
     .sort('-quantity');
 
   const rowsByProduct = stockRows.reduce((acc, row) => {
@@ -233,8 +266,10 @@ const attachWarehouseStock = async (products) => {
         id: String(row.warehouse_id._id),
         _id: row.warehouse_id._id,
         name: row.warehouse_id.name,
+        nameAr: row.warehouse_id.nameAr,
         code: row.warehouse_id.code,
         location: row.warehouse_id.location,
+        locationAr: row.warehouse_id.locationAr,
         status: row.warehouse_id.status,
         quantity: Number(row.quantity || 0),
         unit: plain.unit,
@@ -245,8 +280,10 @@ const attachWarehouseStock = async (products) => {
         id: String(plain.warehouse_id._id || plain.warehouse_id),
         _id: plain.warehouse_id._id || plain.warehouse_id,
         name: plain.warehouse_id.name || plain.warehouse_name || 'Unassigned',
+        nameAr: plain.warehouse_id.nameAr || '',
         code: plain.warehouse_id.code || '',
         location: plain.warehouse_id.location || '',
+        locationAr: plain.warehouse_id.locationAr || '',
         quantity: Number(plain.quantity || 0),
         unit: plain.unit,
       });

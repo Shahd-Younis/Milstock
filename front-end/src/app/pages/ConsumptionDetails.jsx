@@ -7,6 +7,7 @@ import { api } from "../lib/api";
 import { normalizeRecord } from "../lib/normalize";
 import { formatDate } from "../lib/format";
 import { getStoredAuth } from "../lib/auth";
+import { getLocalizedDisplayName, getLocalizedValue } from "../lib/localization";
 
 const labelsEn = {
   title: "Consumption Details",
@@ -109,6 +110,7 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
 
   const quantity = `${consumption.consumed_quantity ?? consumption.quantity ?? 0} ${consumption.unit || consumption.product_id?.unit || ""}`.trim();
   const canCancel = role === "admin" && consumption.status !== "cancelled";
+  const locale = isArabic ? "ar" : "en";
 
   return <div className={`p-6 lg:p-8 space-y-6 ${isArabic ? "rtl text-right" : ""}`} dir={isArabic ? "rtl" : "ltr"}>
     <PageHeader
@@ -128,12 +130,12 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
         </Badge>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DetailRow label={labels.product} value={consumption.product_id?.name} />
-        <DetailRow label={labels.warehouse} value={consumption.warehouse_id?.name} />
+        <DetailRow label={labels.product} value={getLocalizedValue(consumption.product_id, "name", locale)} />
+        <DetailRow label={labels.warehouse} value={getLocalizedValue(consumption.warehouse_id, "name", locale)} />
         <DetailRow label={labels.quantity} value={quantity} />
         <DetailRow label={labels.reason} value={consumption.reason} />
         <DetailRow label={labels.department} value={consumption.department} />
-        <DetailRow label={labels.consumedBy} value={consumption.consumed_by?.name || consumption.user_id?.name} />
+        <DetailRow label={labels.consumedBy} value={getLocalizedDisplayName(consumption.consumed_by, locale) || getLocalizedDisplayName(consumption.user_id, locale)} />
         <DetailRow label={labels.date} value={formatDate(consumption.consumption_date || consumption.createdAt)} />
         <DetailRow label={labels.movement} value={consumption.movement_id?._id ? String(consumption.movement_id._id).slice(-8).toUpperCase() : consumption.movement_id} />
         <div className="md:col-span-2">
