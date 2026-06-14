@@ -306,9 +306,9 @@ const RequestDetailsAr = () => {
                 { label: "إجمالي السعر", value: money(order.total_price), icon: Package }
               ].map((field) => {
                 const Icon = field.icon;
-                return <div key={field.label} className="flex items-start gap-3 flex-row-reverse text-right">
-                  <Icon className="w-4 h-4 text-[#5A6B50] mt-0.5" />
-                  <div>
+                return <div key={field.label} dir="rtl" className="flex items-start gap-3 text-right">
+                  <Icon className="w-4 h-4 text-[#5A6B50] mt-0.5 shrink-0" />
+                  <div className="min-w-0">
                     <p className="text-sm text-muted-foreground mb-1">{field.label}</p>
                     <p className="font-semibold text-foreground">{field.value}</p>
                   </div>

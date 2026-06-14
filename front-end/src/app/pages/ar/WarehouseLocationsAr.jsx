@@ -87,7 +87,19 @@ const WarehouseLocationsAr = () => {
     const savedCapacity = Number(warehouse.capacity || 0);
     const capacity = savedCapacity > 0 ? savedCapacity : Math.max(used + 1000, 5000);
     const usagePercent = capacity ? Math.round(used / capacity * 100) : 0;
-    const categories = Array.from(new Set(rows.map((row) => getLocalizedValue(row.product_id, "category", "ar") || "غير مصنف")));
+    const currentStock = used;
+    const categoryTotals = rows.reduce((totals, row) => {
+      const category = getLocalizedValue(row.product_id, "category", "ar") || "غير مصنف";
+      const safeCategory = String(category || "").trim();
+      if (!safeCategory || safeCategory.includes("�")) return totals;
+      totals[safeCategory] = (totals[safeCategory] || 0) + Number(row.quantity || 0);
+      return totals;
+    }, {});
+    const categories = Object.entries(categoryTotals).map(([name, items]) => ({
+      name,
+      items,
+      percentage: currentStock ? Math.round(items / currentStock * 100) : 0
+    }));
 
     return {
       id: warehouse._id,
@@ -113,7 +125,7 @@ const WarehouseLocationsAr = () => {
     { key: "used", header: "المخزون الحالي" },
     { key: "capacity", header: "السعة" },
     { key: "usagePercent", header: "نسبة الإشغال" },
-    { header: "الفئات", value: (row) => row.categories.join(", ") },
+    { header: "الفئات", value: (row) => row.categories.map((category) => category.name).join(", ") },
     { key: "status", header: "الحالة" }
   ];
 
@@ -286,13 +298,17 @@ const WarehouseLocationsAr = () => {
               </div>
               <div className="col-span-2">
                 <p className="text-muted-foreground text-xs mb-2">فئات المخزون</p>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  {(warehouse.categories.length ? warehouse.categories : ["لا توجد أصناف"]).map((category) => <span
-                    key={category}
-                    className="px-2 py-1 text-xs bg-[#4B5B3A] bg-opacity-10 text-[#4B5B3A] rounded-lg border border-[#4B5B3A] border-opacity-20"
-                  >
-                    {category}
-                  </span>)}
+                <div className="space-y-2">
+                  {warehouse.categories.length === 0 && <p className="text-xs text-muted-foreground">لا توجد أصناف</p>}
+                  {warehouse.categories.map((category) => <div key={category.name}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-foreground font-medium">{category.items} ({category.percentage}%)</span>
+                      <span className="text-muted-foreground">{category.name}</span>
+                    </div>
+                    <div className="w-full h-2 bg-[#E0E1B7] rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${category.percentage}%` }} />
+                    </div>
+                  </div>)}
                 </div>
               </div>
             </div>

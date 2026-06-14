@@ -12,6 +12,7 @@ const pageTitleMap = {
   "/ar/admin/inventory/expiration": "متابعة الصلاحية",
   "/ar/admin/inventory/warehouses": "مواقع المستودعات",
   "/ar/admin/consumptions": "متابعة الاستهلاك",
+  "/ar/admin/waste-analysis": "تحليل الهدر",
   "/ar/admin/requests": "إدارة الطلبات",
   "/ar/admin/requests/pending": "الطلبات المعلّقة",
   "/ar/admin/notifications": "الإشعارات",
@@ -23,6 +24,7 @@ const pageTitleMap = {
   "/ar/user/inventory": "المخزون المتاح",
   "/ar/user/consumptions": "الاستهلاك",
   "/ar/user/consumptions/new": "تسجيل استهلاك",
+  "/ar/user/waste-analysis": "تحليل الهدر",
   "/ar/user/requests": "طلباتي",
   "/ar/user/requests/create": "إنشاء طلب",
   "/ar/user/notifications": "الإشعارات",
@@ -38,9 +40,11 @@ const subtitleMap = {
   "/ar/admin/inventory": "إدارة جميع أصناف المخزون",
   "/ar/admin/reports": "التحليلات والتقارير",
   "/ar/admin/consumptions": "متابعة الاستهلاك عبر كل المخازن",
+  "/ar/admin/waste-analysis": "تحليل الأصناف منتهية الصلاحية والتالفة",
   "/ar/user/dashboard": "متابعة إمدادات وحدتك",
   "/ar/user/consumptions": "متابعة الاستهلاك من المخزن المسؤول عنه",
   "/ar/user/consumptions/new": "تسجيل الكميات المستخدمة بواسطة الوحدة",
+  "/ar/user/waste-analysis": "تحليل الأصناف منتهية الصلاحية والتالفة",
 };
 
 const getRoleText = (userRole) => {

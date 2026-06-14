@@ -203,4 +203,13 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+
+  [dir="rtl"] .mil-card-header > h3 {
+    order: -1;
+    text-align: right;
+  }
+
+  [dir="rtl"] .mil-card-header {
+    direction: rtl;
+  }
 }

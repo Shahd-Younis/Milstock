@@ -1,11 +1,14 @@
+import { isValidDateValue } from "./dateValidation";
+
 const formatDate = (value) => {
   if (!value) return "N/A";
+  if (!isValidDateValue(value)) return "N/A";
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value));
 };
 const formatDateTime = (value, locale = "en") => {
   if (!value) return "N/A";
+  if (!isValidDateValue(value)) return "N/A";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "N/A";
   const dateText = new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
@@ -30,7 +33,7 @@ const getProductStatus = (product) => {
   if (criticalThreshold > 0 && quantity <= criticalThreshold) return "critical";
   if (lowThreshold > 0 && quantity <= lowThreshold) return "low-stock";
   const expirationDate = product.expiration_date || product.expiry_date;
-  if (expirationDate) {
+  if (expirationDate && isValidDateValue(expirationDate)) {
     const days = (new Date(expirationDate).getTime() - Date.now()) / (1e3 * 60 * 60 * 24);
     if (days >= 0 && days <= Math.max(warningDays, criticalDays)) return "expiring-soon";
   }

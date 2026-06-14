@@ -12,6 +12,7 @@ import { MovementLogs } from "./pages/MovementLogs";
 import { ConsumptionList } from "./pages/ConsumptionList";
 import { CreateConsumption } from "./pages/CreateConsumption";
 import { ConsumptionDetails } from "./pages/ConsumptionDetails";
+import { WasteAnalysis } from "./pages/WasteAnalysis";
 import { WarehouseLocations } from "./pages/WarehouseLocations";
 import { WarehouseDashboard } from "./pages/WarehouseDashboard";
 import { CreateRequest } from "./pages/CreateRequest";
@@ -41,6 +42,7 @@ import { MovementLogsAr } from "./pages/ar/MovementLogsAr";
 import { ConsumptionListAr } from "./pages/ar/ConsumptionListAr";
 import { CreateConsumptionAr } from "./pages/ar/CreateConsumptionAr";
 import { ConsumptionDetailsAr } from "./pages/ar/ConsumptionDetailsAr";
+import { WasteAnalysisAr } from "./pages/ar/WasteAnalysisAr";
 import { ExpirationMonitorAr } from "./pages/ar/ExpirationMonitorAr";
 import { WarehouseLocationsAr } from "./pages/ar/WarehouseLocationsAr";
 import { WarehouseDashboardAr } from "./pages/ar/WarehouseDashboardAr";
@@ -83,7 +85,9 @@ const router = createBrowserRouter([
       { path: "inventory/add", Component: AddInventoryItem },
       { path: "inventory/logs", Component: MovementLogs },
       { path: "consumptions", Component: ConsumptionList },
+      { path: "consumptions/:id/edit", Component: CreateConsumption },
       { path: "consumptions/:id", Component: ConsumptionDetails },
+      { path: "waste-analysis", Component: WasteAnalysis },
       { path: "inventory/expiration", Component: ExpirationMonitor },
       { path: "inventory/warehouses", Component: WarehouseLocations },
       { path: "warehouses/:id/dashboard", Component: WarehouseDashboard },
@@ -110,7 +114,9 @@ const router = createBrowserRouter([
       { path: "inventory", Component: InventoryList },
       { path: "consumptions", Component: ConsumptionList },
       { path: "consumptions/new", Component: CreateConsumption },
+      { path: "consumptions/:id/edit", Component: CreateConsumption },
       { path: "consumptions/:id", Component: ConsumptionDetails },
+      { path: "waste-analysis", Component: WasteAnalysis },
       { path: "requests", Component: RequestsList },
       { path: "requests/create", Component: CreateRequest },
       { path: "requests/:id", Component: RequestDetails },
@@ -146,7 +152,9 @@ const router = createBrowserRouter([
       { path: "inventory/add", Component: AddInventoryItemAr },
       { path: "inventory/logs", Component: MovementLogsAr },
       { path: "consumptions", Component: ConsumptionListAr },
+      { path: "consumptions/:id/edit", Component: CreateConsumptionAr },
       { path: "consumptions/:id", Component: ConsumptionDetailsAr },
+      { path: "waste-analysis", Component: WasteAnalysisAr },
       { path: "inventory/expiration", Component: ExpirationMonitorAr },
       { path: "inventory/warehouses", Component: WarehouseLocationsAr },
       { path: "warehouses/:id/dashboard", Component: WarehouseDashboardAr },
@@ -174,7 +182,9 @@ const router = createBrowserRouter([
       { path: "inventory", Component: InventoryListAr },
       { path: "consumptions", Component: ConsumptionListAr },
       { path: "consumptions/new", Component: CreateConsumptionAr },
+      { path: "consumptions/:id/edit", Component: CreateConsumptionAr },
       { path: "consumptions/:id", Component: ConsumptionDetailsAr },
+      { path: "waste-analysis", Component: WasteAnalysisAr },
       { path: "requests", Component: RequestsListAr },
       { path: "requests/create", Component: CreateRequestAr },
       { path: "requests/:id", Component: RequestDetailsAr },

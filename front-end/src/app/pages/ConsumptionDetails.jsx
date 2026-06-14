@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { Badge } from "../components/Badge";
 import { api } from "../lib/api";
@@ -13,9 +13,7 @@ const labelsEn = {
   title: "Consumption Details",
   subtitle: "Review the consumed stock record",
   back: "Back to Consumption",
-  cancel: "Cancel Consumption",
-  cancelPrompt: "Cancellation reason",
-  cancelSuccess: "Consumption cancelled and stock restored.",
+  edit: "Edit Consumption",
   product: "Product",
   warehouse: "Warehouse",
   quantity: "Consumed Quantity",
@@ -35,9 +33,7 @@ const labelsAr = {
   title: "تفاصيل الاستهلاك",
   subtitle: "مراجعة سجل الكمية المستهلكة",
   back: "العودة إلى الاستهلاك",
-  cancel: "إلغاء الاستهلاك",
-  cancelPrompt: "سبب الإلغاء",
-  cancelSuccess: "تم إلغاء الاستهلاك واسترجاع المخزون.",
+  edit: "تعديل الاستهلاك",
   product: "المنتج",
   warehouse: "المخزن",
   quantity: "الكمية المستهلكة",
@@ -69,7 +65,6 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
   const navigate = useNavigate();
   const { role } = getStoredAuth();
   const basePath = getBasePath(role, isArabic);
-  const [message, setMessage] = useState("");
   const [state, setState] = useState({ consumption: null, loading: true, error: "" });
   const refresh = () => {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -84,19 +79,6 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
   }, [id]);
   const { consumption, loading, error } = state;
 
-  const cancelConsumption = async () => {
-    const reason = window.prompt(labels.cancelPrompt, "");
-    if (reason === null) return;
-    setMessage("");
-    try {
-      await api.consumptions.cancel(id, reason);
-      setMessage(labels.cancelSuccess);
-      refresh();
-    } catch (requestError) {
-      setMessage(requestError.message || "Unable to cancel consumption.");
-    }
-  };
-
   if (loading) {
     return <div className="p-6 lg:p-8 text-sm text-[#5A6B50]">{isArabic ? "جاري التحميل..." : "Loading consumption details..."}</div>;
   }
@@ -109,7 +91,7 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
   }
 
   const quantity = `${consumption.consumed_quantity ?? consumption.quantity ?? 0} ${consumption.unit || consumption.product_id?.unit || ""}`.trim();
-  const canCancel = role === "admin" && consumption.status !== "cancelled";
+  const canEdit = consumption.status !== "cancelled";
   const locale = isArabic ? "ar" : "en";
 
   return <div className={`p-6 lg:p-8 space-y-6 ${isArabic ? "rtl text-right" : ""}`} dir={isArabic ? "rtl" : "ltr"}>
@@ -118,10 +100,9 @@ const ConsumptionDetailsView = ({ isArabic = false }) => {
       subtitle={labels.subtitle}
       actions={[
         { label: labels.back, icon: ArrowLeft, variant: "outline", onClick: () => navigate(basePath) },
-        ...(canCancel ? [{ label: labels.cancel, icon: RotateCcw, variant: "danger", onClick: cancelConsumption }] : []),
+        ...(canEdit ? [{ label: labels.edit, icon: Edit, variant: "outline", onClick: () => navigate(`${basePath}/${id}/edit`) }] : []),
       ]}
     />
-    {message && <div className="rounded-xl border border-[#4E4631]/10 bg-white px-4 py-3 text-sm text-[#2E3A24]">{message}</div>}
     <div className="rounded-2xl border border-[#4E4631]/10 bg-white p-5 shadow-sm space-y-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#5A6B50]">{String(consumption._id).slice(-8).toUpperCase()}</p>

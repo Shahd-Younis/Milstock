@@ -66,6 +66,7 @@ const adminNavGroups = [
         icon: BarChart3,
         children: [
           { label: "\u0627\u0644\u062A\u062D\u0644\u064A\u0644\u0627\u062A", path: "/ar/admin/reports", icon: BarChart3 },
+          { label: "\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0647\u062F\u0631", path: "/ar/admin/waste-analysis", icon: BarChart3 },
           { label: "\u0633\u062C\u0644 \u0627\u0644\u0639\u0645\u0644\u064A\u0627\u062A", path: "/ar/admin/audit-logs", icon: Shield }
         ]
       }
@@ -90,7 +91,8 @@ const userNavGroups = [
     label: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646",
     items: [
       { label: "\u0627\u0644\u0645\u062E\u0632\u0648\u0646 \u0627\u0644\u0645\u062A\u0627\u062D", path: "/ar/user/inventory", icon: Package },
-      { label: "\u0627\u0644\u0627\u0633\u062A\u0647\u0644\u0627\u0643", path: "/ar/user/consumptions", icon: FileText }
+      { label: "\u0627\u0644\u0627\u0633\u062A\u0647\u0644\u0627\u0643", path: "/ar/user/consumptions", icon: FileText },
+      { label: "\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0647\u062F\u0631", path: "/ar/user/waste-analysis", icon: BarChart3 }
     ]
   },
   {

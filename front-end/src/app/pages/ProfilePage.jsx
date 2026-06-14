@@ -4,117 +4,158 @@ import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Select } from "../components/Select";
 import { User, Shield, Bell } from "lucide-react";
-const ProfilePage = () => {
-  return <div className="p-6 lg:p-8 space-y-6">
-      <PageHeader
-    title="Profile Settings"
-    subtitle="Manage your account information and preferences"
-  />
 
-      <div className="max-w-4xl space-y-5">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <User className="w-6 h-6 text-primary" />
-              <CardTitle>Personal Information</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Full Name" defaultValue="John Mitchell" />
-              <Input label="Email" type="email" defaultValue="j.mitchell@milstock.local" />
-              <Input label="Rank" defaultValue="Captain" />
-              <Input label="Kitchen" defaultValue="Central Kitchen" />
-              <Input label="Phone" type="tel" defaultValue="+1 (555) 123-4567" />
-              <Select
-    label="Base Location"
-    options={[
-      { value: "base-a", label: "Central Kitchen" },
-      { value: "base-b", label: "Bakery Kitchen" },
-      { value: "base-c", label: "Produce Kitchen" }
-    ]}
-  />
-            </div>
-            <div className="mt-6 flex gap-3">
-              <Button>Save Changes</Button>
-              <Button variant="outline">Cancel</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Shield className="w-6 h-6 text-primary" />
-              <CardTitle>Security</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <Input label="Current Password" type="password" />
-              <Input label="New Password" type="password" />
-              <Input label="Confirm New Password" type="password" />
-            </div>
-            <div className="mt-6">
-              <Button>Update Password</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Bell className="w-6 h-6 text-primary" />
-              <CardTitle>Notification Preferences</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Low Stock Alerts</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive notifications when items are running low
-                  </p>
-                </div>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Expiration Warnings</p>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified about items nearing expiration
-                  </p>
-                </div>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Request Updates</p>
-                  <p className="text-sm text-muted-foreground">
-                    Status updates for your supply requests
-                  </p>
-                </div>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 accent-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Weekly Reports</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive weekly inventory summary emails
-                  </p>
-                </div>
-              </label>
-            </div>
-            <div className="mt-6">
-              <Button>Save Preferences</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>;
+const labels = {
+  en: {
+    title: "Profile Settings",
+    subtitle: "Manage your account information and preferences",
+    personal: "Personal Information",
+    fullName: "Full Name",
+    email: "Email",
+    rank: "Rank",
+    kitchen: "Kitchen",
+    phone: "Phone",
+    base: "Base Location",
+    saveChanges: "Save Changes",
+    cancel: "Cancel",
+    security: "Security",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm New Password",
+    updatePassword: "Update Password",
+    notifications: "Notification Preferences",
+    lowStock: "Low Stock Alerts",
+    lowStockHelp: "Receive notifications when items are running low",
+    expiration: "Expiration Warnings",
+    expirationHelp: "Get notified about items nearing expiration",
+    requests: "Request Updates",
+    requestsHelp: "Status updates for your supply requests",
+    weekly: "Weekly Reports",
+    weeklyHelp: "Receive weekly inventory summary emails",
+    savePreferences: "Save Preferences",
+  },
+  ar: {
+    title: "إعدادات الملف الشخصي",
+    subtitle: "إدارة معلومات الحساب والتفضيلات",
+    personal: "المعلومات الشخصية",
+    fullName: "الاسم الكامل",
+    email: "البريد الإلكتروني",
+    rank: "الرتبة",
+    kitchen: "المطبخ",
+    phone: "الهاتف",
+    base: "موقع القاعدة",
+    saveChanges: "حفظ التغييرات",
+    cancel: "إلغاء",
+    security: "الأمان",
+    currentPassword: "كلمة المرور الحالية",
+    newPassword: "كلمة المرور الجديدة",
+    confirmPassword: "تأكيد كلمة المرور الجديدة",
+    updatePassword: "تحديث كلمة المرور",
+    notifications: "تفضيلات الإشعارات",
+    lowStock: "تنبيهات انخفاض المخزون",
+    lowStockHelp: "استلام إشعارات عند انخفاض كميات الأصناف",
+    expiration: "تحذيرات انتهاء الصلاحية",
+    expirationHelp: "استلام تنبيهات عن الأصناف القريبة من انتهاء الصلاحية",
+    requests: "تحديثات الطلبات",
+    requestsHelp: "تحديثات حالة طلبات التوريد الخاصة بك",
+    weekly: "تقارير أسبوعية",
+    weeklyHelp: "استلام ملخص أسبوعي للمخزون عبر البريد",
+    savePreferences: "حفظ التفضيلات",
+  },
 };
+
+const PreferenceRow = ({ title, help, defaultChecked = false }) => (
+  <label className="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" defaultChecked={defaultChecked} className="w-4 h-4 accent-primary" />
+    <div>
+      <p className="font-medium text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground">{help}</p>
+    </div>
+  </label>
+);
+
+const ProfilePageView = ({ isArabic = false }) => {
+  const t = labels[isArabic ? "ar" : "en"];
+
+  return <div className="p-6 lg:p-8 space-y-6" dir={isArabic ? "rtl" : "ltr"}>
+    <PageHeader title={t.title} subtitle={t.subtitle} />
+
+    <div className="max-w-4xl space-y-5">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <User className="w-6 h-6 text-primary" />
+            <CardTitle>{t.personal}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input label={t.fullName} defaultValue={isArabic ? "مدير مخزون الأغذية" : "Food Inventory Admin"} />
+            <Input label={t.email} type="email" defaultValue="admin@milstock.local" />
+            <Input label={t.rank} defaultValue={isArabic ? "مسؤول" : "Administrator"} />
+            <Input label={t.kitchen} defaultValue={isArabic ? "إدارة المخزون" : "Inventory Management"} />
+            <Input label={t.phone} type="tel" defaultValue="+966 50 123 4567" />
+            <Select
+              label={t.base}
+              options={[
+                { value: "central", label: isArabic ? "المطبخ المركزي" : "Central Kitchen" },
+                { value: "bakery", label: isArabic ? "مطبخ المخبوزات" : "Bakery Kitchen" },
+                { value: "produce", label: isArabic ? "مطبخ المنتجات الطازجة" : "Produce Kitchen" },
+              ]}
+            />
+          </div>
+          <div className="mt-6 flex gap-3">
+            <Button>{t.saveChanges}</Button>
+            <Button variant="outline">{t.cancel}</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-primary" />
+            <CardTitle>{t.security}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <Input label={t.currentPassword} type="password" />
+            <Input label={t.newPassword} type="password" />
+            <Input label={t.confirmPassword} type="password" />
+          </div>
+          <div className="mt-6">
+            <Button>{t.updatePassword}</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Bell className="w-6 h-6 text-primary" />
+            <CardTitle>{t.notifications}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <PreferenceRow title={t.lowStock} help={t.lowStockHelp} defaultChecked />
+            <PreferenceRow title={t.expiration} help={t.expirationHelp} defaultChecked />
+            <PreferenceRow title={t.requests} help={t.requestsHelp} defaultChecked />
+            <PreferenceRow title={t.weekly} help={t.weeklyHelp} />
+          </div>
+          <div className="mt-6">
+            <Button>{t.savePreferences}</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>;
+};
+
+const ProfilePage = () => <ProfilePageView />;
+
 export {
-  ProfilePage
+  ProfilePage,
+  ProfilePageView
 };

@@ -31,6 +31,66 @@ const wasteExportColumns = [
   { key: "expired", header: "Expired Items" },
   { key: "damaged", header: "Damaged Items" }
 ];
+const reportLabels = {
+  en: {
+    title: "Reports & Analytics",
+    subtitle: "Insights and trends for inventory management",
+    exportConsumption: "Export Consumption",
+    exportWaste: "Export Waste",
+    avgMonthly: "Avg Monthly Consumption",
+    records: (count) => `${count} records`,
+    wasteReduction: "Waste Reduction",
+    sinceLastMonth: "Since last month",
+    supplyEfficiency: "Supply Efficiency",
+    improvement: "+2.1% improvement",
+    criticalShortages: "Critical Shortages",
+    fromLastWeek: "-2 from last week",
+    consumptionTrends: "Consumption Trends by Category",
+    lastSixMonths: "Last 6 months",
+    wasteAnalysis: "Waste Analysis",
+    wasteSubtitle: "Expired vs Damaged",
+    expiredItems: "Expired Items",
+    damagedItems: "Damaged Items",
+    insights: "Key Insights & Recommendations",
+    efficiencyTitle: "Improved Efficiency",
+    efficiencyBody: "Supply efficiency has improved by 2.1% this month due to better expiration monitoring and reduced waste.",
+    seasonalTitle: "Seasonal Trends",
+    seasonalBody: "Food consumption peaks in March and May, suggesting seasonal operational patterns that require planning.",
+    wasteTitle: "Waste Reduction",
+    wasteBody: "Expired items decreased by 24% compared to February, showing effectiveness of the new alert system.",
+    monthLocale: "en",
+    uncategorized: "Uncategorized",
+  },
+  ar: {
+    title: "التقارير والتحليلات",
+    subtitle: "رؤى واتجاهات لإدارة المخزون",
+    exportConsumption: "تصدير الاستهلاك",
+    exportWaste: "تصدير الهدر",
+    avgMonthly: "متوسط الاستهلاك الشهري",
+    records: (count) => `${count} سجل`,
+    wasteReduction: "تقليل الهدر",
+    sinceLastMonth: "منذ الشهر الماضي",
+    supplyEfficiency: "كفاءة الإمداد",
+    improvement: "+2.1% تحسن",
+    criticalShortages: "نواقص حرجة",
+    fromLastWeek: "-2 عن الأسبوع الماضي",
+    consumptionTrends: "اتجاهات الاستهلاك حسب الفئة",
+    lastSixMonths: "آخر 6 أشهر",
+    wasteAnalysis: "تحليل الهدر",
+    wasteSubtitle: "منتهي الصلاحية مقابل التالف",
+    expiredItems: "أصناف منتهية الصلاحية",
+    damagedItems: "أصناف تالفة",
+    insights: "رؤى وتوصيات رئيسية",
+    efficiencyTitle: "تحسن الكفاءة",
+    efficiencyBody: "تحسنت كفاءة الإمداد بنسبة 2.1% هذا الشهر بفضل متابعة الصلاحية وتقليل الهدر.",
+    seasonalTitle: "اتجاهات موسمية",
+    seasonalBody: "يرتفع استهلاك الأغذية في مارس ومايو، مما يشير إلى أنماط تشغيل موسمية تحتاج إلى تخطيط.",
+    wasteTitle: "تقليل الهدر",
+    wasteBody: "انخفضت الأصناف منتهية الصلاحية بنسبة 24% مقارنة بفبراير، مما يوضح فعالية نظام التنبيهات الجديد.",
+    monthLocale: "ar-EG",
+    uncategorized: "غير مصنف",
+  },
+};
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return <div className="bg-white border border-[#4E4631]/15 rounded-xl p-3 shadow-md text-xs">
@@ -43,15 +103,16 @@ const CustomTooltip = ({ active, payload, label }) => {
   }
   return null;
 };
-const ReportsPage = () => {
+const ReportsPageView = ({ isArabic = false }) => {
+  const labels = reportLabels[isArabic ? "ar" : "en"];
   const { data: consumptions } = useApiResource(() => api.consumptions.list(), []);
   const activeConsumptions = consumptions.filter((item) => item.status !== "cancelled");
-  const categoryNames = Array.from(new Set(activeConsumptions.map((item) => item.product_id?.category || "Uncategorized"))).slice(0, 4);
+  const categoryNames = Array.from(new Set(activeConsumptions.map((item) => item.product_id?.category || labels.uncategorized))).slice(0, 4);
   const chartKeys = categoryNames.map((name, index) => ({ key: `category${index}`, name, color: COLORS[index % COLORS.length] }));
   const groupedConsumption = activeConsumptions.reduce((totals, item) => {
     const date = new Date(item.consumption_date || item.createdAt);
-    const month = Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleDateString("en", { month: "short" });
-    const category = item.product_id?.category || "Uncategorized";
+    const month = Number.isNaN(date.getTime()) ? labels.uncategorized : date.toLocaleDateString(labels.monthLocale, { month: "short" });
+    const category = item.product_id?.category || labels.uncategorized;
     const categoryIndex = categoryNames.indexOf(category);
     if (!totals[month]) totals[month] = { month };
     if (categoryIndex >= 0) {
@@ -67,10 +128,10 @@ const ReportsPage = () => {
     { key: "month", header: "Month" },
     ...chartKeys.map((item) => ({ key: item.key, header: item.name })),
   ];
-  return <div className="p-6 lg:p-8 space-y-8">
+  return <div className="p-6 lg:p-8 space-y-8" dir={isArabic ? "rtl" : "ltr"}>
       <PageHeader
-    title="Reports & Analytics"
-    subtitle="Insights and trends for inventory management"
+    title={labels.title}
+    subtitle={labels.subtitle}
   />
 
       {
@@ -78,10 +139,10 @@ const ReportsPage = () => {
   }
       <div className="flex items-center gap-3 -mt-4">
         <ExportCsvButton filenamePrefix="reports-consumption-export" columns={consumptionExportColumns} rows={consumptionData} className="flex items-center gap-1.5">
-          Export Consumption
+          {labels.exportConsumption}
         </ExportCsvButton>
         <ExportCsvButton filenamePrefix="reports-waste-export" columns={wasteExportColumns} rows={wasteData} className="flex items-center gap-1.5">
-          Export Waste
+          {labels.exportWaste}
         </ExportCsvButton>
       </div>
 
@@ -89,10 +150,10 @@ const ReportsPage = () => {
     /* KPI Stats */
   }
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard title="Avg Monthly Consumption" value={avgMonthlyConsumption.toLocaleString()} icon={Package} trend={{ value: `${activeConsumptions.length} records`, isPositive: true }} color="primary" />
-        <StatCard title="Waste Reduction" value="15%" icon={TrendingDown} trend={{ value: "Since last month", isPositive: true }} color="success" />
-        <StatCard title="Supply Efficiency" value="94.2%" icon={TrendingUp} trend={{ value: "+2.1% improvement", isPositive: true }} color="primary" />
-        <StatCard title="Critical Shortages" value="3" icon={AlertCircle} trend={{ value: "-2 from last week", isPositive: true }} color="warning" />
+        <StatCard title={labels.avgMonthly} value={avgMonthlyConsumption.toLocaleString()} icon={Package} trend={{ value: labels.records(activeConsumptions.length), isPositive: true }} color="primary" />
+        <StatCard title={labels.wasteReduction} value="15%" icon={TrendingDown} trend={{ value: labels.sinceLastMonth, isPositive: true }} color="success" />
+        <StatCard title={labels.supplyEfficiency} value="94.2%" icon={TrendingUp} trend={{ value: labels.improvement, isPositive: true }} color="primary" />
+        <StatCard title={labels.criticalShortages} value="3" icon={AlertCircle} trend={{ value: labels.fromLastWeek, isPositive: true }} color="warning" />
       </div>
 
       {
@@ -101,8 +162,8 @@ const ReportsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <CardHeader>
-            <CardTitle>Consumption Trends by Category</CardTitle>
-            <span className="text-xs text-muted-foreground">Last 6 months</span>
+            <CardTitle>{labels.consumptionTrends}</CardTitle>
+            <span className="text-xs text-muted-foreground">{labels.lastSixMonths}</span>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
@@ -120,8 +181,8 @@ const ReportsPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Waste Analysis</CardTitle>
-            <span className="text-xs text-muted-foreground">Expired vs Damaged</span>
+            <CardTitle>{labels.wasteAnalysis}</CardTitle>
+            <span className="text-xs text-muted-foreground">{labels.wasteSubtitle}</span>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
@@ -131,8 +192,8 @@ const ReportsPage = () => {
                 <YAxis key="rpt-lc-yaxis" stroke="#5A6B50" tick={{ fontSize: 11, fill: "#5A6B50" }} axisLine={false} tickLine={false} width={30} />
                 <Tooltip key="rpt-lc-tooltip" content={<CustomTooltip />} />
                 <Legend key="rpt-lc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5A6B50" }} />
-                <Line key="rpt-lc-expired" type="monotone" dataKey="expired" stroke="#D4183D" strokeWidth={2.5} name="Expired Items" dot={false} activeDot={{ r: 4 }} />
-                <Line key="rpt-lc-damaged" type="monotone" dataKey="damaged" stroke="#C9A961" strokeWidth={2.5} name="Damaged Items" dot={false} activeDot={{ r: 4 }} />
+                <Line key="rpt-lc-expired" type="monotone" dataKey="expired" stroke="#D4183D" strokeWidth={2.5} name={labels.expiredItems} dot={false} activeDot={{ r: 4 }} />
+                <Line key="rpt-lc-damaged" type="monotone" dataKey="damaged" stroke="#C9A961" strokeWidth={2.5} name={labels.damagedItems} dot={false} activeDot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -144,7 +205,7 @@ const ReportsPage = () => {
   }
       <Card>
         <CardHeader>
-          <CardTitle>Key Insights & Recommendations</CardTitle>
+          <CardTitle>{labels.insights}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -153,10 +214,10 @@ const ReportsPage = () => {
                 <div className="w-8 h-8 rounded-lg bg-[#5B8A4A]/15 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-[#5B8A4A]" />
                 </div>
-                <h4 className="font-semibold text-[#2E3A24]">Improved Efficiency</h4>
+                <h4 className="font-semibold text-[#2E3A24]">{labels.efficiencyTitle}</h4>
               </div>
               <p className="text-sm text-[#5A6B50] leading-relaxed">
-                Supply efficiency has improved by 2.1% this month due to better expiration monitoring and reduced waste.
+                {labels.efficiencyBody}
               </p>
             </div>
             <div className="p-5 bg-[#B8862A]/8 rounded-xl border border-[#B8862A]/15">
@@ -164,10 +225,10 @@ const ReportsPage = () => {
                 <div className="w-8 h-8 rounded-lg bg-[#B8862A]/15 flex items-center justify-center">
                   <Package className="w-4 h-4 text-[#B8862A]" />
                 </div>
-                <h4 className="font-semibold text-[#2E3A24]">Seasonal Trends</h4>
+                <h4 className="font-semibold text-[#2E3A24]">{labels.seasonalTitle}</h4>
               </div>
               <p className="text-sm text-[#5A6B50] leading-relaxed">
-                Food consumption peaks in March and May, suggesting seasonal operational patterns that require planning.
+                {labels.seasonalBody}
               </p>
             </div>
             <div className="p-5 bg-[#4B5B3A]/8 rounded-xl border border-[#4B5B3A]/15">
@@ -175,10 +236,10 @@ const ReportsPage = () => {
                 <div className="w-8 h-8 rounded-lg bg-[#4B5B3A]/15 flex items-center justify-center">
                   <TrendingDown className="w-4 h-4 text-[#4B5B3A]" />
                 </div>
-                <h4 className="font-semibold text-[#2E3A24]">Waste Reduction</h4>
+                <h4 className="font-semibold text-[#2E3A24]">{labels.wasteTitle}</h4>
               </div>
               <p className="text-sm text-[#5A6B50] leading-relaxed">
-                Expired items decreased by 24% compared to February, showing effectiveness of the new alert system.
+                {labels.wasteBody}
               </p>
             </div>
           </div>
@@ -186,6 +247,8 @@ const ReportsPage = () => {
       </Card>
     </div>;
 };
+const ReportsPage = () => <ReportsPageView />;
 export {
-  ReportsPage
+  ReportsPage,
+  ReportsPageView
 };

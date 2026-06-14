@@ -113,3 +113,136 @@ Expiration notification scan completed { scanned: 15, created: 0 }
 [0mGET /api/users [36m304[0m 486.724 ms - -[0m
 [0mGET /api/products [36m304[0m 770.579 ms - -[0m
 [0mGET /api/users [36m304[0m 468.700 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 624.587 ms - 11700[0m
+[0mGET /api/products [36m304[0m 790.018 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/orders [36m304[0m 1524.743 ms - -[0m
+[0mGET /api/order-items [36m304[0m 1543.315 ms - -[0m
+[0mGET /api/notifications/expiration/check [36m304[0m 1831.736 ms - -[0m
+[0mGET /api/order-items [36m304[0m 468.558 ms - -[0m
+[0mGET /api/orders [36m304[0m 473.886 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 2133.317 ms - -[0m
+[0mGET /api/orders/6a2d822a0acc23a857f19d76 [36m304[0m 457.465 ms - -[0m
+[0mGET /api/order-items [36m304[0m 464.585 ms - -[0m
+[0mPATCH /api/notifications/6a2d822a0acc23a857f19d7b/read [32m200[0m 644.921 ms - 2018[0m
+[0mPATCH /api/orders/6a2d822a0acc23a857f19d76/admin-decision [32m200[0m 2183.610 ms - 7137[0m
+[0mGET /api/order-items [32m200[0m 464.075 ms - 11848[0m
+[0mGET /api/orders/6a2d822a0acc23a857f19d76 [32m200[0m 470.976 ms - 2085[0m
+[0mGET /api/order-items [36m304[0m 464.644 ms - -[0m
+[0mGET /api/orders [32m200[0m 471.782 ms - 6547[0m
+[0mGET /api/products [36m304[0m 774.110 ms - -[0m
+[0mGET /api/warehouses [36m304[0m 458.623 ms - -[0m
+[0mGET /api/products [36m304[0m 907.971 ms - -[0m
+[0mGET /api/movements [32m200[0m 461.062 ms - 24988[0m
+[0mGET /api/product-warehouses [36m304[0m 1460.947 ms - -[0m
+[0mPATCH /api/orders/6a2d822a0acc23a857f19d76/status [32m200[0m 1703.430 ms - 4855[0m
+[0mGET /api/movements [32m200[0m 470.267 ms - 25028[0m
+[0mGET /api/product-warehouses [36m304[0m 474.368 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 462.681 ms - 11700[0m
+[0mGET /api/warehouses [36m304[0m 468.581 ms - -[0m
+[0mGET /api/users [36m304[0m 467.387 ms - -[0m
+[0mGET /api/products [36m304[0m 754.532 ms - -[0m
+[0mGET /api/orders [32m200[0m 459.236 ms - 6548[0m
+[0mGET /api/order-items [32m200[0m 461.633 ms - 11849[0m
+[0mGET /api/products [36m304[0m 762.365 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/consumptions [32m200[0m 1468.310 ms - 11700[0m
+[0mGET /api/notifications/expiration/check [36m304[0m 1659.541 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [32m200[0m 1972.251 ms - 51932[0m
+[0mGET /api/warehouses [36m304[0m 454.706 ms - -[0m
+[0mGET /api/users [36m304[0m 457.126 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 464.775 ms - 11700[0m
+[0mGET /api/products [36m304[0m 758.712 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 459.555 ms - 11700[0m
+[0mGET /api/warehouses [36m304[0m 462.184 ms - -[0m
+[0mGET /api/users [36m304[0m 463.441 ms - -[0m
+[0mGET /api/products [36m304[0m 771.316 ms - -[0m
+[0mGET /api/consumptions/6a2d5b62c03af7022b866925 [32m200[0m 464.764 ms - 3072[0m
+[0mGET /api/warehouses [36m304[0m 459.777 ms - -[0m
+[0mGET /api/product-warehouses [36m304[0m 462.344 ms - -[0m
+[0mGET /api/warehouses/6a26c3273ddc626ed45dc176/dashboard [32m200[0m 1246.113 ms - 5476[0m
+[0mGET /api/warehouses [36m304[0m 474.077 ms - -[0m
+[0mGET /api/product-warehouses [36m304[0m 477.337 ms - -[0m
+[0mGET /api/warehouses/6a26c3273ddc626ed45dc175/dashboard [32m200[0m 1238.783 ms - 9671[0m
+[0mGET /api/warehouses [36m304[0m 461.311 ms - -[0m
+[0mGET /api/product-warehouses [36m304[0m 466.732 ms - -[0m
+[0mGET /api/warehouses/6a26c3273ddc626ed45dc175/dashboard [36m304[0m 1242.319 ms - -[0m
+[0mGET /api/warehouses [36m304[0m 463.772 ms - -[0m
+[0mGET /api/product-warehouses [36m304[0m 473.408 ms - -[0m
+[0mGET /api/order-items [36m304[0m 465.192 ms - -[0m
+[0mGET /api/orders [36m304[0m 475.418 ms - -[0m
+[0mPOST /api/audit-logs [32m201[0m 326.176 ms - 613[0m
+[0mGET /api/orders [36m304[0m 472.503 ms - -[0m
+[0mGET /api/order-items [36m304[0m 473.945 ms - -[0m
+[0mGET /api/products [36m304[0m 785.903 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/consumptions [32m200[0m 1454.090 ms - 11700[0m
+[0mGET /api/notifications/expiration/check [36m304[0m 1532.305 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 1834.681 ms - -[0m
+[0mGET /api/orders [36m304[0m 456.403 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 462.598 ms - 11700[0m
+[0mGET /api/order-items [36m304[0m 467.057 ms - -[0m
+[0mGET /api/products [36m304[0m 771.236 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1676.645 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 469.986 ms - 11700[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 2127.256 ms - -[0m
+[0mGET /api/audit-logs [32m200[0m 790.176 ms - 178559[0m
+[0mGET /api/users [36m304[0m 461.579 ms - -[0m
+[0mGET /api/order-items [36m304[0m 458.725 ms - -[0m
+[0mGET /api/orders [36m304[0m 463.846 ms - -[0m
+[0mGET /api/consumptions [32m200[0m 467.722 ms - 11700[0m
+[0mGET /api/products [36m304[0m 770.985 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1529.204 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 1853.925 ms - -[0m
+[0mGET /api/notifications/expiration/check [33m401[0m 0.779 ms - 62[0m
+[0mGET /api/notifications [33m401[0m 0.518 ms - 62[0m
+[0mGET /api/notifications/expiration/check [33m401[0m 0.583 ms - 62[0m
+[0mGET /api/notifications [33m401[0m 0.483 ms - 62[0m
+[0mPOST /api/auth/login [32m200[0m 592.334 ms - 974[0m
+[0mGET /api/products [36m304[0m 770.067 ms - -[0m
+[0mGET /api/warehouses [36m304[0m 454.737 ms - -[0m
+[0mGET /api/products [36m304[0m 772.504 ms - -[0m
+[0mGET /api/order-items [36m304[0m 461.397 ms - -[0m
+[0mGET /api/orders [36m304[0m 464.905 ms - -[0m
+[0mGET /api/orders/6a2d822a0acc23a857f19d76 [32m200[0m 460.599 ms - 2086[0m
+[0mGET /api/order-items [36m304[0m 463.856 ms - -[0m
+[0mGET /api/orders/6a2d822a0acc23a857f19d76 [36m304[0m 458.666 ms - -[0m
+[0mGET /api/order-items [36m304[0m 464.419 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1553.000 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 2007.230 ms - -[0m
+[0mGET /api/order-items [36m304[0m 458.283 ms - -[0m
+[0mGET /api/orders/6a2d822a0acc23a857f19d76 [36m304[0m 464.794 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1539.276 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 1852.781 ms - -[0m
+[0mGET /api/notifications/expiration/check [0m-[0m - ms - -[0m
+[0mGET /api/notifications/expiration/check [0m-[0m - ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+Expiration notification scan completed { scanned: 15, created: 0 }
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [32m200[0m 1530.059 ms - 16856[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [32m200[0m 1852.493 ms - 51932[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1533.149 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1531.946 ms - -[0m
+[0mGET /api/notifications [32m200[0m 1837.627 ms - 51932[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications [36m304[0m 1874.406 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mGET /api/notifications/expiration/check [36m304[0m 1546.271 ms - -[0m
+Expiration notification scan completed { scanned: 15, created: 0 }
+[0mPOST /api/auth/login [32m200[0m 573.554 ms - 974[0m
+[0mGET /api/notifications [36m304[0m 1989.544 ms - -[0m

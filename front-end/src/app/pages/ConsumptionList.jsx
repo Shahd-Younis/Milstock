@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { Plus, Search } from "lucide-react";
+import { Edit, Plus, Search } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
@@ -13,6 +13,7 @@ import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
 import { getStoredAuth } from "../lib/auth";
 import { getLocalizedDisplayName, getLocalizedValue } from "../lib/localization";
+import { isDateRangeValid } from "../lib/dateValidation";
 
 const labelsEn = {
   title: "Consumption",
@@ -38,9 +39,7 @@ const labelsEn = {
   status: "Status",
   actions: "Actions",
   view: "View",
-  cancel: "Cancel",
-  cancelPrompt: "Cancellation reason",
-  cancelSuccess: "Consumption cancelled and stock restored.",
+  edit: "Edit",
   totalToday: "Total Consumed Today",
   totalWeek: "Total Consumed This Week",
   totalMonth: "Total Consumed This Month",
@@ -53,6 +52,7 @@ const labelsEn = {
   allProducts: "All Products",
   allUsers: "All Users",
   allReasons: "All Reasons",
+  invalidDateRange: "Date From cannot be after Date To",
 };
 
 const labelsAr = {
@@ -79,9 +79,7 @@ const labelsAr = {
   status: "الحالة",
   actions: "إجراءات",
   view: "عرض",
-  cancel: "إلغاء",
-  cancelPrompt: "سبب الإلغاء",
-  cancelSuccess: "تم إلغاء الاستهلاك واسترجاع المخزون.",
+  edit: "تعديل",
   totalToday: "إجمالي المستهلك اليوم",
   totalWeek: "إجمالي المستهلك هذا الأسبوع",
   totalMonth: "إجمالي المستهلك هذا الشهر",
@@ -94,6 +92,7 @@ const labelsAr = {
   allProducts: "كل المنتجات",
   allUsers: "كل المستخدمين",
   allReasons: "كل الأسباب",
+  invalidDateRange: "تاريخ البداية لا يمكن أن يكون بعد تاريخ النهاية",
 };
 
 const getBasePath = (role, isArabic) => {
@@ -134,15 +133,16 @@ const ConsumptionListView = ({ isArabic = false }) => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [message, setMessage] = useState("");
+  const datesAreValid = isDateRangeValid(dateFrom, dateTo);
   const { data, loading, error, refresh } = useApiResource(() => api.consumptions.list({
     warehouse_id: isAdmin ? warehouseFilter : "",
     product_id: isAdmin ? productFilter : "",
     consumed_by: isAdmin ? userFilter : "",
     reason: isAdmin ? reasonFilter : "",
-    dateFrom: isAdmin ? dateFrom : "",
-    dateTo: isAdmin ? dateTo : "",
+    dateFrom: isAdmin && datesAreValid ? dateFrom : "",
+    dateTo: isAdmin && datesAreValid ? dateTo : "",
     status: statusFilter === "all" ? "" : statusFilter,
-  }), [isAdmin, warehouseFilter, productFilter, userFilter, reasonFilter, dateFrom, dateTo, statusFilter]);
+  }), [isAdmin, warehouseFilter, productFilter, userFilter, reasonFilter, dateFrom, dateTo, datesAreValid, statusFilter]);
   const { data: warehouses } = useApiResource(() => isAdmin ? api.warehouses.list() : Promise.resolve([]), [isAdmin]);
   const { data: products } = useApiResource(() => isAdmin ? api.products.list() : Promise.resolve([]), [isAdmin]);
   const { data: users } = useApiResource(() => isAdmin ? api.users.list() : Promise.resolve([]), [isAdmin]);
@@ -175,20 +175,7 @@ const ConsumptionListView = ({ isArabic = false }) => {
     return Object.entries(totals).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
   };
   const reasonOptions = Array.from(new Set(rows.map((row) => row.reason).filter(Boolean)));
-
-  const canCancel = isAdmin;
-  const cancelConsumption = async (row) => {
-    const reason = window.prompt(labels.cancelPrompt, "");
-    if (reason === null) return;
-    setMessage("");
-    try {
-      await api.consumptions.cancel(row.id, reason);
-      setMessage(labels.cancelSuccess);
-      refresh();
-    } catch (requestError) {
-      setMessage(requestError.message || "Unable to cancel consumption.");
-    }
-  };
+  const dateRangeError = datesAreValid ? "" : labels.invalidDateRange;
 
   const columns = [
     { key: "shortId", header: labels.id },
@@ -213,10 +200,13 @@ const ConsumptionListView = ({ isArabic = false }) => {
           event.stopPropagation();
           navigate(`${basePath}/${row.id}`);
         }}>{labels.view}</Button>
-        {canCancel && row.status !== "cancelled" && <Button type="button" variant="outline" size="sm" onClick={(event) => {
+        {row.status !== "cancelled" && <Button type="button" variant="outline" size="sm" onClick={(event) => {
           event.stopPropagation();
-          cancelConsumption(row);
-        }}>{labels.cancel}</Button>}
+          navigate(`${basePath}/${row.id}/edit`);
+        }}>
+          <Edit className="w-4 h-4" />
+          {labels.edit}
+        </Button>}
       </div>
     }
   ];
@@ -285,6 +275,7 @@ const ConsumptionListView = ({ isArabic = false }) => {
       <Input label={labels.dateFrom} type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
       <Input label={labels.dateTo} type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
     </div>}
+    {dateRangeError && <div className="rounded-xl border border-[#D4183D]/20 bg-[#D4183D]/10 px-4 py-3 text-sm text-[#D4183D]">{dateRangeError}</div>}
     <p className="text-sm text-[#5A6B50]">{loading ? labels.loading : error || labels.count(filteredRows.length, rows.length)}</p>
     <Table
       columns={columns}

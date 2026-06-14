@@ -211,6 +211,14 @@ const api = {
       body: JSON.stringify({ reason })
     })
   },
+  waste: {
+    list: () => requestWithFallback("/waste", "/wastes"),
+    analytics: () => requestWithFallback("/waste/analytics", "/wastes/analytics"),
+    create: (payload) => requestWithFallback("/waste", "/wastes", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    })
+  },
   notifications: {
     ...crud("/notifications"),
     expiration: () => request("/notifications/expiration/check"),

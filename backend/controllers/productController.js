@@ -8,6 +8,7 @@ const { adjustStock } = require('../services/inventoryService');
 const { createAuditLog } = require('../services/auditLogService');
 const { generateExpirationNotifications } = require('../services/expirationNotificationService');
 const { buildWarehouseScopeFilter, assertWarehouseAccess } = require('../utils/warehouseScope');
+const { assertDateRange, assertValidDate } = require('../utils/dateValidation');
 
 const productRules = [
   body('name').optional().trim().isLength({ min: 2 }).withMessage('Product name is required'),
@@ -18,9 +19,13 @@ const productRules = [
   body('categoryAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('min_quantity').optional().isFloat({ min: 0 }).withMessage('Minimum quantity must be 0 or greater'),
   body('warehouse_id').optional().isMongoId().withMessage('Valid warehouse_id is required'),
-  body('expiry_date').optional({ nullable: true }).isISO8601().withMessage('Expiry date must be a valid date'),
-  body('expiration_date').optional({ nullable: true }).isISO8601().withMessage('Expiration date must be a valid date'),
-  body('manufacturing_date').optional({ nullable: true }).isISO8601().withMessage('Manufacturing date must be a valid date'),
+  body('expiry_date').optional({ nullable: true, checkFalsy: true }).custom((value) => assertValidDate(value, 'Expiry date must be a valid date')),
+  body('expiration_date').optional({ nullable: true, checkFalsy: true }).custom((value) => assertValidDate(value, 'Expiration date must be a valid date')),
+  body('manufacturing_date').optional({ nullable: true, checkFalsy: true }).custom((value) => assertValidDate(value, 'Manufacturing date must be a valid date')),
+  body('manufacturing_date').custom((value, { req }) => {
+    const expirationDate = req.body.expiration_date || req.body.expiry_date;
+    return assertDateRange(value, expirationDate, 'Manufacturing date cannot be after expiration date');
+  }),
   body('warehouse_name').optional().trim(),
   body('storage_section').optional().trim(),
   body('batch_number').optional().trim(),

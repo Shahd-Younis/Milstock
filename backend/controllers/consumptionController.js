@@ -12,6 +12,7 @@ const { syncProductQuantity } = require('../services/inventoryService');
 const { createNotification } = require('../services/notificationService');
 const { createAuditLog } = require('../services/auditLogService');
 const { assertWarehouseAccess, enforcePayloadWarehouse, getAssignedWarehouseId } = require('../utils/warehouseScope');
+const { assertDateRange, assertValidDate } = require('../utils/dateValidation');
 
 const consumptionPopulate = ['user_id', 'consumed_by', 'product_id', 'warehouse_id', 'movement_id', 'cancelled_by'];
 
@@ -28,6 +29,14 @@ const consumptionRules = [
 const cancelRules = [
   body('reason').optional().trim(),
   body('note').optional().trim(),
+];
+
+const updateRules = [
+  body('consumed_quantity').optional().isFloat({ min: 0.000001 }).withMessage('Consumed quantity must be greater than zero'),
+  body('quantity').optional().isFloat({ min: 0.000001 }).withMessage('Quantity must be greater than zero'),
+  body('reason').optional().trim().notEmpty().withMessage('Reason cannot be empty'),
+  body('department').optional().trim(),
+  body('notes').optional().trim(),
 ];
 
 const getConsumptionQuantity = (payload) => Number(payload.consumed_quantity ?? payload.quantity ?? 0);
@@ -54,6 +63,11 @@ const buildConsumptionFilter = (req) => {
   if (status) filter.status = status;
   if (reason) filter.reason = reason;
   if (dateFrom || dateTo) {
+    try {
+      assertDateRange(dateFrom, dateTo, 'Date From cannot be after Date To');
+    } catch (error) {
+      throw new AppError(error.message, 400);
+    }
     filter.consumption_date = {};
     if (dateFrom) filter.consumption_date.$gte = new Date(dateFrom);
     if (dateTo) filter.consumption_date.$lte = new Date(dateTo);
@@ -180,6 +194,11 @@ const createConsumption = asyncHandler(async (req, res) => {
 
   const payload = { ...req.body };
   enforcePayloadWarehouse(req, payload);
+  try {
+    assertValidDate(payload.consumption_date, 'Consumption date must be a valid date');
+  } catch (error) {
+    throw new AppError(error.message, 400);
+  }
   const consumedQuantity = getConsumptionQuantity(payload);
   if (!consumedQuantity || consumedQuantity <= 0) {
     throw new AppError('Consumed quantity must be greater than zero', 400);
@@ -402,17 +421,133 @@ const cancelConsumption = asyncHandler(async (req, res) => {
   res.json({ success: true, data: populated, stock: stockRow });
 });
 
+const updateConsumption = asyncHandler(async (req, res) => {
+  if (req.user?.role === 'supplier') {
+    throw new AppError('Suppliers cannot update consumption records', 403);
+  }
+
+  const session = await mongoose.startSession();
+  let consumption;
+  let stockRow;
+  let product;
+  let warehouse;
+  let oldQuantity = 0;
+  let newQuantity = 0;
+  let delta = 0;
+
+  try {
+    await session.withTransaction(async () => {
+      consumption = await Consumption.findById(req.params.id).session(session);
+      if (!consumption) throw new AppError('Consumption record not found', 404);
+      if (consumption.status === 'cancelled') {
+        throw new AppError('Cancelled consumption records cannot be edited', 400);
+      }
+
+      await assertWarehouseAccess(req, Consumption, consumption);
+
+      product = await Product.findById(consumption.product_id).session(session);
+      warehouse = await Warehouse.findById(consumption.warehouse_id).session(session);
+      if (!product || !warehouse) {
+        throw new AppError('Related product or warehouse was not found', 404);
+      }
+
+      stockRow = await ProductWarehouse.findOne({
+        product_id: consumption.product_id,
+        warehouse_id: consumption.warehouse_id,
+      }).session(session);
+      if (!stockRow) {
+        throw new AppError('Product is not available in this warehouse', 400);
+      }
+
+      oldQuantity = Number(consumption.consumed_quantity || consumption.quantity || 0);
+      newQuantity = getConsumptionQuantity(req.body) || oldQuantity;
+      if (!newQuantity || newQuantity <= 0) {
+        throw new AppError('Consumed quantity must be greater than zero', 400);
+      }
+
+      const availableIncludingOriginal = Number(stockRow.quantity || 0) + oldQuantity;
+      if (newQuantity > availableIncludingOriginal) {
+        throw new AppError('Insufficient stock for updated consumption quantity', 400);
+      }
+
+      delta = newQuantity - oldQuantity;
+      if (delta !== 0) {
+        stockRow.quantity = Number(stockRow.quantity || 0) - delta;
+        await stockRow.save({ session });
+        await syncProductQuantity(consumption.product_id, session);
+
+        const [movement] = await InventoryMovement.create([{
+          user_id: req.user._id,
+          performed_by: req.user._id,
+          product_id: consumption.product_id,
+          change_type: delta > 0 ? 'out' : 'in',
+          stock: Math.abs(delta),
+          reference_id: consumption.warehouse_id,
+          reference_type: 'consumption_update',
+          from_warehouse: delta > 0 ? consumption.warehouse_id : null,
+          to_warehouse: delta > 0 ? null : consumption.warehouse_id,
+          requested_quantity: Math.abs(delta),
+          moved_quantity: Math.abs(delta),
+          status: 'completed',
+          movement_type: 'consumption',
+          completed_by: req.user._id,
+          completed_at: new Date(),
+          note: req.body.reason || req.body.notes || 'Consumption record updated',
+        }], { session });
+        consumption.movement_id = movement._id;
+      }
+
+      consumption.quantity = newQuantity;
+      consumption.consumed_quantity = newQuantity;
+      if (req.body.reason !== undefined) consumption.reason = req.body.reason;
+      if (req.body.department !== undefined) consumption.department = req.body.department;
+      if (req.body.notes !== undefined) consumption.notes = req.body.notes;
+      await consumption.save({ session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  await createAuditLog({
+    req,
+    action: 'edit_consumption',
+    module: 'consumption',
+    entityId: consumption._id,
+    entityType: 'Consumption',
+    description: `Edited consumption for ${product.name}`,
+    newData: {
+      consumption,
+      old_quantity: oldQuantity,
+      new_quantity: newQuantity,
+      stock_delta: delta,
+    },
+  });
+
+  if (delta !== 0) {
+    await notifyLowStockAfterConsumption({
+      req,
+      product,
+      warehouse,
+      oldQuantity: Number(stockRow.quantity || 0) + delta,
+      newQuantity: stockRow.quantity,
+      consumedQuantity: Math.abs(delta),
+    });
+  }
+
+  const populated = await Consumption.findById(consumption._id).populate(consumptionPopulate);
+  res.json({ success: true, data: populated, stock: stockRow });
+});
+
 module.exports = {
   consumptionRules,
   cancelRules,
+  updateRules,
   getConsumptions,
   getMyConsumptions,
   getConsumption,
   createConsumption,
   cancelConsumption,
-  updateConsumption: asyncHandler(async (_req, res) => {
-    res.status(405).json({ success: false, message: 'Consumption records are immutable. Cancel the record instead.' });
-  }),
+  updateConsumption,
   deleteConsumption: asyncHandler(async (_req, res) => {
     res.status(405).json({ success: false, message: 'Consumption records cannot be deleted. Use cancel instead.' });
   }),

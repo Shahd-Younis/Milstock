@@ -19,12 +19,14 @@ const pageTitleMap = {
   "/admin/users": "User Management",
   "/admin/settings": "System Settings",
   "/admin/consumptions": "Consumption Monitor",
+  "/admin/waste-analysis": "Waste Analysis",
   "/admin/profile": "My Profile",
   "/admin/help": "Help Center",
   "/user/dashboard": "Kitchen Dashboard",
   "/user/inventory": "Available Stock",
   "/user/consumptions": "Consumption",
   "/user/consumptions/new": "Record Consumption",
+  "/user/waste-analysis": "Waste Analysis",
   "/user/requests": "My Requests",
   "/user/requests/create": "Create Request",
   "/user/notifications": "Notifications",
@@ -40,9 +42,11 @@ const subtitleMap = {
   "/admin/inventory": "Manage all stock items",
   "/admin/reports": "Analytics and reporting",
   "/admin/consumptions": "Monitor consumption across warehouses",
+  "/admin/waste-analysis": "Analyze expired and damaged stock waste",
   "/user/dashboard": "Monitor your kitchen supply",
   "/user/consumptions": "Track consumption from your assigned warehouse",
   "/user/consumptions/new": "Record stock used by your unit",
+  "/user/waste-analysis": "Analyze expired and damaged stock waste",
 };
 
 const getRoleText = (userRole) => {

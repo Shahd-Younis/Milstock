@@ -17,7 +17,7 @@ const CardHeader = ({
 }) => {
   return <div
     className={clsx(
-      "mb-5 pb-4 border-b border-border flex items-center justify-between gap-3",
+      "mil-card-header mb-5 pb-4 border-b border-border flex items-center justify-between gap-3",
       className
     )}
   >

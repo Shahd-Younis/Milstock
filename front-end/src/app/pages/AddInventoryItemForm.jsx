@@ -10,6 +10,7 @@ import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getLocalizedValue } from "../lib/localization";
+import { isDateRangeValid, isValidDateInput, toDateInputValue } from "../lib/dateValidation";
 
 const translations = {
   en: {
@@ -66,6 +67,8 @@ const translations = {
       englishCategoryRequired: "English category is required.",
       arabicCategoryRequired: "Arabic category is required.",
       warehouseRequired: "Warehouse is required.",
+      invalidDate: "Enter a valid date.",
+      invalidDateRange: "Manufacturing date cannot be after expiration date.",
       created: "Item created successfully.",
       updated: "Item updated successfully.",
       saveFailed: "Unable to save product",
@@ -105,7 +108,7 @@ const translations = {
       manufacturingDate: "تاريخ التصنيع",
       batchNumber: "رقم التشغيلة",
       serialNumber: "الرقم التسلسلي",
-      description: "الوصف بالإنجليزي",
+      description: "الوصف",
       arabicDescription: "الوصف بالعربي",
       notes: "ملاحظات",
     },
@@ -123,7 +126,7 @@ const translations = {
       storageSection: "مثال: B-12",
       batchNumber: "أدخل رقم التشغيلة",
       serialNumber: "أدخل الرقم التسلسلي",
-      description: "اكتب وصف الصنف بالإنجليزي",
+      description: "اكتب وصف الصنف",
       arabicDescription: "اكتب وصف الصنف بالعربي",
       notes: "ملاحظات التخزين أو التعامل الداخلي",
     },
@@ -133,6 +136,8 @@ const translations = {
       englishCategoryRequired: "الفئة بالإنجليزي مطلوبة.",
       arabicCategoryRequired: "الفئة بالعربي مطلوبة.",
       warehouseRequired: "المخزن مطلوب.",
+      invalidDate: "أدخل تاريخًا صحيحًا.",
+      invalidDateRange: "تاريخ التصنيع لا يمكن أن يكون بعد تاريخ انتهاء الصلاحية.",
       created: "تم إنشاء الصنف بنجاح.",
       updated: "تم تحديث الصنف بنجاح.",
       saveFailed: "تعذر حفظ الصنف",
@@ -291,9 +296,9 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       warehouse_id: product.warehouse_id?._id || product.warehouse_id || "",
       warehouse_name: product.warehouse_name || product.warehouse_id?.name || "",
       storage_section: product.storage_section || "",
-      expiry_date: expirationDate ? expirationDate.slice(0, 10) : "",
-      expiration_date: expirationDate ? expirationDate.slice(0, 10) : "",
-      manufacturing_date: product.manufacturing_date ? product.manufacturing_date.slice(0, 10) : "",
+      expiry_date: toDateInputValue(expirationDate),
+      expiration_date: toDateInputValue(expirationDate),
+      manufacturing_date: toDateInputValue(product.manufacturing_date),
       batch_number: product.batch_number || "",
       serial_number: product.serial_number || "",
       description: product.description || "",
@@ -351,6 +356,19 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       setSaving(false);
       return;
     }
+    const expirationDate = form.expiration_date || form.expiry_date || "";
+    if (!isValidDateInput(expirationDate) || !isValidDateInput(form.manufacturing_date)) {
+      setMessageType("error");
+      setMessage(t.messages.invalidDate);
+      setSaving(false);
+      return;
+    }
+    if (!isDateRangeValid(form.manufacturing_date, expirationDate)) {
+      setMessageType("error");
+      setMessage(t.messages.invalidDateRange);
+      setSaving(false);
+      return;
+    }
 
     const selectedWarehouse = warehouses.find((warehouse) => warehouse._id === form.warehouse_id);
     const payload = {
@@ -364,8 +382,8 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       warehouse_id: form.warehouse_id,
       warehouse_name: selectedWarehouse?.name || form.warehouse_name || "",
       storage_section: form.storage_section,
-      expiry_date: form.expiration_date || form.expiry_date || undefined,
-      expiration_date: form.expiration_date || form.expiry_date || undefined,
+      expiry_date: expirationDate || undefined,
+      expiration_date: expirationDate || undefined,
       manufacturing_date: form.manufacturing_date || undefined,
       batch_number: form.batch_number,
       serial_number: form.serial_number,
@@ -469,7 +487,6 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
           <Section title={t.sections.additionalDetails}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <TextareaField label={t.fields.description} placeholder={t.placeholders.description} value={form.description} onChange={handleChange("description")} className={fieldClass} />
-              <TextareaField label={t.fields.arabicDescription} placeholder={t.placeholders.arabicDescription} value={form.descriptionAr} onChange={handleChange("descriptionAr")} className={fieldClass} />
               <TextareaField label={t.fields.notes} placeholder={t.placeholders.notes} value={form.notes} onChange={handleChange("notes")} className={fieldClass} />
             </div>
           </Section>

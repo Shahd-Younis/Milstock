@@ -4,6 +4,7 @@ const validate = require('../middleware/validate');
 const {
   consumptionRules,
   cancelRules,
+  updateRules,
   getConsumptions,
   getMyConsumptions,
   getConsumption,
@@ -23,7 +24,8 @@ router.patch('/:id/cancel', cancelRules, validate, cancelConsumption);
 router
   .route('/:id')
   .get(getConsumption)
-  .put(updateConsumption)
+  .put(updateRules, validate, updateConsumption)
+  .patch(updateRules, validate, updateConsumption)
   .delete(deleteConsumption);
 
 module.exports = router;

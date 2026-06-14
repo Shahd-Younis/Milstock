@@ -64,7 +64,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 const AdminDashboardAr = () => {
-  return <div className="p-6 lg:p-8 space-y-8">
+  return <div dir="rtl" className="p-6 lg:p-8 space-y-8">
       {
     /* KPI Stats */
   }
@@ -84,8 +84,8 @@ const AdminDashboardAr = () => {
   }
         <Card className="lg:col-span-2">
           <CardHeader>
-            <span className="text-xs text-muted-foreground">آخر 5 أشهر</span>
             <CardTitle className="text-right">اتجاهات المخزون</CardTitle>
+            <span className="text-xs text-muted-foreground">آخر 5 أشهر</span>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
@@ -132,21 +132,21 @@ const AdminDashboardAr = () => {
   }
         <Card>
           <CardHeader>
+            <CardTitle className="text-right">أحدث الطلبات</CardTitle>
             <Link to="/ar/admin/requests">
               <Button variant="ghost" size="sm" className="flex items-center gap-1">
                 عرض الكل
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
-            <CardTitle className="text-right">أحدث الطلبات</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {recentRequests.map((req) => <div
     key={req.id}
-    className="flex items-start justify-between p-4 rounded-xl bg-[#ECEEE2]/60 hover:bg-[#ECEEE2] border border-transparent hover:border-[#4E4631]/10 transition-all"
+    className="flex flex-row-reverse items-start justify-between gap-4 p-4 rounded-xl bg-[#ECEEE2]/60 hover:bg-[#ECEEE2] border border-transparent hover:border-[#4E4631]/10 transition-all"
   >
-                  <div className="flex flex-col items-end gap-2 mr-3 flex-shrink-0">
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <Badge
     variant={req.status === "pending" ? "pending" : req.status === "approved" ? "success" : "info"}
   >
@@ -155,13 +155,13 @@ const AdminDashboardAr = () => {
                     <span className="text-[11px] text-[#5A6B50]">{req.time}</span>
                   </div>
                   <div className="text-right min-w-0 flex-1">
-                    <div className="flex items-center gap-2 justify-end mb-1">
+                    <div className="flex items-center gap-2 justify-start flex-row-reverse mb-1">
+                      <span className="text-sm font-semibold text-[#2E3A24]">{req.id}</span>
                       <span
     className={req.priority === "urgent" ? "text-[10px] font-bold text-[#D4183D] uppercase tracking-wide" : req.priority === "high" ? "text-[10px] font-bold text-[#B8862A] uppercase tracking-wide" : "text-[10px] text-[#5A6B50] uppercase tracking-wide"}
   >
                         {priorityLabels[req.priority]}
                       </span>
-                      <span className="text-sm font-semibold text-[#2E3A24]">{req.id}</span>
                     </div>
                     <p className="text-xs text-[#5A6B50] mb-1">{req.kitchen}</p>
                     <p className="text-sm text-[#2E3A24]">
@@ -178,21 +178,21 @@ const AdminDashboardAr = () => {
   }
         <Card>
           <CardHeader>
+            <CardTitle className="text-right">التنبيهات الحرجة</CardTitle>
             <span className="text-xs bg-[#D4183D]/10 text-[#D4183D] px-2 py-0.5 rounded-lg font-medium">
               2 نشط
             </span>
-            <CardTitle className="text-right">التنبيهات الحرجة</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {criticalAlerts.map((alert, index) => <div
     key={index}
-    className={`flex items-start gap-3 p-4 rounded-xl border flex-row-reverse ${alert.severity === "danger" ? "bg-[#D4183D]/5 border-[#D4183D]/15" : alert.severity === "warning" ? "bg-[#B8862A]/5 border-[#B8862A]/15" : "bg-[#5B8A4A]/5 border-[#5B8A4A]/15"}`}
+    className={`relative p-4 pr-7 rounded-xl border text-right ${alert.severity === "danger" ? "bg-[#D4183D]/5 border-[#D4183D]/15" : alert.severity === "warning" ? "bg-[#B8862A]/5 border-[#B8862A]/15" : "bg-[#5B8A4A]/5 border-[#5B8A4A]/15"}`}
   >
                   <div
-    className={`w-1.5 flex-shrink-0 rounded-full mt-0.5 self-stretch ${alert.severity === "danger" ? "bg-[#D4183D]" : alert.severity === "warning" ? "bg-[#B8862A]" : "bg-[#5B8A4A]"}`}
+    className={`absolute right-4 top-5 bottom-5 w-1.5 rounded-full ${alert.severity === "danger" ? "bg-[#D4183D]" : alert.severity === "warning" ? "bg-[#B8862A]" : "bg-[#5B8A4A]"}`}
   />
-                  <div className="flex-1 text-right min-w-0">
+                  <div className="min-w-0">
                     <p className="text-sm text-[#2E3A24] font-medium leading-snug mb-1">{alert.message}</p>
                     <p className="text-xs text-[#5A6B50]">{alert.time}</p>
                   </div>

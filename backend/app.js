@@ -18,6 +18,7 @@ const orderItemRoutes = require('./routes/orderItemRoutes');
 const productWarehouseRoutes = require('./routes/productWarehouseRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const consumptionRoutes = require('./routes/consumptionRoutes');
+const wasteRoutes = require('./routes/wasteRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const auditLogRoutes = require('./routes/auditLogRoutes');
 const providerRoutes = require('./routes/providerRoutes');
@@ -73,6 +74,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/movements', inventoryRoutes);
 app.use('/api/consumption', consumptionRoutes);
 app.use('/api/consumptions', consumptionRoutes);
+app.use('/api/waste', wasteRoutes);
+app.use('/api/wastes', wasteRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 

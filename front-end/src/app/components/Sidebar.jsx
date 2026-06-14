@@ -64,6 +64,7 @@ const adminNavGroups = [
         icon: BarChart3,
         children: [
           { label: "Analytics", path: "/admin/reports", icon: BarChart3 },
+          { label: "Waste Analysis", path: "/admin/waste-analysis", icon: BarChart3 },
           { label: "Audit Logs", path: "/admin/audit-logs", icon: Shield }
         ]
       }
@@ -88,7 +89,8 @@ const userNavGroups = [
     label: "INVENTORY",
     items: [
       { label: "Available Stock", path: "/user/inventory", icon: Package },
-      { label: "Consumption", path: "/user/consumptions", icon: FileText }
+      { label: "Consumption", path: "/user/consumptions", icon: FileText },
+      { label: "Waste Analysis", path: "/user/waste-analysis", icon: BarChart3 }
     ]
   },
   {
