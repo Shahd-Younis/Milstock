@@ -26,11 +26,31 @@ const supplierOrderRoutes = require('./routes/supplierOrderRoutes');
 const { getDbState } = require('./config/db');
 
 const app = express();
+const defaultClientOrigins = [
+  'http://localhost:5173',
+  'https://milstock-frontend.vercel.app',
+];
+const configuredClientOrigins = [
+  process.env.CLIENT_URL,
+  process.env.CLIENT_URLS,
+]
+  .filter(Boolean)
+  .flatMap((origins) => origins.split(','))
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedClientOrigins = [...new Set([...defaultClientOrigins, ...configuredClientOrigins])];
 
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin(origin, callback) {
+      if (!origin || allowedClientOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new AppError(`CORS origin ${origin} is not allowed`, 403));
+    },
     credentials: true,
   })
 );
