@@ -24,6 +24,7 @@ const auditLogRoutes = require('./routes/auditLogRoutes');
 const providerRoutes = require('./routes/providerRoutes');
 const supplierOrderRoutes = require('./routes/supplierOrderRoutes');
 const { getDbState } = require('./config/db');
+const { setupSwagger } = require('./docs/swagger');
 
 const app = express();
 const defaultClientOrigins = [
@@ -77,6 +78,8 @@ app.get('/', (_req, res) => {
     health: '/api/health',
   });
 });
+
+setupSwagger(app);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

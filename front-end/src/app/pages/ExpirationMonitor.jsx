@@ -4,6 +4,7 @@ import { Table } from "../components/Table";
 import { Badge } from "../components/Badge";
 import { Calendar, AlertTriangle, Clock } from "lucide-react";
 import { StatCard } from "../components/StatCard";
+import { useState } from "react";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
@@ -23,6 +24,7 @@ const pageCopy = {
     withinWarning: "Expiring Within 30 Days",
     total: "Total Monitored Items",
     criticalTitle: "Critical - Expiring Within 7 Days",
+    warningTitle: "Expiring Within 30 Days",
     allTitle: "All Monitored Items",
     itemId: "Item ID",
     itemName: "Item Name",
@@ -35,7 +37,11 @@ const pageCopy = {
     days: "days",
     unassigned: "Unassigned",
     noCritical: "No critical expiring MongoDB products.",
+    noWarning: "No MongoDB products expiring within 30 days.",
     noExpiring: "No expiring MongoDB products found.",
+    statusCritical: "critical",
+    statusWarning: "warning",
+    statusNormal: "normal",
   },
   ar: {
     title: "متابعة تواريخ الصلاحية",
@@ -46,6 +52,7 @@ const pageCopy = {
     withinWarning: "تنتهي خلال 30 يومًا",
     total: "إجمالي الأصناف تحت المتابعة",
     criticalTitle: "حرج - تنتهي خلال 7 أيام",
+    warningTitle: "تنتهي خلال 30 يومًا",
     allTitle: "كل الأصناف تحت المتابعة",
     itemId: "رمز الصنف",
     itemName: "اسم الصنف",
@@ -58,13 +65,18 @@ const pageCopy = {
     days: "يوم",
     unassigned: "غير محدد",
     noCritical: "لا توجد أصناف حرجة قريبة من انتهاء الصلاحية.",
+    noWarning: "لا توجد أصناف تنتهي خلال 30 يومًا.",
     noExpiring: "لا توجد أصناف قريبة من انتهاء الصلاحية.",
+    statusCritical: "حرج",
+    statusWarning: "تنبيه",
+    statusNormal: "طبيعي",
   },
 };
 
 const ExpirationMonitorView = ({ isArabic = false }) => {
   const locale = isArabic ? "ar" : "en";
   const t = pageCopy[locale];
+  const [activeRange, setActiveRange] = useState("critical");
   const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
   const expiringItems = products.filter((product) => isValidDateValue(product.expiration_date || product.expiry_date)).map((product) => {
     const expirationDateValue = product.expiration_date || product.expiry_date;
@@ -86,6 +98,9 @@ const ExpirationMonitorView = ({ isArabic = false }) => {
   }).filter((item) => item.severity !== "normal").sort((a, b) => a.daysRemaining - b.daysRemaining);
   const criticalItems = expiringItems.filter((item) => item.severity === "critical");
   const warningItems = expiringItems.filter((item) => item.severity === "warning");
+  const visibleItems = activeRange === "critical" ? criticalItems : activeRange === "warning" ? warningItems : expiringItems;
+  const activeTitle = activeRange === "critical" ? t.criticalTitle : activeRange === "warning" ? t.warningTitle : t.allTitle;
+  const emptyMessage = activeRange === "critical" ? t.noCritical : activeRange === "warning" ? t.noWarning : t.noExpiring;
   const columns = [
     { key: "id", header: t.itemId },
     { key: "name", header: t.itemName },
@@ -114,7 +129,12 @@ const ExpirationMonitorView = ({ isArabic = false }) => {
           warning: "warning",
           normal: "success"
         };
-        return <Badge variant={variantMap[row.severity]}>{row.severity}</Badge>;
+        const labelMap = {
+          critical: t.statusCritical,
+          warning: t.statusWarning,
+          normal: t.statusNormal
+        };
+        return <Badge variant={variantMap[row.severity]}>{labelMap[row.severity]}</Badge>;
       }
     }
   ];
@@ -126,30 +146,21 @@ const ExpirationMonitorView = ({ isArabic = false }) => {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard title={t.withinCritical} value={criticalItems.length.toString()} icon={AlertTriangle} color="danger" />
-        <StatCard title={t.withinWarning} value={warningItems.length.toString()} icon={Clock} color="warning" />
-        <StatCard title={t.total} value={expiringItems.length.toString()} icon={Calendar} color="primary" />
+        <StatCard title={t.withinCritical} value={criticalItems.length.toLocaleString(locale === "ar" ? "ar-EG" : "en")} icon={AlertTriangle} color="danger" onClick={() => setActiveRange("critical")} />
+        <StatCard title={t.withinWarning} value={warningItems.length.toLocaleString(locale === "ar" ? "ar-EG" : "en")} icon={Clock} color="warning" onClick={() => setActiveRange("warning")} />
+        <StatCard title={t.total} value={expiringItems.length.toLocaleString(locale === "ar" ? "ar-EG" : "en")} icon={Calendar} color="primary" onClick={() => setActiveRange("all")} />
       </div>
 
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <AlertTriangle className="w-6 h-6 text-destructive" />
-              <CardTitle>{t.criticalTitle}</CardTitle>
+              {activeRange === "critical" ? <AlertTriangle className="w-6 h-6 text-destructive" /> : activeRange === "warning" ? <Clock className="w-6 h-6 text-[#B8862A]" /> : <Calendar className="w-6 h-6 text-[#6A7B4D]" />}
+              <CardTitle>{activeTitle}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <Table columns={columns} data={loading ? [] : criticalItems} emptyMessage={error || t.noCritical} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.allTitle}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table columns={columns} data={loading ? [] : expiringItems} emptyMessage={error || t.noExpiring} />
+            <Table columns={columns} data={loading ? [] : visibleItems} emptyMessage={error || emptyMessage} />
           </CardContent>
         </Card>
       </div>

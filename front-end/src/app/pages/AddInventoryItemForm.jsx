@@ -192,6 +192,7 @@ const getArabicCategory = (category) => {
 };
 
 const initialForm = {
+  displayName: "",
   name: "",
   nameAr: "",
   category: "",
@@ -209,6 +210,7 @@ const initialForm = {
   serial_number: "",
   description: "",
   descriptionAr: "",
+  displayDescription: "",
   notes: "",
 };
 
@@ -269,9 +271,10 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     const product = products.find((entry) => entry._id === id);
     if (!product) return;
     const expirationDate = product.expiration_date || product.expiry_date;
-    setForm({
-      name: product.name || "",
-      nameAr: product.nameAr || "",
+      setForm({
+        displayName: locale === "ar" ? product.nameAr || product.name || "" : product.name || product.nameAr || "",
+        name: product.name || "",
+        nameAr: product.nameAr || "",
       category: product.category || "",
       categoryAr: product.categoryAr || "",
       quantity: String(product.quantity ?? ""),
@@ -285,10 +288,11 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       manufacturing_date: toDateInputValue(product.manufacturing_date),
       batch_number: product.batch_number || "",
       serial_number: product.serial_number || "",
-      description: product.description || "",
-      descriptionAr: product.descriptionAr || "",
-      notes: product.notes || "",
-    });
+        description: product.description || "",
+        descriptionAr: product.descriptionAr || "",
+        displayDescription: locale === "ar" ? product.descriptionAr || product.description || "" : product.description || product.descriptionAr || "",
+        notes: product.notes || "",
+      });
   }, [id, isEdit, products]);
 
   const handleChange = (field) => (event) => {
@@ -301,6 +305,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       if (!value.trim()) {
         return {
           ...current,
+          displayName: "",
           name: "",
           nameAr: "",
         };
@@ -308,6 +313,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       const bilingual = getBilingualText(value, { en: current.name, ar: current.nameAr });
       return {
         ...current,
+        displayName: value,
         name: bilingual.en,
         nameAr: bilingual.ar,
       };
@@ -320,6 +326,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       if (!value.trim()) {
         return {
           ...current,
+          displayDescription: "",
           description: "",
           descriptionAr: "",
         };
@@ -327,6 +334,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       const bilingual = getBilingualText(value, { en: current.description, ar: current.descriptionAr });
       return {
         ...current,
+        displayDescription: value,
         description: bilingual.en,
         descriptionAr: bilingual.ar,
       };
@@ -348,7 +356,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     setSaving(true);
     setMessage("");
 
-    const displayName = isArabic ? form.nameAr || form.name : form.name || form.nameAr;
+    const displayName = form.displayName || (isArabic ? form.nameAr || form.name : form.name || form.nameAr);
     if (!displayName.trim()) {
       setMessageType("error");
       setMessage(t.messages.nameRequired);
@@ -383,7 +391,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
 
     const selectedWarehouse = warehouses.find((warehouse) => warehouse._id === form.warehouse_id);
     const bilingualName = getBilingualText(displayName, { en: form.name, ar: form.nameAr });
-    const bilingualDescription = getBilingualText(isArabic ? form.descriptionAr || form.description : form.description || form.descriptionAr, {
+    const bilingualDescription = getBilingualText(form.displayDescription || (isArabic ? form.descriptionAr || form.description : form.description || form.descriptionAr), {
       en: form.description,
       ar: form.descriptionAr
     });
@@ -392,8 +400,15 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     const payload = {
       name: bilingualName.en,
       nameAr: bilingualName.ar,
+      displayName,
+      product_name: bilingualName.en,
+      product_name_ar: bilingualName.ar,
+      item_name: bilingualName.en,
+      item_name_ar: bilingualName.ar,
       category: form.category.trim(),
       categoryAr,
+      category_name: form.category.trim(),
+      category_name_ar: categoryAr,
       quantity: Number(form.quantity),
       unit: form.unit,
       min_quantity: Number(form.min_quantity),
@@ -443,7 +458,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
               <Input
                 label={t.fields.itemName}
                 placeholder={t.placeholders.itemName}
-                value={isArabic ? form.nameAr || form.name : form.name || form.nameAr}
+                value={form.displayName}
                 onChange={handleLocalizedNameChange}
                 required
                 className={fieldClass}
@@ -509,11 +524,11 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
 
           <Section title={t.sections.additionalDetails}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextareaField
-                label={t.fields.description}
-                placeholder={t.placeholders.description}
-                value={isArabic ? form.descriptionAr || form.description : form.description || form.descriptionAr}
-                onChange={handleLocalizedDescriptionChange}
+            <TextareaField
+              label={t.fields.description}
+              placeholder={t.placeholders.description}
+              value={form.displayDescription}
+              onChange={handleLocalizedDescriptionChange}
                 className={fieldClass}
               />
               <TextareaField label={t.fields.notes} placeholder={t.placeholders.notes} value={form.notes} onChange={handleChange("notes")} className={fieldClass} />

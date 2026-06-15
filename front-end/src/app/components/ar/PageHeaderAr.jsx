@@ -9,13 +9,13 @@ const PageHeaderAr = ({
   className
 }) => {
   const headerActions = actions || (action ? [action] : []);
-  return <div dir="rtl" className={clsx("mb-8 flex items-start justify-between gap-4", className)}>
+  return <div dir="rtl" className={clsx("mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between", className)}>
       <div className="text-right flex-1 min-w-0">
-        <div className="flex items-center gap-3 justify-start mb-1">
-          <h1 className="text-[#2E3A24] truncate">{title}</h1>
+        <div className="flex items-start gap-3 justify-start mb-1">
+          <h1 className="text-[#2E3A24] whitespace-normal break-words leading-tight">{title}</h1>
           {badge && badge}
         </div>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-muted-foreground leading-6 break-words">{subtitle}</p>}
       </div>
       {headerActions.length > 0 && <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
         {headerActions.map((item) => <Button

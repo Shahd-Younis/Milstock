@@ -140,7 +140,14 @@ const AdminDashboard = () => {
                 <Pie key="adm-pc-pie" data={categoryData} cx="50%" cy="45%" outerRadius={85} innerRadius={45} dataKey="value" labelLine={false}>
                   {categoryData.map((entry, index) => <Cell key={`cell-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip key="adm-pc-tooltip" formatter={(v) => [v.toLocaleString(), "Kitchens"]} contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #4E4631/15" }} />
+                <Tooltip
+                  key="adm-pc-tooltip"
+                  formatter={(value, _name, props) => [
+                    Number(value || 0).toLocaleString(),
+                    props?.payload?.name || "Category"
+                  ]}
+                  contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #4E4631/15" }}
+                />
                 <Legend key="adm-pc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5A6B50" }} />
               </PieChart>
             </ResponsiveContainer>

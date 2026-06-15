@@ -1,7 +1,7 @@
 import { StatCardAr } from "../../components/ar/StatCardAr";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card";
 import { Badge } from "../../components/Badge";
-import { Package, AlertTriangle, Calendar, FileText, ArrowRight } from "lucide-react";
+import { Package, AlertTriangle, Calendar, FileText, ArrowRight, Utensils } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -17,6 +17,11 @@ import {
 } from "recharts";
 import { Link } from "react-router";
 import { Button } from "../../components/Button";
+import { api } from "../../lib/api";
+import { useApiResource } from "../../lib/useApiResource";
+import { getProductStatus } from "../../lib/format";
+import { normalizeArray, sameId } from "../../lib/normalize";
+import { formatNotification, getLocalizedDisplayName, getLocalizedValue } from "../../lib/localization";
 const stockTrendData = [
   { month: "\u064A\u0646\u0627\u064A\u0631", stock: 2400, requests: 240 },
   { month: "\u0641\u0628\u0631\u0627\u064A\u0631", stock: 2210, requests: 198 },
@@ -64,15 +69,61 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 const AdminDashboardAr = () => {
+  const { data: products } = useApiResource(() => api.products.list(), []);
+  const { data: orders } = useApiResource(() => api.orders.list(), []);
+  const { data: orderItems } = useApiResource(() => api.orderItems.list(), []);
+  const { data: consumptions } = useApiResource(() => api.consumptions.list(), []);
+  const { data: notifications } = useApiResource(async () => {
+    await api.notifications.expiration().catch(() => {});
+    return api.notifications.list();
+  }, []);
+  const orderItemsArray = normalizeArray(orderItems);
+  const lowStockItems = products.filter((product) => ["low-stock", "critical"].includes(getProductStatus(product)));
+  const expiringSoon = products.filter((product) => getProductStatus(product) === "expiring-soon");
+  const pendingOrders = orders.filter((order) => order.status === "pending");
+  const todayKey = new Date().toDateString();
+  const consumedToday = consumptions
+    .filter((item) => item.status !== "cancelled" && new Date(item.consumption_date || item.createdAt).toDateString() === todayKey)
+    .reduce((sum, item) => sum + Number(item.consumed_quantity || item.quantity || 0), 0);
+  const categoryData = Object.entries(
+    products.reduce((totals, product) => {
+      const category = getLocalizedValue(product, "category", "ar") || "غير مصنف";
+      totals[category] = (totals[category] || 0) + Number(product.quantity || 0);
+      return totals;
+    }, {})
+  ).map(([name, value]) => ({ name, value }));
+  const stockTrendData = orders.slice(-5).map((order) => ({
+    month: new Date(order.date).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }),
+    stock: products.reduce((sum, product) => sum + Number(product.quantity || 0), 0),
+    requests: orderItemsArray.filter((item) => sameId(item.order_id, order._id)).reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+  }));
+  const recentRequests = orders.slice(0, 3).map((order) => {
+    const items = orderItemsArray.filter((item) => sameId(item.order_id, order._id));
+    return {
+      id: order._id.slice(-8).toUpperCase(),
+      kitchen: getLocalizedDisplayName(order.user_id, "ar") || "مستخدم غير محدد",
+      item: items.map((item) => getLocalizedValue(item.product_id, "name", "ar") || getLocalizedValue(item.product, "name", "ar") || item.product_name || item.name).filter(Boolean).join("، ") || "لا توجد أصناف",
+      quantity: items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+      status: order.status,
+      priority: order.status === "pending" ? "high" : "normal",
+      time: order.date ? new Date(order.date).toLocaleDateString("ar-EG") : "حديث"
+    };
+  });
+  const criticalAlerts = notifications.slice(0, 3).map((notification) => ({
+    message: formatNotification(notification, "ar").message || notification.messageAr || notification.message || "إشعار نظام",
+    severity: String(notification.type || "").includes("low") ? "danger" : String(notification.type || "").includes("order") ? "success" : "warning",
+    time: notification.createdAt ? new Date(notification.createdAt).toLocaleDateString("ar-EG") : "حديث"
+  }));
   return <div dir="rtl" className="p-6 lg:p-8 space-y-8">
       {
     /* KPI Stats */
   }
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        <StatCardAr title="إجمالي أصناف المخزون" value="12,458" icon={Package} trend={{ value: "+12% \u0639\u0646 \u0627\u0644\u0634\u0647\u0631 \u0627\u0644\u0645\u0627\u0636\u064A", isPositive: true }} color="primary" to="/ar/admin/inventory" />
-        <StatCardAr title="أصناف منخفضة المخزون" value="23" icon={AlertTriangle} trend={{ value: "+5 \u0645\u0646\u0630 \u0623\u0645\u0633", isPositive: false }} color="warning" to="/ar/admin/inventory?status=low_stock" />
-        <StatCardAr title="تنتهي صلاحيتها قريباً" value="47" icon={Calendar} trend={{ value: "\u062E\u0644\u0627\u0644 30 \u064A\u0648\u0645\u0627\u064B", isPositive: false }} color="danger" to="/ar/admin/inventory?filter=expiring" />
-        <StatCardAr title="الطلبات المعلّقة" value="12" icon={FileText} trend={{ value: "-3 \u0639\u0646 \u0623\u0645\u0633", isPositive: true }} color="success" to="/ar/admin/requests?status=pending" />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
+        <StatCardAr title="إجمالي أصناف المخزون" value={products.reduce((sum, product) => sum + Number(product.quantity || 0), 0).toLocaleString("ar-EG")} icon={Package} trend={{ value: `${products.length} صنف`, isPositive: true }} color="primary" to="/ar/admin/inventory" />
+        <StatCardAr title="أصناف منخفضة المخزون" value={lowStockItems.length.toLocaleString("ar-EG")} icon={AlertTriangle} trend={{ value: "حسب حدود المنتجات", isPositive: false }} color="warning" to="/ar/admin/inventory?status=low_stock" />
+        <StatCardAr title="تنتهي صلاحيتها قريباً" value={expiringSoon.length.toLocaleString("ar-EG")} icon={Calendar} trend={{ value: "حسب حدود المنتجات", isPositive: false }} color="danger" to="/ar/admin/inventory?filter=expiring" />
+        <StatCardAr title="الطلبات المعلّقة" value={pendingOrders.length.toLocaleString("ar-EG")} icon={FileText} trend={{ value: "طلبات مفتوحة", isPositive: true }} color="success" to="/ar/admin/requests?status=pending" />
+        <StatCardAr title="المستهلك اليوم" value={consumedToday.toLocaleString("ar-EG")} icon={Utensils} trend={{ value: `${consumptions.length} سجل`, isPositive: true }} color="primary" to="/ar/admin/consumptions" />
       </div>
 
       {
@@ -115,7 +166,14 @@ const AdminDashboardAr = () => {
                 <Pie key="ar-adm-pc-pie" data={categoryData} cx="50%" cy="45%" outerRadius={85} innerRadius={45} dataKey="value" labelLine={false}>
                   {categoryData.map((entry, index) => <Cell key={`cell-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip key="ar-adm-pc-tooltip" formatter={(v) => [v.toLocaleString(), "\u0648\u062D\u062F\u0629"]} contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid rgba(78,70,49,0.15)" }} />
+                <Tooltip
+                  key="ar-adm-pc-tooltip"
+                  formatter={(value, _name, props) => [
+                    Number(value || 0).toLocaleString("ar-EG"),
+                    props?.payload?.name || "الفئة"
+                  ]}
+                  contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid rgba(78,70,49,0.15)" }}
+                />
                 <Legend key="ar-adm-pc-legend" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5A6B50" }} />
               </PieChart>
             </ResponsiveContainer>

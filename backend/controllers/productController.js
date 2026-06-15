@@ -11,6 +11,12 @@ const { buildWarehouseScopeFilter, assertWarehouseAccess } = require('../utils/w
 const { assertDateRange, assertValidDate } = require('../utils/dateValidation');
 
 const textTranslations = {
+  Chicken: 'دجاج',
+  chicken: 'دجاج',
+  Meat: 'لحمة',
+  meat: 'لحمة',
+  Beef: 'لحمة',
+  beef: 'لحمة',
   'Fresh Vegetables': 'خضروات طازجة',
   Bread: 'خبز',
   Rice: 'أرز',
@@ -42,6 +48,24 @@ const reverseTextTranslations = Object.entries(textTranslations).reduce((acc, [e
 
 const containsArabic = (value) => /[\u0600-\u06FF]/.test(String(value || ''));
 
+const getKnownTranslation = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (textTranslations[text]) return textTranslations[text];
+  const lowerText = text.toLowerCase();
+  const match = Object.keys(textTranslations).find((key) => key.toLowerCase() === lowerText);
+  return match ? textTranslations[match] : '';
+};
+
+const getKnownEnglish = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (reverseTextTranslations[text]) return reverseTextTranslations[text];
+  const lowerText = text.toLowerCase();
+  const match = Object.keys(reverseTextTranslations).find((key) => key.toLowerCase() === lowerText);
+  return match ? reverseTextTranslations[match] : '';
+};
+
 const getBilingualText = (primary, fallback = {}) => {
   const text = String(primary || '').trim();
   const fallbackEn = String(fallback.en || '').trim();
@@ -49,21 +73,21 @@ const getBilingualText = (primary, fallback = {}) => {
 
   if (!text) {
     return {
-      en: fallbackEn || (fallbackAr ? reverseTextTranslations[fallbackAr] || fallbackAr : ''),
-      ar: fallbackAr || (fallbackEn ? textTranslations[fallbackEn] || fallbackEn : ''),
+      en: fallbackEn || (fallbackAr ? getKnownEnglish(fallbackAr) || fallbackAr : ''),
+      ar: containsArabic(fallbackAr) ? fallbackAr : getKnownTranslation(fallbackEn) || fallbackAr || fallbackEn || '',
     };
   }
 
   if (containsArabic(text)) {
     return {
-      en: reverseTextTranslations[text] || fallbackEn || text,
+      en: getKnownEnglish(text) || (fallbackEn && !containsArabic(fallbackEn) && fallbackEn.length >= text.length ? fallbackEn : text),
       ar: text,
     };
   }
 
   return {
     en: text,
-    ar: textTranslations[text] || fallbackAr || text,
+    ar: getKnownTranslation(text) || (containsArabic(fallbackAr) ? fallbackAr : '') || text,
   };
 };
 
@@ -129,6 +153,19 @@ const requireTrimmed = (payload, field, message) => {
 };
 
 const normalizeBilingualProductPayload = (payload, { partial = false } = {}) => {
+  if (!payload.name) {
+    payload.name = payload.displayName || payload.product_name || payload.item_name || payload.itemName || payload.productName || payload.title || '';
+  }
+  if (!payload.nameAr) {
+    payload.nameAr = payload.product_name_ar || payload.item_name_ar || payload.itemNameAr || payload.productNameAr || payload.titleAr || '';
+  }
+  if (!payload.category) {
+    payload.category = payload.category_name || payload.categoryName || '';
+  }
+  if (!payload.categoryAr) {
+    payload.categoryAr = payload.category_name_ar || payload.categoryNameAr || '';
+  }
+
   const hasName = Object.prototype.hasOwnProperty.call(payload, 'name');
   const hasNameAr = Object.prototype.hasOwnProperty.call(payload, 'nameAr');
   const hasCategory = Object.prototype.hasOwnProperty.call(payload, 'category');

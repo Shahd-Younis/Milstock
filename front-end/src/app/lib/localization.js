@@ -4,6 +4,12 @@ export const getCurrentLocale = () => {
 };
 
 const knownTextTranslations = {
+  Chicken: "دجاج",
+  chicken: "دجاج",
+  Meat: "لحمة",
+  meat: "لحمة",
+  Beef: "لحمة",
+  beef: "لحمة",
   "Fresh Vegetables": "خضروات طازجة",
   Bread: "خبز",
   Rice: "أرز",
@@ -14,6 +20,18 @@ const knownTextTranslations = {
   "Fresh Fruits": "فواكه طازجة",
   Sugar: "سكر",
   Beans: "فول",
+  "Fresh Produce": "منتجات طازجة",
+  Baking: "مخبوزات",
+  Bakery: "مخبوزات",
+  "Canned Food": "أغذية معلبة",
+  "Frozen Food": "أغذية مجمدة",
+  Beverages: "مشروبات",
+  "Dry Goods": "مواد جافة",
+  Dairy: "ألبان",
+  Grains: "حبوب",
+  Oils: "زيوت",
+  "Food Supplies": "مستلزمات غذائية",
+  "Uncategorized": "غير مصنف",
   "Dry Goods Warehouse": "مخزن المواد الجافة",
   "Cold Storage Warehouse": "مخزن التبريد",
   "Fresh Produce Warehouse": "مخزن المنتجات الطازجة",
@@ -36,6 +54,32 @@ const reverseKnownTextTranslations = Object.entries(knownTextTranslations).reduc
 
 export const containsArabic = (value) => /[\u0600-\u06FF]/.test(String(value || ""));
 
+const getKnownTranslation = (value) => {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (knownTextTranslations[text]) return knownTextTranslations[text];
+  const lowerText = text.toLowerCase();
+  const match = Object.keys(knownTextTranslations).find((key) => key.toLowerCase() === lowerText);
+  return match ? knownTextTranslations[match] : "";
+};
+
+const getKnownEnglish = (value) => {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (reverseKnownTextTranslations[text]) return reverseKnownTextTranslations[text];
+  const match = Object.keys(reverseKnownTextTranslations).find((key) => key.toLowerCase() === text.toLowerCase());
+  return match ? reverseKnownTextTranslations[match] : "";
+};
+
+const isBadArabicFallback = (arabicValue, defaultValue) => {
+  const arabicText = String(arabicValue || "").trim();
+  const defaultText = String(defaultValue || "").trim();
+  if (!arabicText || !defaultText) return false;
+  if (containsArabic(arabicText)) return false;
+  if (arabicText === defaultText) return false;
+  return arabicText.length < defaultText.length || defaultText.toLowerCase().startsWith(arabicText.toLowerCase());
+};
+
 export const getBilingualText = (value, fallback = {}) => {
   const text = String(value || "").trim();
   const fallbackEn = String(fallback.en || "").trim();
@@ -43,21 +87,21 @@ export const getBilingualText = (value, fallback = {}) => {
 
   if (!text) {
     return {
-      en: fallbackEn || (fallbackAr ? reverseKnownTextTranslations[fallbackAr] || fallbackAr : ""),
-      ar: fallbackAr || (fallbackEn ? knownTextTranslations[fallbackEn] || fallbackEn : ""),
+      en: fallbackEn || (fallbackAr ? getKnownEnglish(fallbackAr) || fallbackAr : ""),
+      ar: containsArabic(fallbackAr) ? fallbackAr : getKnownTranslation(fallbackEn) || fallbackAr || fallbackEn || "",
     };
   }
 
   if (containsArabic(text)) {
     return {
-      en: reverseKnownTextTranslations[text] || fallbackEn || text,
+      en: getKnownEnglish(text) || (fallbackEn && !containsArabic(fallbackEn) && fallbackEn.length >= text.length ? fallbackEn : text),
       ar: text,
     };
   }
 
   return {
     en: text,
-    ar: knownTextTranslations[text] || fallbackAr || text,
+    ar: getKnownTranslation(text) || (containsArabic(fallbackAr) ? fallbackAr : "") || text,
   };
 };
 
@@ -68,7 +112,7 @@ export const localizeText = (value, locale = getCurrentLocale()) => {
   if (text.includes(",")) {
     return text.split(",").map((part) => localizeText(part, locale)).join("، ");
   }
-  return knownTextTranslations[text] || text;
+  return getKnownTranslation(text) || text;
 };
 
 export const getLocalizedValue = (entity, field, locale = getCurrentLocale()) => {
@@ -79,9 +123,17 @@ export const getLocalizedValue = (entity, field, locale = getCurrentLocale()) =>
   const arabicValue = entity[translatedField] ?? entity[snakeTranslatedField] ?? entity.translations?.ar?.[field] ?? "";
 
   if (locale === "ar") {
-    return localizeText(arabicValue || defaultValue || "", locale);
+    const displayValue = isBadArabicFallback(arabicValue, defaultValue) ? defaultValue : arabicValue || defaultValue || "";
+    return localizeText(displayValue, locale);
   }
-  return defaultValue || entity.translations?.en?.[field] || arabicValue || "";
+  const englishValue = defaultValue || entity.translations?.en?.[field] || "";
+  if (containsArabic(englishValue)) {
+    return getKnownEnglish(englishValue) || englishValue;
+  }
+  if (!englishValue && containsArabic(arabicValue)) {
+    return getKnownEnglish(arabicValue) || arabicValue || "";
+  }
+  return englishValue || arabicValue || "";
 };
 
 export const getLocalizedDisplayName = (entity, locale = getCurrentLocale()) =>

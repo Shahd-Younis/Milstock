@@ -69,10 +69,10 @@ const NavbarAr = ({ userRole }) => {
     navigate("/ar/login", { replace: true });
   };
 
-  return <div dir="rtl" className="h-16 bg-white border-b border-[#4E4631]/10 px-6 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-[0_1px_3px_rgba(46,58,36,0.06)]">
-    <div className="min-w-0 text-right">
-      <h2 className="text-[#2E3A24] leading-none truncate">{title}</h2>
-      {subtitle && <p className="text-xs text-[#5A6B50] mt-0.5">{subtitle}</p>}
+  return <div dir="rtl" className="min-h-16 bg-white border-b border-[#4E4631]/10 px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-10 shadow-[0_1px_3px_rgba(46,58,36,0.06)]">
+    <div className="min-w-0 flex-1 text-right">
+      <h2 className="text-[#2E3A24] leading-tight whitespace-normal break-words">{title}</h2>
+      {subtitle && <p className="text-xs text-[#5A6B50] mt-0.5 leading-5 break-words">{subtitle}</p>}
     </div>
 
     <div className="flex items-center gap-2 flex-shrink-0">
