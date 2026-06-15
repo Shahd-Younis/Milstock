@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card"
 import { Input } from "../../components/Input";
 import { Select } from "../../components/Select";
 import { Button } from "../../components/Button";
-import { AlertTriangle, Bell, Save } from "lucide-react";
+import { AlertTriangle, Save } from "lucide-react";
 import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { normalizeRecord } from "../../lib/normalize";
@@ -151,37 +151,6 @@ const SettingsPageAr = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2.5 flex-row-reverse justify-end">
-              <CardTitle className="text-right">إعدادات الإشعارات</CardTitle>
-              <div className="w-8 h-8 rounded-lg bg-[#6A7B4D]/12 flex items-center justify-center">
-                <Bell className="w-4 h-4 text-[#6A7B4D]" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { label: "إشعارات البريد الإلكتروني", desc: "إرسال تنبيهات البريد للأحداث الحرجة", defaultChecked: true },
-                { label: "تنبيهات SMS", desc: "إرسال رسائل نصية للإشعارات العاجلة", defaultChecked: true },
-                { label: "التقارير اليومية", desc: "استلام ملخصات المخزون اليومية", defaultChecked: false }
-              ].map((item) => <label key={item.label} className="flex items-center justify-between cursor-pointer">
-                  <input type="checkbox" defaultChecked={item.defaultChecked} className="w-5 h-5 accent-primary" />
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                </label>)}
-            </div>
-            <div className="mt-6">
-              <Button className="flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                حفظ إعدادات الإشعارات
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>;
 };

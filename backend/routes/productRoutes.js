@@ -4,6 +4,7 @@ const validate = require('../middleware/validate');
 const {
   productRules,
   alertSettingsRules,
+  normalizeProductRequest,
   getProducts,
   getProduct,
   getProductAlertSettings,
@@ -17,7 +18,7 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.route('/').get(getProducts).post(authorize('admin'), productRules, validate, createProduct);
+router.route('/').get(getProducts).post(authorize('admin'), normalizeProductRequest, productRules, validate, createProduct);
 router
   .route('/:id/alert-settings')
   .get(getProductAlertSettings)
@@ -25,7 +26,7 @@ router
 router
   .route('/:id')
   .get(getProduct)
-  .put(authorize('admin'), productRules, validate, updateProduct)
+  .put(authorize('admin'), normalizeProductRequest, productRules, validate, updateProduct)
   .delete(authorize('admin'), deleteProduct);
 
 module.exports = router;

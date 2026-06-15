@@ -155,7 +155,7 @@ const SidebarAr = ({ userRole }) => {
     /* RTL: Logo first (→ RIGHT/leading in RTL), collapse button second (→ LEFT/trailing in RTL) */
   }
         {!collapsed && <BrandLogo
-    className="flex-row-reverse text-right"
+    className="text-right"
     subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
   />}
         {!collapsed && <button
@@ -319,52 +319,54 @@ const MobileNavAr = ({ userRole }) => {
       {
     /* Mobile top bar */
   }
-      <div className="lg:hidden fixed top-0 right-0 left-0 z-50 h-14 bg-[#2E3A24] text-[#E0E1B7] border-b border-white/[0.08] px-4 flex items-center justify-between">
-        <Link
-    to={userRole === "admin" ? "/ar/admin/notifications" : userRole === "supplier" ? "/ar/supplier/notifications" : "/ar/user/notifications"}
-    className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
-  >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#D4183D] text-white text-[10px] leading-4 text-center rounded-full">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>}
-        </Link>
-        <BrandLogo
-    subtitle={userRole === "admin" ? "Admin" : userRole === "supplier" ? "supplier" : "Kitchen"}
-    className="flex-row-reverse text-right [&>div:first-child]:w-7 [&>div:first-child]:h-7"
-  />
+      <div dir="rtl" className="lg:hidden fixed top-0 right-0 left-0 z-50 h-14 bg-[#2E3A24] text-[#E0E1B7] border-b border-white/[0.08] px-3 flex items-center justify-between gap-3">
         <button
     onClick={() => setDrawerOpen(true)}
-    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-lg transition-colors"
+    aria-label="فتح القائمة"
   >
           <Menu className="w-5 h-5" />
         </button>
+        <BrandLogo
+    subtitle={userRole === "admin" ? "Admin" : userRole === "supplier" ? "supplier" : "Kitchen"}
+    className="absolute left-1/2 top-1/2 min-w-0 -translate-x-1/2 -translate-y-1/2 text-left [&>div:first-child]:w-7 [&>div:first-child]:h-7 [&_p:first-child]:text-sm [&_p:last-child]:text-[9px]"
+  />
+        <Link
+    to={userRole === "admin" ? "/ar/admin/notifications" : userRole === "supplier" ? "/ar/supplier/notifications" : "/ar/user/notifications"}
+    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+  >
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && <span className="absolute -top-1 -left-1 min-w-4 h-4 px-1 bg-[#D4183D] text-white text-[10px] leading-4 text-center rounded-full">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>}
+        </Link>
       </div>
 
       {
     /* Drawer */
   }
-      {drawerOpen && <div className="lg:hidden fixed inset-0 z-50 flex justify-end">
+      {drawerOpen && <div dir="rtl" className="lg:hidden fixed inset-0 z-50">
           <div
-    className="flex-1 bg-black/50 backdrop-blur-sm"
+    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
     onClick={() => setDrawerOpen(false)}
   />
-          <div className="w-72 bg-[#2E3A24] text-[#E0E1B7] h-full overflow-y-auto flex flex-col shadow-2xl">
-            <div className="h-14 flex items-center justify-between px-4 border-b border-white/[0.08]">
+          <div className="absolute right-0 top-0 h-full w-[min(22rem,calc(100vw-1rem))] bg-[#2E3A24] text-[#E0E1B7] overflow-y-auto flex flex-col shadow-2xl">
+            <div className="min-h-16 flex items-center justify-between gap-3 px-4 border-b border-white/[0.08]">
+              <BrandLogo
+    subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
+    className="min-w-0 flex-row-reverse text-right [&>div:first-child]:w-8 [&>div:first-child]:h-8"
+  />
               <button
     onClick={() => setDrawerOpen(false)}
-    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+    className="p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+    aria-label="إغلاق القائمة"
   >
                 <X className="w-5 h-5" />
               </button>
-              <BrandLogo
-    subtitle={userRole === "admin" ? "Admin Portal" : userRole === "supplier" ? "supplier Portal" : "Kitchen Portal"}
-    className="flex-row-reverse text-right [&>div:first-child]:w-7 [&>div:first-child]:h-7"
-  />
             </div>
-            <nav className="flex-1 p-3 space-y-0.5">
+            <nav className="flex-1 p-3 space-y-1">
               {navGroups.map((group) => <div key={group.label} className="mb-3">
-                  <p className="text-[10px] font-semibold text-[#E0E1B7]/40 tracking-widest uppercase px-3 py-1.5 text-right">
+                  <p className="text-[10px] font-semibold text-[#E0E1B7]/40 tracking-widest uppercase px-3 pt-3 pb-1.5 text-right">
                     {group.label}
                   </p>
                   {group.items.map((item) => <Link
@@ -372,30 +374,32 @@ const MobileNavAr = ({ userRole }) => {
     to={item.children ? item.children[0].path : item.path}
     onClick={() => setDrawerOpen(false)}
     className={clsx(
-      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
+      "flex items-center justify-between gap-3 px-3 py-3 rounded-xl transition-all min-h-11",
       isActive(item.children ? item.children[0].path : item.path) ? "bg-[#4B5B3A]/60 text-white" : "text-[#E0E1B7]/70 hover:bg-white/[0.06]"
     )}
   >
-                      <span className="flex-1 text-sm text-right">{item.label}</span>
-                      <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                      {item.badge !== void 0 && <span className="ms-auto px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] rounded-md">
+                      <span className="min-w-0 flex flex-1 items-center gap-3">
+                        <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+                        <span className="min-w-0 flex-1 text-sm font-medium text-right leading-5">{item.label}</span>
+                      </span>
+                      {item.badge !== void 0 && <span className="flex-shrink-0 px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] font-bold rounded-md leading-none">
                           {item.badge}
                         </span>}
                     </Link>)}
                 </div>)}
             </nav>
-            <div className="p-3 border-t border-white/[0.06] space-y-0.5">
-              <Link to="/ar/profile" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/70 hover:bg-white/[0.06]">
-                <User className="w-[18px] h-[18px]" />
-                <span className="flex-1 text-sm text-right">الملف الشخصي</span>
+            <div className="p-3 border-t border-white/[0.06] space-y-1">
+              <Link to="/ar/profile" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#E0E1B7]/70 hover:bg-white/[0.06]">
+                <User className="w-[18px] h-[18px] flex-shrink-0" />
+                <span className="min-w-0 flex-1 text-sm text-right">الملف الشخصي</span>
               </Link>
-              <Link to={userRole === "admin" ? "/admin/dashboard" : userRole === "supplier" ? "/supplier/dashboard" : "/user/dashboard"} onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
-                <Globe className="w-[18px] h-[18px]" />
-                <span className="flex-1 text-sm text-right">English</span>
+              <Link to={userRole === "admin" ? "/admin/dashboard" : userRole === "supplier" ? "/supplier/dashboard" : "/user/dashboard"} onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#C9A961] hover:bg-[#C9A961]/10">
+                <Globe className="w-[18px] h-[18px] flex-shrink-0" />
+                <span className="min-w-0 flex-1 text-sm font-medium text-right">English</span>
               </Link>
-              <Link to="/ar/login" onClick={() => { clearStoredAuth(); setDrawerOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
-                <LogOut className="w-[18px] h-[18px]" />
-                <span className="flex-1 text-sm text-right">تسجيل الخروج</span>
+              <Link to="/ar/login" onClick={() => { clearStoredAuth(); setDrawerOpen(false); }} className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#E0E1B7]/60 hover:bg-[#D4183D]/15">
+                <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
+                <span className="min-w-0 flex-1 text-sm text-right">تسجيل الخروج</span>
               </Link>
             </div>
           </div>
@@ -404,15 +408,15 @@ const MobileNavAr = ({ userRole }) => {
       {
     /* Bottom tab bar */
   }
-      <div className="lg:hidden fixed bottom-0 right-0 left-0 z-40 bg-[#2E3A24] text-[#E0E1B7] border-t border-white/[0.08] safe-area-pb">
-        <div className="flex items-center justify-around py-1">
+      <div dir="rtl" className="lg:hidden fixed bottom-0 right-0 left-0 z-40 bg-[#2E3A24] text-[#E0E1B7] border-t border-white/[0.08] safe-area-pb">
+        <div className="flex items-stretch justify-around gap-1 px-1 py-1">
           {bottomItems.map((item) => {
     const active = isActive(item.path);
     return <Link
       key={item.path}
       to={item.path}
       className={clsx(
-        "flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl transition-colors relative min-w-0",
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1.5 py-2 rounded-xl transition-colors relative",
         active ? "text-white" : "text-[#E0E1B7]/50 hover:text-[#E0E1B7]/80"
       )}
     >
@@ -422,8 +426,8 @@ const MobileNavAr = ({ userRole }) => {
     )}>
                   <item.icon className="w-5 h-5" />
                 </div>
-                <span className="text-[9px] truncate max-w-[48px] text-center leading-none">{item.label}</span>
-                {item.badge && <span className="absolute top-1 right-1 w-2 h-2 bg-[#D4183D] rounded-full" />}
+                <span className="text-[9px] truncate max-w-full text-center leading-tight">{item.label}</span>
+                {item.badge && <span className="absolute top-1 left-2 w-2 h-2 bg-[#D4183D] rounded-full" />}
               </Link>;
   })}
         </div>

@@ -126,7 +126,7 @@ const RequestsListAr = () => {
       </div>
     </div>
 
-    <div className="mb-4 flex items-center justify-between">
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-muted-foreground text-sm">
         {ordersLoading ? "جاري تحميل الطلبات من MongoDB..." : ordersError || `عرض ${filtered.length} من ${requestRows.length} طلب`}
       </p>
@@ -158,16 +158,31 @@ const RequestsListAr = () => {
     </div>
 
     <div className="lg:hidden space-y-3">
-      {filtered.map((request) => <div key={request.mongoId} className="p-4 rounded-xl border border-border bg-card cursor-pointer hover:border-primary transition-colors" onClick={() => openRequest(request)}>
-        <div className="flex items-center justify-between mb-3">
-          <Badge variant={statusVariants[request.status] || "neutral"}>{statusLabels[request.status] || request.status}</Badge>
-          <div className="text-right">
-            <p className="font-semibold text-foreground">{request.id}</p>
-            <p className="text-xs text-muted-foreground">{request.kitchen}</p>
+      {filtered.map((request) => <div
+        key={request.mongoId}
+        dir="rtl"
+        className="p-4 rounded-xl border border-border bg-card cursor-pointer hover:border-primary transition-colors text-right"
+        onClick={() => openRequest(request)}
+      >
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-foreground leading-none">{request.id}</p>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground break-words">{request.kitchen}</p>
           </div>
+          <Badge variant={statusVariants[request.status] || "neutral"} className="shrink-0">
+            {statusLabels[request.status] || request.status}
+          </Badge>
         </div>
-        <p className="text-sm text-foreground text-right mb-2">{request.item} - الكمية: {request.quantity}</p>
-        <p className="text-xs text-muted-foreground text-right">{request.requestedDate} - {request.supplier}</p>
+        <div className="space-y-1.5 text-sm">
+          <p className="text-foreground leading-6 break-words">
+            <span className="font-medium">{request.item}</span>
+            <span className="mx-1 text-muted-foreground">•</span>
+            <span>الكمية: {request.quantity}</span>
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground break-words">
+            {request.requestedDate} <span className="mx-1">•</span> {request.supplier}
+          </p>
+        </div>
       </div>)}
     </div>
   </div>;

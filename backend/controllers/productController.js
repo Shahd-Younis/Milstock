@@ -166,6 +166,11 @@ const normalizeBilingualProductPayload = (payload, { partial = false } = {}) => 
   }
 };
 
+const normalizeProductRequest = (req, _res, next) => {
+  normalizeBilingualProductPayload(req.body, { partial: req.method !== 'POST' });
+  next();
+};
+
 const createProduct = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
   normalizeBilingualProductPayload(payload);
@@ -450,6 +455,7 @@ const getProduct = asyncHandler(async (req, res) => {
 module.exports = {
   productRules,
   alertSettingsRules,
+  normalizeProductRequest,
   getProducts,
   getProduct,
   getProductAlertSettings,

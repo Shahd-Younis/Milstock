@@ -220,21 +220,21 @@ const NotificationsPageAr = () => {
           onKeyDown={handleKeyDown}
           className={`rounded-2xl border border-[#4E4631]/10 border-r-4 ${style.border} p-4 shadow-sm transition-all ${canOpenNotification ? "cursor-pointer hover:bg-[#FBFCF5] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#6A7B4D]/30" : ""} ${read ? "bg-white opacity-75" : "bg-[#FBFCF5] ring-1 ring-[#4B5B3A]/10"}`}
         >
-          <div dir="ltr" className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${style.iconClass}`}>
               <Icon className="h-5 w-5" />
             </div>
-            <div dir="rtl" className="min-w-0 flex-1 text-right">
-              <div>
-                <p className={`text-xs font-semibold uppercase tracking-wide ${notification.severity === "critical" ? "text-[#D4183D]" : notification.severity === "warning" ? "text-[#B8862A]" : "text-[#4B5B3A]"}`}>{getTypeLabel(notification)}</p>
-                <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="min-w-0 flex-1 text-right">
+              <div className="space-y-2">
+                <p className={`text-xs font-semibold tracking-wide ${notification.severity === "critical" ? "text-[#D4183D]" : notification.severity === "warning" ? "text-[#B8862A]" : "text-[#4B5B3A]"}`}>{getTypeLabel(notification)}</p>
+                <div className="flex flex-wrap items-center justify-start gap-2">
+                  <h3 className="text-lg font-semibold text-[#2E3A24]">{itemName || formatted.title || notification.titleAr || notification.title || "إشعار"}</h3>
                   {!read && <span className="rounded-lg bg-[#D4183D] px-2 py-0.5 text-xs font-semibold text-white">غير مقروء</span>}
-                  <h3 className="mt-1 text-lg font-semibold text-[#2E3A24]">{itemName || formatted.title || notification.titleAr || notification.title || "إشعار"}</h3>
                 </div>
-                <p className="mt-1 text-sm leading-relaxed text-[#5A6B50]">{getDisplayMessage(notification)}</p>
+                <p className="text-sm leading-relaxed text-[#5A6B50]">{getDisplayMessage(notification)}</p>
               </div>
 
-              <div className="mt-3 flex flex-wrap justify-end gap-2 text-xs text-[#5A6B50]">
+              <div className="mt-3 flex flex-wrap justify-start gap-2 text-xs text-[#5A6B50]">
                 <span>{formatDateTime(notification.createdAt, "ar-EG")}</span>
                 {notification.type === "low_stock" && notification.metadata?.current_stock !== undefined && <span>المخزون الحالي: {notification.metadata.current_stock} {notification.metadata?.unit || ""}</span>}
                 {notification.type === "low_stock" && notification.metadata?.minimum_stock !== undefined && <span>الحد الأدنى: {notification.metadata.minimum_stock} {notification.metadata?.unit || ""}</span>}
@@ -242,7 +242,7 @@ const NotificationsPageAr = () => {
                 {notification.metadata?.days_remaining !== undefined && <span>الأيام المتبقية: {notification.metadata.days_remaining}</span>}
               </div>
 
-              <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <div className="mt-4 flex flex-wrap justify-start gap-2">
                 {!read && <Button type="button" variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); markOneAsRead(notification._id); }}>
                   <Eye className="w-4 h-4" />
                   تحديد كمقروء
