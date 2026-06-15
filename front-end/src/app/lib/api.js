@@ -1,4 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+const normalizeApiBaseUrl = (value) => {
+  const rawUrl = String(value || "http://localhost:5001/api").trim();
+  const protocolFixedUrl = rawUrl.replace(/^https?:\/\/https?:\/\//i, "https://");
+  const slashFixedUrl = protocolFixedUrl.replace(/^https?:\/\/https\/\//i, "https://");
+  const withoutTrailingSlash = slashFixedUrl.replace(/\/+$/, "");
+  return withoutTrailingSlash.endsWith("/api") ? withoutTrailingSlash : `${withoutTrailingSlash}/api`;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 const DEMO_TOKEN = "frontend-test-admin-token";
 
 const request = async (path, options = {}) => {
