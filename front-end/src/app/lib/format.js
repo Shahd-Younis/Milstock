@@ -1,9 +1,9 @@
 import { isValidDateValue } from "./dateValidation";
 
-const formatDate = (value) => {
+const formatDate = (value, locale = "en") => {
   if (!value) return "N/A";
   if (!isValidDateValue(value)) return "N/A";
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
 };
 const formatDateTime = (value, locale = "en") => {
   if (!value) return "N/A";

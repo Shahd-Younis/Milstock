@@ -1,6 +1,7 @@
 const AuditLog = require('../models/auditLogModel');
 const asyncHandler = require('../utils/asyncHandler');
 const { createAuditLog } = require('../services/auditLogService');
+const { assertDateRange } = require('../utils/dateValidation');
 
 const getAuditLogs = asyncHandler(async (req, res) => {
   const { module, action, user, dateFrom, dateTo } = req.query;
@@ -10,6 +11,7 @@ const getAuditLogs = asyncHandler(async (req, res) => {
   if (action) filter.action = action;
   if (user) filter.$or = [{ user_name: new RegExp(user, 'i') }, { user_id: user }];
   if (dateFrom || dateTo) {
+    assertDateRange(dateFrom, dateTo, 'Invalid audit log date range');
     filter.createdAt = {};
     if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
     if (dateTo) filter.createdAt.$lte = new Date(dateTo);

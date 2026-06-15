@@ -12,6 +12,7 @@ import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate } from "../../lib/format";
 import { getLocalizedDisplayName, getLocalizedValue, localizeText } from "../../lib/localization";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT } from "../../lib/dateValidation";
 
 const actionLabels = {
   in: "وارد",
@@ -28,6 +29,8 @@ const actionVariants = {
   consumption: "warning",
   consumption_cancelled: "success"
 };
+
+const formatNumberAr = (value) => Number(value || 0).toLocaleString("ar-EG");
 
 const MovementLogsAr = () => {
   const location = useLocation();
@@ -95,12 +98,12 @@ const MovementLogsAr = () => {
 
   const movementData = movements.filter((movement) => matchesWarehouseFilter(movement) && movement.status !== "pending").map((movement) => ({
     id: movement._id.slice(-8).toUpperCase(),
-    date: formatDate(movement.createdAt),
+    date: formatDate(movement.createdAt, "ar-EG"),
     itemId: movement.product_id?._id?.slice(-8).toUpperCase() || "N/A",
     itemName: getLocalizedValue(movement.product_id, "name", "ar") || localizeText(movement.product_name || movement.name, "ar") || "صنف غير معروف",
     action: movement.movement_type === "consumption" || movement.movement_type === "consumption_cancelled" ? movement.movement_type : movement.change_type,
     status: movement.status,
-    quantity: `${movement.change_type === "in" ? "+" : movement.change_type === "out" ? "-" : ""}${movement.stock}`,
+    quantity: `${movement.change_type === "in" ? "+" : movement.change_type === "out" ? "-" : ""}${formatNumberAr(movement.stock)}`,
     location: getLocalizedValue(movement.from_warehouse, "name", "ar") || getLocalizedValue(movement.to_warehouse, "name", "ar") || getLocalizedValue(movement.reference_id, "name", "ar") || "لا يوجد مخزن",
     user: getLocalizedDisplayName(movement.performed_by, "ar") || getLocalizedDisplayName(movement.user_id, "ar") || "مستخدم غير معروف",
     reason: movement.reference_type || "حركة مخزون"
@@ -190,7 +193,7 @@ const MovementLogsAr = () => {
     <PageHeaderAr title="سجلات حركة المخزون" subtitle="السجل الكامل لكل معاملات المخزون" />
     {message && <div className="rounded-xl border border-[#4E4631]/10 bg-white px-4 py-3 text-sm text-[#2E3A24]">{message}</div>}
 
-    <div className="flex gap-2">
+    <div className="flex justify-start gap-2">
       <Button type="button" variant={activeTab === "pending" ? "primary" : "outline"} onClick={() => setActiveTab("pending")}>التحويلات المعلقة</Button>
       <Button type="button" variant={activeTab === "history" ? "primary" : "outline"} onClick={() => setActiveTab("history")}>سجل الحركة</Button>
     </div>
@@ -198,19 +201,19 @@ const MovementLogsAr = () => {
     {activeTab === "pending" && <div className="space-y-4">
       {loading && <p className="text-sm text-[#5A6B50]">جاري تحميل التحويلات المعلقة...</p>}
       {!loading && pendingTransfers.length === 0 && <div className="rounded-xl border border-[#4E4631]/10 bg-white p-6 text-sm text-[#5A6B50]">لا توجد تحويلات معلقة في انتظار الإتمام.</div>}
-      {pendingTransfers.map((transfer) => <div key={transfer.orderId} className="rounded-2xl border border-[#4E4631]/10 bg-white p-5 shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      {pendingTransfers.map((transfer) => <div key={transfer.orderId} className="rounded-2xl border border-[#4E4631]/10 bg-white p-5 shadow-sm space-y-5 text-right">
+        <div className="space-y-4">
           <div className="text-right">
             <p className="text-xs text-[#5A6B50]">رقم الطلب</p>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {transfer.hasInsufficientStock && <Badge variant="danger">مخزون غير كاف</Badge>}
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold text-[#2E3A24]">{transfer.requestId}</h3>
+              {transfer.hasInsufficientStock && <Badge variant="danger">مخزون غير كاف</Badge>}
             </div>
             <p className="text-sm text-[#5A6B50]">{transfer.source} ← {transfer.destination}</p>
-            <p className="text-xs text-[#5A6B50]">مقدم الطلب: {transfer.requester} | تاريخ الموافقة: {formatDate(transfer.approvedAt)}</p>
+            <p className="text-xs text-[#5A6B50]">مقدم الطلب: {transfer.requester} | تاريخ الموافقة: {formatDate(transfer.approvedAt, "ar-EG")}</p>
             {transfer.hasInsufficientStock && <p className="mt-2 text-sm text-[#D4183D]">المخزن المصدر لا يحتوي على كمية كافية. قم بتغذية المخزن المصدر أو إلغاء هذا التحويل.</p>}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-start gap-2">
             {transfer.hasInsufficientStock && <Button type="button" variant="danger" onClick={() => cancelTransfer(transfer.orderId)} disabled={busyOrderId === transfer.orderId}>
               {busyOrderId === transfer.orderId ? "جاري الإلغاء..." : "إلغاء التحويل"}
             </Button>}
@@ -221,24 +224,24 @@ const MovementLogsAr = () => {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-right">
+          <table className="w-full text-sm text-start">
             <thead>
-              <tr className="border-b border-[#4E4631]/10 text-right text-[#5A6B50]">
-                <th className="py-2 pl-3">الصنف</th>
-                <th className="py-2 pl-3">الكمية المطلوبة</th>
-                <th className="py-2 pl-3">المخزون الحالي في المصدر</th>
-                <th className="py-2 pl-3">المخزون الحالي في المستلم</th>
+              <tr className="border-b border-[#4E4631]/10 text-[#5A6B50]">
+                <th className="py-2 px-3 text-start">الصنف</th>
+                <th className="py-2 px-3 text-start">الكمية المطلوبة</th>
+                <th className="py-2 px-3 text-start">المخزون الحالي في المصدر</th>
+                <th className="py-2 px-3 text-start">المخزون الحالي في المستلم</th>
               </tr>
             </thead>
             <tbody>
               {transfer.rows.map((row) => <tr key={row.movementId} className="border-b border-[#4E4631]/5">
-                <td className="py-2 pl-3 font-medium text-[#2E3A24]">{row.productName}</td>
-                <td className="py-2 pl-3">{row.quantity}</td>
-                <td className={`py-2 pl-3 ${row.insufficient ? "font-semibold text-[#D4183D]" : ""}`}>
-                  {row.sourceStock}
-                  {row.insufficient && <span className="mr-2 text-xs">(المطلوب {row.quantity})</span>}
+                <td className="py-2 px-3 font-medium text-[#2E3A24]">{row.productName}</td>
+                <td className="py-2 px-3">{formatNumberAr(row.quantity)}</td>
+                <td className={`py-2 px-3 ${row.insufficient ? "font-semibold text-[#D4183D]" : ""}`}>
+                  {formatNumberAr(row.sourceStock)}
+                  {row.insufficient && <span className="me-2 text-xs">(المطلوب {formatNumberAr(row.quantity)})</span>}
                 </td>
-                <td className="py-2 pl-3">{row.destinationStock}</td>
+                <td className="py-2 px-3">{formatNumberAr(row.destinationStock)}</td>
               </tr>)}
             </tbody>
           </table>
@@ -271,7 +274,7 @@ const MovementLogsAr = () => {
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
         />
-        <Input type="date" />
+        <Input type="date" min={MIN_DATE_INPUT} max={MAX_DATE_INPUT} />
       </div>
 
       <div className="mb-4 flex items-center justify-between">

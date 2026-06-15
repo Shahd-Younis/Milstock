@@ -10,6 +10,7 @@ import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { getStoredAssignedWarehouse } from "../lib/warehouseDisplay";
 import { getLocalizedValue } from "../lib/localization";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT, isValidDateInput } from "../lib/dateValidation";
 const CreateRequest = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState([{ product_id: "", quantity: "" }]);
@@ -66,6 +67,10 @@ const CreateRequest = () => {
     }
     if (requestType === "warehouse_request" && !sourceWarehouseId) {
       setMessage("Please select the source warehouse.");
+      return;
+    }
+    if (!isValidDateInput(expectedDeliveryDate)) {
+      setMessage("Enter a valid expected delivery date between 2000 and 2100.");
       return;
     }
     setSaving(true);
@@ -209,6 +214,8 @@ const CreateRequest = () => {
               {requestType === "supplier_request" && <Input
                 label="Expected Delivery Date"
                 type="date"
+                min={MIN_DATE_INPUT}
+                max={MAX_DATE_INPUT}
                 value={expectedDeliveryDate}
                 onChange={(event) => setExpectedDeliveryDate(event.target.value)}
                 className="mt-4"

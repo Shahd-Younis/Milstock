@@ -9,6 +9,7 @@ import { Search, Shield } from "lucide-react";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT } from "../lib/dateValidation";
 
 const AuditLogs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -110,7 +111,7 @@ const AuditLogs = () => {
           </div>
           <Select options={[{ value: "all", label: "All Categories" }, { value: "inventory", label: "Inventory" }, { value: "requests", label: "Requests" }, { value: "users", label: "User Mgmt" }, { value: "warehouses", label: "Warehouses" }, { value: "notifications", label: "Notifications" }, { value: "export", label: "Export" }, { value: "security", label: "Security" }]} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} />
           <Select options={[{ value: "all", label: "All Status" }, { value: "success", label: "Success" }, { value: "failed", label: "Failed" }]} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} />
-          <Input type="date" />
+          <Input type="date" min={MIN_DATE_INPUT} max={MAX_DATE_INPUT} />
         </div>
       </div>
 

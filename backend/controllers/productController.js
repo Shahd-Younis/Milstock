@@ -10,12 +10,69 @@ const { generateExpirationNotifications } = require('../services/expirationNotif
 const { buildWarehouseScopeFilter, assertWarehouseAccess } = require('../utils/warehouseScope');
 const { assertDateRange, assertValidDate } = require('../utils/dateValidation');
 
+const textTranslations = {
+  'Fresh Vegetables': 'خضروات طازجة',
+  Bread: 'خبز',
+  Rice: 'أرز',
+  Pasta: 'مكرونة',
+  'Cooking Oil': 'زيت طهي',
+  Milk: 'حليب',
+  Cheese: 'جبن',
+  'Fresh Fruits': 'فواكه طازجة',
+  Sugar: 'سكر',
+  Beans: 'فول',
+  'Canned Tuna': 'تونة معلبة',
+  'Frozen Vegetables': 'خضروات مجمدة',
+  'Water Bottles': 'زجاجات مياه',
+  Food: 'أغذية',
+  Dairy: 'ألبان',
+  Bakery: 'مخبوزات',
+  Pantry: 'مواد جافة',
+  'Canned Food': 'أغذية معلبة',
+  'Frozen Food': 'أغذية مجمدة',
+  'Fresh Produce': 'منتجات طازجة',
+  Beverages: 'مشروبات',
+  'Dry Goods': 'مواد جافة',
+};
+
+const reverseTextTranslations = Object.entries(textTranslations).reduce((acc, [english, arabic]) => {
+  acc[arabic] = english;
+  return acc;
+}, {});
+
+const containsArabic = (value) => /[\u0600-\u06FF]/.test(String(value || ''));
+
+const getBilingualText = (primary, fallback = {}) => {
+  const text = String(primary || '').trim();
+  const fallbackEn = String(fallback.en || '').trim();
+  const fallbackAr = String(fallback.ar || '').trim();
+
+  if (!text) {
+    return {
+      en: fallbackEn || (fallbackAr ? reverseTextTranslations[fallbackAr] || fallbackAr : ''),
+      ar: fallbackAr || (fallbackEn ? textTranslations[fallbackEn] || fallbackEn : ''),
+    };
+  }
+
+  if (containsArabic(text)) {
+    return {
+      en: reverseTextTranslations[text] || fallbackEn || text,
+      ar: text,
+    };
+  }
+
+  return {
+    en: text,
+    ar: textTranslations[text] || fallbackAr || text,
+  };
+};
+
 const productRules = [
-  body('name').optional().trim().isLength({ min: 2 }).withMessage('Product name is required'),
+  body('name').optional({ nullable: true, checkFalsy: true }).trim().isLength({ min: 2 }).withMessage('Product name is required'),
   body('nameAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('quantity').optional().isFloat({ min: 0 }).withMessage('Quantity must be 0 or greater'),
   body('unit').optional().isIn(['kg', 'g', 'liter', 'Tons', 'piece', 'box']).withMessage('Invalid unit'),
-  body('category').optional().trim().notEmpty().withMessage('Category is required'),
+  body('category').optional({ nullable: true, checkFalsy: true }).trim().notEmpty().withMessage('Category is required'),
   body('categoryAr').optional({ nullable: true, checkFalsy: true }).trim(),
   body('min_quantity').optional().isFloat({ min: 0 }).withMessage('Minimum quantity must be 0 or greater'),
   body('warehouse_id').optional().isMongoId().withMessage('Valid warehouse_id is required'),
@@ -72,17 +129,34 @@ const requireTrimmed = (payload, field, message) => {
 };
 
 const normalizeBilingualProductPayload = (payload, { partial = false } = {}) => {
-  const requiredFields = [
-    ['name', 'English product name is required'],
-    ['nameAr', 'Arabic product name is required'],
-    ['category', 'English category is required'],
-    ['categoryAr', 'Arabic category is required'],
-  ];
+  const hasName = Object.prototype.hasOwnProperty.call(payload, 'name');
+  const hasNameAr = Object.prototype.hasOwnProperty.call(payload, 'nameAr');
+  const hasCategory = Object.prototype.hasOwnProperty.call(payload, 'category');
+  const hasCategoryAr = Object.prototype.hasOwnProperty.call(payload, 'categoryAr');
+  const hasDescription = Object.prototype.hasOwnProperty.call(payload, 'description');
+  const hasDescriptionAr = Object.prototype.hasOwnProperty.call(payload, 'descriptionAr');
 
-  for (const [field, message] of requiredFields) {
-    if (!partial || Object.prototype.hasOwnProperty.call(payload, field)) {
-      requireTrimmed(payload, field, message);
-    }
+  if (!partial || hasName || hasNameAr) {
+    const nameInput = payload.name || payload.nameAr;
+    const bilingualName = getBilingualText(nameInput, { en: payload.name, ar: payload.nameAr });
+    payload.name = bilingualName.en;
+    payload.nameAr = bilingualName.ar;
+    requireTrimmed(payload, 'name', 'Product name is required');
+  }
+
+  if (!partial || hasCategory || hasCategoryAr) {
+    const categoryInput = payload.category || payload.categoryAr;
+    const bilingualCategory = getBilingualText(categoryInput, { en: payload.category, ar: payload.categoryAr });
+    payload.category = bilingualCategory.en;
+    payload.categoryAr = bilingualCategory.ar;
+    requireTrimmed(payload, 'category', 'Category is required');
+  }
+
+  if (hasDescription || hasDescriptionAr) {
+    const descriptionInput = payload.description || payload.descriptionAr;
+    const bilingualDescription = getBilingualText(descriptionInput, { en: payload.description, ar: payload.descriptionAr });
+    payload.description = bilingualDescription.en;
+    payload.descriptionAr = bilingualDescription.ar;
   }
 
   for (const field of ['description', 'descriptionAr', 'warehouse_name', 'storage_section', 'batch_number', 'serial_number', 'notes']) {
@@ -248,15 +322,42 @@ const updateProductAlertSettings = asyncHandler(async (req, res) => {
   res.json({ success: true, data: buildAlertSettingsResponse(product) });
 });
 
-const attachWarehouseStock = async (products) => {
+const normalizeStockIdentity = (value) => String(value || '').trim().toLowerCase();
+
+const attachWarehouseStock = async (products, options = {}) => {
+  const { includeMatchingProducts = false } = options;
   const productList = Array.isArray(products) ? products : [products];
-  const productIds = productList.map((product) => product._id);
+  const baseProductIds = productList.map((product) => product._id);
+  let productIds = baseProductIds;
+  let matchingProductsByBaseId = {};
+
+  if (includeMatchingProducts) {
+    const orFilters = productList.map((product) => ({
+      name: product.name,
+      category: product.category,
+      unit: product.unit,
+    }));
+    const matchingProducts = await Product.find({ $or: orFilters }).populate('warehouse_id');
+
+    matchingProductsByBaseId = productList.reduce((acc, product) => {
+      acc[String(product._id)] = matchingProducts.filter((candidate) =>
+        normalizeStockIdentity(candidate.name) === normalizeStockIdentity(product.name)
+        && normalizeStockIdentity(candidate.category) === normalizeStockIdentity(product.category)
+        && normalizeStockIdentity(candidate.unit) === normalizeStockIdentity(product.unit)
+      );
+      return acc;
+    }, {});
+
+    productIds = [...new Set(matchingProducts.map((product) => String(product._id)))];
+  }
+
   const stockRows = await ProductWarehouse.find({ product_id: { $in: productIds } })
+    .populate('product_id', '_id name nameAr category categoryAr unit warehouse_id warehouse_name')
     .populate('warehouse_id', '_id name nameAr code location locationAr status')
     .sort('-quantity');
 
   const rowsByProduct = stockRows.reduce((acc, row) => {
-    const productId = String(row.product_id);
+    const productId = String(row.product_id?._id || row.product_id);
     if (!acc[productId]) acc[productId] = [];
     acc[productId].push(row);
     return acc;
@@ -264,21 +365,38 @@ const attachWarehouseStock = async (products) => {
 
   return productList.map((product) => {
     const plain = product.toObject ? product.toObject() : { ...product };
-    const rows = rowsByProduct[String(product._id)] || [];
+    const matchingProducts = matchingProductsByBaseId[String(product._id)] || [product];
+    const matchingProductIds = new Set(matchingProducts.map((entry) => String(entry._id)));
+    const rows = includeMatchingProducts
+      ? stockRows.filter((row) => matchingProductIds.has(String(row.product_id?._id || row.product_id)))
+      : rowsByProduct[String(product._id)] || [];
+    const warehousesById = new Map();
     const warehouses = rows
       .filter((row) => row.warehouse_id)
-      .map((row) => ({
-        id: String(row.warehouse_id._id),
-        _id: row.warehouse_id._id,
-        name: row.warehouse_id.name,
-        nameAr: row.warehouse_id.nameAr,
-        code: row.warehouse_id.code,
-        location: row.warehouse_id.location,
-        locationAr: row.warehouse_id.locationAr,
-        status: row.warehouse_id.status,
-        quantity: Number(row.quantity || 0),
-        unit: plain.unit,
-      }));
+      .map((row) => {
+        const key = String(row.warehouse_id._id);
+        const existing = warehousesById.get(key);
+        const nextQuantity = Number(row.quantity || 0);
+        if (existing) {
+          existing.quantity += nextQuantity;
+          return null;
+        }
+        const warehouse = {
+          id: key,
+          _id: row.warehouse_id._id,
+          name: row.warehouse_id.name,
+          nameAr: row.warehouse_id.nameAr,
+          code: row.warehouse_id.code,
+          location: row.warehouse_id.location,
+          locationAr: row.warehouse_id.locationAr,
+          status: row.warehouse_id.status,
+          quantity: nextQuantity,
+          unit: row.product_id?.unit || plain.unit,
+        };
+        warehousesById.set(key, warehouse);
+        return warehouse;
+      })
+      .filter(Boolean);
 
     if (!warehouses.length && plain.warehouse_id) {
       warehouses.push({
@@ -324,7 +442,7 @@ const getProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id).populate('warehouse_id');
   if (!product) throw new AppError('Product not found', 404);
   await assertWarehouseAccess(req, Product, product);
-  const [data] = await attachWarehouseStock(product);
+  const [data] = await attachWarehouseStock(product, { includeMatchingProducts: true });
 
   res.json({ success: true, data });
 });

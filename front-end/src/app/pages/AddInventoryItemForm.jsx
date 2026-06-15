@@ -9,8 +9,8 @@ import { Select } from "../components/Select";
 import { Button } from "../components/Button";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
-import { getLocalizedValue } from "../lib/localization";
-import { isDateRangeValid, isValidDateInput, toDateInputValue } from "../lib/dateValidation";
+import { getBilingualText, getLocalizedValue } from "../lib/localization";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT, isDateRangeValid, isValidDateInput, toDateInputValue } from "../lib/dateValidation";
 
 const translations = {
   en: {
@@ -26,10 +26,8 @@ const translations = {
       additionalDetails: "Additional Details",
     },
     fields: {
-      itemName: "English Item Name *",
-      arabicItemName: "Arabic Item Name *",
-      category: "English Category *",
-      arabicCategory: "Arabic Category *",
+      itemName: "Item Name *",
+      category: "Category *",
       initialQuantity: "Initial Quantity *",
       unitType: "Unit Type *",
       lowStockThreshold: "Low Stock Threshold *",
@@ -39,16 +37,13 @@ const translations = {
       manufacturingDate: "Manufacturing Date",
       batchNumber: "Batch Number",
       serialNumber: "Serial Number",
-      description: "English Description",
-      arabicDescription: "Arabic Description",
+      description: "Description",
       notes: "Notes",
     },
     placeholders: {
-      itemName: "Enter English item name",
-      arabicItemName: "Enter Arabic item name",
+      itemName: "Enter item name",
       category: "Select category...",
       noCategories: "No MongoDB categories yet",
-      arabicCategory: "Enter Arabic category",
       quantity: "0",
       unit: "Select unit...",
       lowStock: "0",
@@ -57,17 +52,14 @@ const translations = {
       storageSection: "e.g., B-12",
       batchNumber: "Enter batch number",
       serialNumber: "Enter serial number",
-      description: "Describe this food item in English",
-      arabicDescription: "Describe this food item in Arabic",
+      description: "Describe this food item",
       notes: "Internal storage or handling notes",
     },
     messages: {
-      englishNameRequired: "English name is required.",
-      arabicNameRequired: "Arabic name is required.",
-      englishCategoryRequired: "English category is required.",
-      arabicCategoryRequired: "Arabic category is required.",
+      nameRequired: "Item name is required.",
+      categoryRequired: "Category is required.",
       warehouseRequired: "Warehouse is required.",
-      invalidDate: "Enter a valid date.",
+      invalidDate: "Enter a valid date between 2000 and 2100.",
       invalidDateRange: "Manufacturing date cannot be after expiration date.",
       created: "Item created successfully.",
       updated: "Item updated successfully.",
@@ -95,10 +87,8 @@ const translations = {
       additionalDetails: "تفاصيل إضافية",
     },
     fields: {
-      itemName: "اسم الصنف بالإنجليزي *",
-      arabicItemName: "اسم الصنف بالعربي *",
-      category: "الفئة بالإنجليزي *",
-      arabicCategory: "الفئة بالعربي *",
+      itemName: "اسم الصنف *",
+      category: "الفئة *",
       initialQuantity: "الكمية الأولية *",
       unitType: "الوحدة *",
       lowStockThreshold: "حد انخفاض المخزون *",
@@ -109,15 +99,12 @@ const translations = {
       batchNumber: "رقم التشغيلة",
       serialNumber: "الرقم التسلسلي",
       description: "الوصف",
-      arabicDescription: "الوصف بالعربي",
       notes: "ملاحظات",
     },
     placeholders: {
-      itemName: "اكتب اسم الصنف بالإنجليزي",
-      arabicItemName: "اكتب اسم الصنف بالعربي",
+      itemName: "اكتب اسم الصنف",
       category: "اختر الفئة...",
       noCategories: "لا توجد فئات في MongoDB",
-      arabicCategory: "اكتب الفئة بالعربي",
       quantity: "0",
       unit: "اختر وحدة القياس",
       lowStock: "0",
@@ -127,16 +114,13 @@ const translations = {
       batchNumber: "أدخل رقم التشغيلة",
       serialNumber: "أدخل الرقم التسلسلي",
       description: "اكتب وصف الصنف",
-      arabicDescription: "اكتب وصف الصنف بالعربي",
       notes: "ملاحظات التخزين أو التعامل الداخلي",
     },
     messages: {
-      englishNameRequired: "اسم الصنف بالإنجليزي مطلوب.",
-      arabicNameRequired: "اسم الصنف بالعربي مطلوب.",
-      englishCategoryRequired: "الفئة بالإنجليزي مطلوبة.",
-      arabicCategoryRequired: "الفئة بالعربي مطلوبة.",
+      nameRequired: "اسم الصنف مطلوب.",
+      categoryRequired: "الفئة مطلوبة.",
       warehouseRequired: "المخزن مطلوب.",
-      invalidDate: "أدخل تاريخًا صحيحًا.",
+      invalidDate: "أدخل تاريخًا صحيحًا بين سنة 2000 و2100.",
       invalidDateRange: "تاريخ التصنيع لا يمكن أن يكون بعد تاريخ انتهاء الصلاحية.",
       created: "تم إنشاء الصنف بنجاح.",
       updated: "تم تحديث الصنف بنجاح.",
@@ -311,6 +295,44 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
+  const handleLocalizedNameChange = (event) => {
+    const value = event.target.value;
+    setForm((current) => {
+      if (!value.trim()) {
+        return {
+          ...current,
+          name: "",
+          nameAr: "",
+        };
+      }
+      const bilingual = getBilingualText(value, { en: current.name, ar: current.nameAr });
+      return {
+        ...current,
+        name: bilingual.en,
+        nameAr: bilingual.ar,
+      };
+    });
+  };
+
+  const handleLocalizedDescriptionChange = (event) => {
+    const value = event.target.value;
+    setForm((current) => {
+      if (!value.trim()) {
+        return {
+          ...current,
+          description: "",
+          descriptionAr: "",
+        };
+      }
+      const bilingual = getBilingualText(value, { en: current.description, ar: current.descriptionAr });
+      return {
+        ...current,
+        description: bilingual.en,
+        descriptionAr: bilingual.ar,
+      };
+    });
+  };
+
   const handleCategoryChange = (event) => {
     const category = event.target.value;
     const selectedOption = categoryOptions.find((option) => option.value === category);
@@ -326,27 +348,16 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     setSaving(true);
     setMessage("");
 
-    if (!form.name.trim()) {
+    const displayName = isArabic ? form.nameAr || form.name : form.name || form.nameAr;
+    if (!displayName.trim()) {
       setMessageType("error");
-      setMessage(t.messages.englishNameRequired);
-      setSaving(false);
-      return;
-    }
-    if (!form.nameAr.trim()) {
-      setMessageType("error");
-      setMessage(t.messages.arabicNameRequired);
+      setMessage(t.messages.nameRequired);
       setSaving(false);
       return;
     }
     if (!form.category.trim()) {
       setMessageType("error");
-      setMessage(t.messages.englishCategoryRequired);
-      setSaving(false);
-      return;
-    }
-    if (!form.categoryAr.trim()) {
-      setMessageType("error");
-      setMessage(t.messages.arabicCategoryRequired);
+      setMessage(t.messages.categoryRequired);
       setSaving(false);
       return;
     }
@@ -371,11 +382,18 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
     }
 
     const selectedWarehouse = warehouses.find((warehouse) => warehouse._id === form.warehouse_id);
+    const bilingualName = getBilingualText(displayName, { en: form.name, ar: form.nameAr });
+    const bilingualDescription = getBilingualText(isArabic ? form.descriptionAr || form.description : form.description || form.descriptionAr, {
+      en: form.description,
+      ar: form.descriptionAr
+    });
+    const selectedCategory = categoryOptions.find((option) => option.value === form.category);
+    const categoryAr = form.categoryAr || selectedCategory?.categoryAr || getArabicCategory(form.category) || form.category;
     const payload = {
-      name: form.name.trim(),
-      nameAr: form.nameAr.trim(),
+      name: bilingualName.en,
+      nameAr: bilingualName.ar,
       category: form.category.trim(),
-      categoryAr: form.categoryAr.trim(),
+      categoryAr,
       quantity: Number(form.quantity),
       unit: form.unit,
       min_quantity: Number(form.min_quantity),
@@ -387,8 +405,8 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       manufacturing_date: form.manufacturing_date || undefined,
       batch_number: form.batch_number,
       serial_number: form.serial_number,
-      description: form.description.trim(),
-      descriptionAr: form.descriptionAr.trim(),
+      description: bilingualDescription.en,
+      descriptionAr: bilingualDescription.ar,
       notes: form.notes,
     };
 
@@ -422,8 +440,14 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
 
           <Section title={t.sections.basicInformation} withDivider={false}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label={t.fields.itemName} placeholder={t.placeholders.itemName} value={form.name} onChange={handleChange("name")} required className={fieldClass} />
-              <Input label={t.fields.arabicItemName} placeholder={t.placeholders.arabicItemName} value={form.nameAr} onChange={handleChange("nameAr")} required className={fieldClass} />
+              <Input
+                label={t.fields.itemName}
+                placeholder={t.placeholders.itemName}
+                value={isArabic ? form.nameAr || form.name : form.name || form.nameAr}
+                onChange={handleLocalizedNameChange}
+                required
+                className={fieldClass}
+              />
               <Select
                 label={t.fields.category}
                 options={categoryOptions.length > 1 ? categoryOptions : [
@@ -439,7 +463,6 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
                 required
                 className={fieldClass}
               />
-              <Input label={t.fields.arabicCategory} placeholder={t.placeholders.arabicCategory} value={form.categoryAr} onChange={handleChange("categoryAr")} required className={fieldClass} />
             </div>
           </Section>
 
@@ -477,8 +500,8 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
 
           <Section title={t.sections.expirationTracking}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label={t.fields.expirationDate} type="date" value={form.expiration_date || form.expiry_date} onChange={handleChange("expiration_date")} className={fieldClass} />
-              <Input label={t.fields.manufacturingDate} type="date" value={form.manufacturing_date} onChange={handleChange("manufacturing_date")} className={fieldClass} />
+              <Input label={t.fields.expirationDate} type="date" min={MIN_DATE_INPUT} max={MAX_DATE_INPUT} value={form.expiration_date || form.expiry_date} onChange={handleChange("expiration_date")} className={fieldClass} />
+              <Input label={t.fields.manufacturingDate} type="date" min={MIN_DATE_INPUT} max={MAX_DATE_INPUT} value={form.manufacturing_date} onChange={handleChange("manufacturing_date")} className={fieldClass} />
               <Input label={t.fields.batchNumber} placeholder={t.placeholders.batchNumber} value={form.batch_number} onChange={handleChange("batch_number")} className={fieldClass} />
               <Input label={t.fields.serialNumber} placeholder={t.placeholders.serialNumber} value={form.serial_number} onChange={handleChange("serial_number")} className={fieldClass} />
             </div>
@@ -486,7 +509,13 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
 
           <Section title={t.sections.additionalDetails}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextareaField label={t.fields.description} placeholder={t.placeholders.description} value={form.description} onChange={handleChange("description")} className={fieldClass} />
+              <TextareaField
+                label={t.fields.description}
+                placeholder={t.placeholders.description}
+                value={isArabic ? form.descriptionAr || form.description : form.description || form.descriptionAr}
+                onChange={handleLocalizedDescriptionChange}
+                className={fieldClass}
+              />
               <TextareaField label={t.fields.notes} placeholder={t.placeholders.notes} value={form.notes} onChange={handleChange("notes")} className={fieldClass} />
             </div>
           </Section>

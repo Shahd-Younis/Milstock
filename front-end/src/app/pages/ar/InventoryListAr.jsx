@@ -11,6 +11,38 @@ import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../../lib/format";
 import { getLocalizedValue } from "../../lib/localization";
+import { isValidDateValue } from "../../lib/dateValidation";
+
+const unitLabelsAr = {
+  kg: "كجم",
+  kilogram: "كجم",
+  kilograms: "كجم",
+  g: "جم",
+  gram: "جم",
+  grams: "جم",
+  liter: "لتر",
+  liters: "لتر",
+  litre: "لتر",
+  litres: "لتر",
+  Tons: "طن",
+  ton: "طن",
+  tons: "طن",
+  piece: "قطعة",
+  pieces: "قطعة",
+  pcs: "قطعة",
+  unit: "وحدة",
+  units: "وحدة",
+  box: "صندوق",
+  boxes: "صندوق",
+  bottle: "زجاجة",
+  bottles: "زجاجة"
+};
+
+const formatQuantityAr = (quantity, unit) => {
+  const normalizedUnit = String(unit || "").trim();
+  const unitLabel = unitLabelsAr[normalizedUnit] || unitLabelsAr[normalizedUnit.toLowerCase()] || normalizedUnit;
+  return `${Number(quantity || 0).toLocaleString("ar-EG")} ${unitLabel}`.trim();
+};
 
 const statusLabels = {
   "in-stock": "متوفر",
@@ -50,7 +82,7 @@ const InventoryListAr = () => {
   }, [location.search]);
 
   const isExpiringWithin30Days = (value) => {
-    if (!value) return false;
+    if (!value || !isValidDateValue(value)) return false;
     const days = (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return days >= 0 && days <= 30;
   };
@@ -65,7 +97,7 @@ const InventoryListAr = () => {
       quantity: product.quantity,
       unit: product.unit,
       expirationRaw: product.expiration_date || product.expiry_date,
-      expirationDate: formatDate(product.expiration_date || product.expiry_date),
+      expirationDate: formatDate(product.expiration_date || product.expiry_date, "ar-EG"),
       warehouse: getLocalizedValue(product.warehouse_id, "name", "ar") || "غير محدد",
       warehouseId: product.warehouse_id?._id || product.warehouse_id || "",
       storageSection: product.storage_section || "غير محدد",
@@ -87,12 +119,12 @@ const InventoryListAr = () => {
     { key: "id", header: "رمز الصنف" },
     { key: "name", header: "اسم الصنف" },
     { key: "category", header: "الفئة" },
-    { key: "quantity", header: "الكمية", render: (row) => `${row.quantity} ${row.unit}` },
+    { key: "quantity", header: "الكمية", render: (row) => formatQuantityAr(row.quantity, row.unit) },
     { key: "expirationDate", header: "تاريخ الصلاحية" },
     {
       key: "warehouse",
       header: "المستودع",
-      render: (row) => <div className="text-right">
+      render: (row) => <div className="text-start">
         <p className="font-medium text-foreground">{row.warehouse}</p>
         <p className="text-xs text-muted-foreground">{row.storageSection}</p>
       </div>
@@ -123,7 +155,7 @@ const InventoryListAr = () => {
     { key: "id", header: "\u0631\u0645\u0632 \u0627\u0644\u0635\u0646\u0641" },
     { key: "name", header: "\u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641" },
     { key: "category", header: "\u0627\u0644\u0641\u0626\u0629" },
-    { header: "\u0627\u0644\u0643\u0645\u064a\u0629", value: (row) => `${row.quantity} ${row.unit}` },
+    { header: "\u0627\u0644\u0643\u0645\u064a\u0629", value: (row) => formatQuantityAr(row.quantity, row.unit) },
     { key: "expirationDate", header: "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629" },
     { key: "warehouse", header: "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639" },
     { key: "storageSection", header: "\u0642\u0633\u0645 \u0627\u0644\u062a\u062e\u0632\u064a\u0646" },
@@ -179,7 +211,7 @@ const InventoryListAr = () => {
       </ExportCsvButton>
     </div>
 
-    <p className="text-sm text-[#5A6B50] text-right">
+    <p className="text-sm text-[#5A6B50] text-start">
       {loading ? "جاري تحميل بيانات المخزون من MongoDB..." : error || `عرض ${filteredData.length} من ${inventoryData.length} صنف`}
     </p>
 
@@ -188,7 +220,7 @@ const InventoryListAr = () => {
       data={loading ? [] : filteredData}
       emptyMessage={error || "لا توجد منتجات في MongoDB. شغّل npm run seed."}
       onRowClick={(row) => navigate(`/ar/admin/inventory/${row.mongoId}`)}
-      className="text-right"
+      className="text-start"
     />
   </div>;
 };

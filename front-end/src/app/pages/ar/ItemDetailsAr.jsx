@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ArrowRight, Calendar, Edit, MapPin, Package, Trash2 } from "lucide-react";
 import { PageHeaderAr } from "../../components/ar/PageHeaderAr";
@@ -6,11 +6,31 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../components/Card"
 import { Badge } from "../../components/Badge";
 import { Button } from "../../components/Button";
 import { api } from "../../lib/api";
-import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus } from "../../lib/format";
 import { getLocalizedValue, localizeText } from "../../lib/localization";
 
 const fieldValue = (value) => value || "غير محدد";
+const unitLabelsAr = {
+  kg: "كجم",
+  g: "جم",
+  liter: "لتر",
+  Tons: "طن",
+  ton: "طن",
+  piece: "قطعة",
+  pieces: "قطعة",
+  pcs: "قطعة",
+  unit: "وحدة",
+  units: "وحدة",
+  box: "صندوق",
+  boxes: "صندوق"
+};
+
+const formatNumberAr = (value) => Number(value || 0).toLocaleString("ar-EG");
+const formatUnitAr = (unit) => {
+  const normalized = String(unit || "").trim();
+  return unitLabelsAr[normalized] || unitLabelsAr[normalized.toLowerCase()] || normalized;
+};
+const formatQuantityAr = (quantity, unit) => `${formatNumberAr(quantity)} ${formatUnitAr(unit)}`.trim();
 
 const ItemDetailsAr = () => {
   const { id } = useParams();
@@ -19,9 +39,31 @@ const ItemDetailsAr = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const { data: products, loading, error } = useApiResource(() => api.products.list(), []);
-  const { data: productWarehouseRows } = useApiResource(() => api.productWarehouses.list(), []);
-  const product = useMemo(() => products.find((entry) => entry._id === id), [id, products]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    api.products.get(id)
+      .then((response) => {
+        if (!active) return;
+        setProduct(response?.data || response?.product || response || null);
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        setProduct(null);
+        setError(requestError.message || "تعذر تحميل بيانات الصنف.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   if (loading) {
     return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل الصنف من MongoDB...</CardContent></Card></div>;
@@ -41,13 +83,6 @@ const ItemDetailsAr = () => {
   const productName = getLocalizedValue(product, "name", "ar") || "صنف مخزون";
   const productCategory = getLocalizedValue(product, "category", "ar");
   const productDescription = getLocalizedValue(product, "description", "ar");
-  const normalizeIdentity = (value) => String(value || "").trim().toLowerCase();
-  const sameItemProducts = products.filter((entry) =>
-    normalizeIdentity(entry.name) === normalizeIdentity(product.name)
-    && normalizeIdentity(entry.unit) === normalizeIdentity(product.unit)
-    && normalizeIdentity(entry.category) === normalizeIdentity(product.category)
-  );
-  const sameItemProductIds = new Set(sameItemProducts.map((entry) => String(entry._id)));
   const mergeWarehouseRows = (rows) => {
     const byWarehouse = new Map();
     rows.forEach((warehouse) => {
@@ -61,46 +96,24 @@ const ItemDetailsAr = () => {
     });
     return Array.from(byWarehouse.values());
   };
-  const rowWarehouseStock = mergeWarehouseRows(productWarehouseRows
-    .filter((row) => sameItemProductIds.has(String(row.product_id?._id || row.product_id || "")))
-    .map((row) => {
-      const rowProduct = row.product_id && typeof row.product_id === "object" ? row.product_id : sameItemProducts.find((entry) => entry._id === (row.product_id?._id || row.product_id));
-      return {
-        id: row.warehouse_id?._id || row.warehouse_id,
-        _id: row.warehouse_id?._id || row.warehouse_id,
-        name: getLocalizedValue(row.warehouse_id, "name", "ar") || getLocalizedValue(rowProduct?.warehouse_id, "name", "ar") || localizeText(rowProduct?.warehouse_name, "ar") || "غير محدد",
-        code: row.warehouse_id?.code || rowProduct?.warehouse_id?.code || "",
-        location: getLocalizedValue(row.warehouse_id, "location", "ar") || getLocalizedValue(rowProduct?.warehouse_id, "location", "ar") || "",
-        quantity: Number(row.quantity || 0),
-        unit: rowProduct?.unit || product.unit,
-      };
-    }));
-  const sameItemProductStock = mergeWarehouseRows(sameItemProducts
-    .filter((entry) => entry.warehouse_id || entry.warehouse_name)
-    .map((entry) => ({
-      id: entry.warehouse_id?._id || entry.warehouse_id || entry.warehouse_name,
-      _id: entry.warehouse_id?._id || entry.warehouse_id,
-      name: getLocalizedValue(entry.warehouse_id, "name", "ar") || localizeText(entry.warehouse_name, "ar") || "غير محدد",
-      code: entry.warehouse_id?.code || "",
-      location: getLocalizedValue(entry.warehouse_id, "location", "ar") || "",
-      quantity: Number(entry.quantity || 0),
-      unit: entry.unit,
-    })));
-  const hasWarehouseArray = Array.isArray(product.warehouses);
-  const warehouseStock = rowWarehouseStock.length
-    ? rowWarehouseStock
-    : sameItemProductStock.length
-    ? sameItemProductStock
-    : hasWarehouseArray
-    ? product.warehouses
-    : (product.warehouse_id || product.warehouse_name ? [{
+  const warehouseStock = mergeWarehouseRows(
+    Array.isArray(product.warehouses) && product.warehouses.length
+      ? product.warehouses.map((warehouse) => ({
+        ...warehouse,
+        name: getLocalizedValue(warehouse, "name", "ar") || warehouse.name || "غير محدد",
+        location: getLocalizedValue(warehouse, "location", "ar") || warehouse.location || "",
+        quantity: Number(warehouse.quantity || 0),
+        unit: warehouse.unit || product.unit,
+      }))
+      : (product.warehouse_id || product.warehouse_name ? [{
       id: product.warehouse_id?._id || product.warehouse_id || "legacy-warehouse",
       name: getLocalizedValue(product.warehouse_id, "name", "ar") || localizeText(product.warehouse_name, "ar") || "غير محدد",
       code: product.warehouse_id?.code,
       location: getLocalizedValue(product.warehouse_id, "location", "ar"),
       quantity: product.quantity ?? 0,
       unit: product.unit,
-    }] : []);
+    }] : [])
+  );
   const totalStock = warehouseStock.length
     ? warehouseStock.reduce((sum, warehouse) => sum + Number(warehouse.quantity || 0), 0)
     : Number(product.totalStock ?? product.quantity ?? 0);
@@ -119,6 +132,13 @@ const ItemDetailsAr = () => {
     "out-of-stock": "danger",
     "expiring-soon": "warning"
   }[status] || "neutral";
+  const statusLabels = {
+    "in-stock": "متوفر",
+    critical: "حرج",
+    "low-stock": "مخزون منخفض",
+    "out-of-stock": "نفد المخزون",
+    "expiring-soon": "ينتهي قريباً"
+  };
   const handleDelete = async () => {
     setDeleting(true);
     setDeleteError("");
@@ -150,9 +170,36 @@ const ItemDetailsAr = () => {
     {deleteError && <div className="rounded-xl border border-[#D4183D]/20 bg-[#D4183D]/10 px-4 py-3 text-sm text-[#D4183D] text-right">{deleteError}</div>}
 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card><div className="flex items-start gap-4 flex-row-reverse text-right"><Package className="w-8 h-8 text-[#6A7B4D]" /><div><p className="text-sm text-muted-foreground">الكمية الحالية</p><p className="text-3xl font-bold text-foreground">{totalStock}</p><p className="text-sm text-muted-foreground">{product.unit || ""}</p></div></div></Card>
-      <Card><div className="flex items-start gap-4 flex-row-reverse text-right"><MapPin className="w-8 h-8 text-[#6A7B4D]" /><div><p className="text-sm text-muted-foreground">المخزن</p><p className="text-2xl font-bold text-foreground">{warehouseStock.length > 1 ? `${warehouseStock.length} مخازن` : primaryWarehouse.name}</p><p className="text-sm text-muted-foreground">{warehouseStock.length > 1 ? "راجع توزيع المخزون بالأسفل" : primaryWarehouse.location || product.storage_section || "لا يوجد قسم تخزين"}</p></div></div></Card>
-      <Card><div className="flex items-start gap-4 flex-row-reverse text-right"><Calendar className="w-8 h-8 text-[#6A7B4D]" /><div><p className="text-sm text-muted-foreground">تاريخ انتهاء الصلاحية</p><p className="text-2xl font-bold text-foreground">{formatDate(expirationDate)}</p><Badge variant={statusVariant} className="mt-2">{status}</Badge></div></div></Card>
+      <Card>
+        <div className="flex items-start justify-between gap-4 text-right">
+          <div>
+            <p className="text-sm text-muted-foreground">الكمية الحالية</p>
+            <p className="text-3xl font-bold text-foreground">{formatNumberAr(totalStock)}</p>
+            <p className="text-sm text-muted-foreground">{formatUnitAr(product.unit)}</p>
+          </div>
+          <Package className="w-8 h-8 text-[#6A7B4D] shrink-0" />
+        </div>
+      </Card>
+      <Card>
+        <div className="flex items-start justify-between gap-4 text-right">
+          <div>
+            <p className="text-sm text-muted-foreground">المخازن</p>
+            <p className="text-2xl font-bold text-foreground">{warehouseStock.length > 1 ? `${formatNumberAr(warehouseStock.length)} مخازن` : primaryWarehouse.name}</p>
+            <p className="text-sm text-muted-foreground">{warehouseStock.length > 1 ? "راجع توزيع المخزون بالأسفل" : primaryWarehouse.location || product.storage_section || "لا يوجد قسم تخزين"}</p>
+          </div>
+          <MapPin className="w-8 h-8 text-[#6A7B4D] shrink-0" />
+        </div>
+      </Card>
+      <Card>
+        <div className="flex items-start justify-between gap-4 text-right">
+          <div>
+            <p className="text-sm text-muted-foreground">تاريخ انتهاء الصلاحية</p>
+            <p className="text-2xl font-bold text-foreground">{formatDate(expirationDate, "ar-EG")}</p>
+            <Badge variant={statusVariant} className="mt-2">{statusLabels[status] || status}</Badge>
+          </div>
+          <Calendar className="w-8 h-8 text-[#6A7B4D] shrink-0" />
+        </div>
+      </Card>
     </div>
 
     <div className="space-y-6">
@@ -162,13 +209,13 @@ const ItemDetailsAr = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-right">
               {[
                 ["الفئة", productCategory],
-                ["الوحدة", product.unit],
-                ["حد انخفاض المخزون", product.alert_settings?.low_stock_threshold ?? product.min_quantity],
-                ["حد المخزون الحرج", product.alert_settings?.critical_stock_threshold ?? 0],
-                ["تاريخ التصنيع", formatDate(product.manufacturing_date)],
+                ["الوحدة", formatUnitAr(product.unit)],
+                ["حد انخفاض المخزون", formatQuantityAr(product.alert_settings?.low_stock_threshold ?? product.min_quantity, product.unit)],
+                ["حد المخزون الحرج", formatQuantityAr(product.alert_settings?.critical_stock_threshold ?? 0, product.unit)],
+                ["تاريخ التصنيع", formatDate(product.manufacturing_date, "ar-EG")],
                 ["رقم التشغيلة", product.batch_number],
                 ["الرقم التسلسلي", product.serial_number],
-                ["موقع المخزن", warehouseStock.length > 1 ? `${warehouseStock.length} مواقع مخازن` : primaryWarehouse.location],
+                ["موقع المخزن", warehouseStock.length > 1 ? `${formatNumberAr(warehouseStock.length)} مواقع مخازن` : primaryWarehouse.location],
                 ["قسم التخزين", product.storage_section]
               ].map(([label, value]) => <div key={label}>
                 <p className="text-sm text-muted-foreground mb-1">{label}</p>
@@ -178,7 +225,7 @@ const ItemDetailsAr = () => {
           </CardContent>
         </Card>
 
-        {(warehouseStock.length !== 1) && <Card>
+        <Card>
           <CardHeader><CardTitle className="text-right">المخزون حسب المخزن</CardTitle></CardHeader>
           <CardContent>
             {warehouseStock.length === 0 ? <div className="rounded-xl border border-[#4E4631]/10 bg-[#ECEEE2]/50 px-4 py-6 text-center text-sm text-[#5A6B50]">
@@ -199,14 +246,14 @@ const ItemDetailsAr = () => {
                     <td className="py-2 pl-3 text-[#5A6B50]">
                       {[warehouse.code, warehouse.location].filter(Boolean).join(" / ") || "غير محدد"}
                     </td>
-                    <td className="py-2 pl-3 font-semibold text-[#2E3A24]">{warehouse.quantity ?? 0}</td>
-                    <td className="py-2 pl-3">{warehouse.unit || product.unit || "غير محدد"}</td>
+                    <td className="py-2 pl-3 font-semibold text-[#2E3A24]">{formatNumberAr(warehouse.quantity)}</td>
+                    <td className="py-2 pl-3">{formatUnitAr(warehouse.unit || product.unit) || "غير محدد"}</td>
                   </tr>)}
                 </tbody>
               </table>
             </div>}
           </CardContent>
-        </Card>}
+        </Card>
 
         <Card>
           <CardHeader><CardTitle className="text-right">تفاصيل إضافية</CardTitle></CardHeader>
@@ -234,4 +281,5 @@ const ItemDetailsAr = () => {
 export {
   ItemDetailsAr
 };
+
 

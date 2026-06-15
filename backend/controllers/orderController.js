@@ -12,6 +12,7 @@ const { adjustStock } = require('../services/inventoryService');
 const { createNotification } = require('../services/notificationService');
 const { createAuditLog } = require('../services/auditLogService');
 const { assertWarehouseAccess, requireAssignedWarehouse } = require('../utils/warehouseScope');
+const { assertValidDate } = require('../utils/dateValidation');
 
 const orderRules = [
   body('total_price').optional().isFloat({ min: 0 }).withMessage('Total price must be 0 or greater'),
@@ -21,6 +22,7 @@ const orderRules = [
   body('supplier_id').optional().isMongoId().withMessage('Valid supplier_id is required'),
   body('source_warehouse').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Valid source_warehouse is required'),
   body('destination_warehouse').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Valid destination_warehouse is required'),
+  body('expected_delivery_date').optional({ nullable: true, checkFalsy: true }).custom((value) => assertValidDate(value, 'Expected delivery date must be between 2000 and 2100')),
   body('items').optional().isArray().withMessage('Items must be an array'),
 ];
 

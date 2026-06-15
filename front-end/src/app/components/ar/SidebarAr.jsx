@@ -227,16 +227,16 @@ const SidebarAr = ({ userRole }) => {
     />
 
                     {!collapsed && <>
+                        <span className="flex-1 text-sm font-medium text-right">{item.label}</span>
                         {item.children && <ChevronDown
       className={clsx(
         "w-3.5 h-3.5 text-[#E0E1B7]/40 transition-transform duration-200",
         expanded && "rotate-180"
       )}
     />}
-                        {item.badge !== void 0 && <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] font-bold rounded-md leading-none">
+                        {item.badge !== void 0 && <span className="ms-auto px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] font-bold rounded-md leading-none">
                             {item.badge}
                           </span>}
-                        <span className="flex-1 text-sm font-medium text-right">{item.label}</span>
                       </>}
                     {collapsed && item.badge !== void 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4183D] rounded-full" />}
                   </Link>
@@ -376,11 +376,11 @@ const MobileNavAr = ({ userRole }) => {
       isActive(item.children ? item.children[0].path : item.path) ? "bg-[#4B5B3A]/60 text-white" : "text-[#E0E1B7]/70 hover:bg-white/[0.06]"
     )}
   >
+                      <span className="flex-1 text-sm text-right">{item.label}</span>
                       <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                      {item.badge !== void 0 && <span className="px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] rounded-md">
+                      {item.badge !== void 0 && <span className="ms-auto px-1.5 py-0.5 bg-[#D4183D] text-white text-[10px] rounded-md">
                           {item.badge}
                         </span>}
-                      <span className="flex-1 text-sm text-right">{item.label}</span>
                     </Link>)}
                 </div>)}
             </nav>

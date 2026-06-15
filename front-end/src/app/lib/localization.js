@@ -29,6 +29,38 @@ const knownTextTranslations = {
   supplier: "مورد",
 };
 
+const reverseKnownTextTranslations = Object.entries(knownTextTranslations).reduce((acc, [english, arabic]) => {
+  acc[arabic] = english;
+  return acc;
+}, {});
+
+export const containsArabic = (value) => /[\u0600-\u06FF]/.test(String(value || ""));
+
+export const getBilingualText = (value, fallback = {}) => {
+  const text = String(value || "").trim();
+  const fallbackEn = String(fallback.en || "").trim();
+  const fallbackAr = String(fallback.ar || "").trim();
+
+  if (!text) {
+    return {
+      en: fallbackEn || (fallbackAr ? reverseKnownTextTranslations[fallbackAr] || fallbackAr : ""),
+      ar: fallbackAr || (fallbackEn ? knownTextTranslations[fallbackEn] || fallbackEn : ""),
+    };
+  }
+
+  if (containsArabic(text)) {
+    return {
+      en: reverseKnownTextTranslations[text] || fallbackEn || text,
+      ar: text,
+    };
+  }
+
+  return {
+    en: text,
+    ar: knownTextTranslations[text] || fallbackAr || text,
+  };
+};
+
 export const localizeText = (value, locale = getCurrentLocale()) => {
   const text = String(value || "").trim();
   if (!text) return "";

@@ -12,7 +12,7 @@ function Table({
           <tr className="border-b border-[#4E4631]/10 bg-[#ECEEE2]/60">
             {columns.map((column) => <th
     key={column.key}
-    className="px-5 py-3.5 text-left text-xs font-semibold text-[#5A6B50] uppercase tracking-wide"
+    className="px-5 py-3.5 text-start text-xs font-semibold text-[#5A6B50] uppercase tracking-wide"
   >
                 {column.header}
               </th>)}
@@ -27,7 +27,7 @@ function Table({
       onRowClick && "cursor-pointer hover:bg-[#ECEEE2]/50"
     )}
   >
-              {columns.map((column) => <td key={column.key} className="px-5 py-3.5 text-sm text-[#2E3A24]">
+              {columns.map((column) => <td key={column.key} className="px-5 py-3.5 text-sm text-[#2E3A24] text-start">
                   {column.render ? column.render(row) : row[column.key]}
                 </td>)}
             </tr>)}

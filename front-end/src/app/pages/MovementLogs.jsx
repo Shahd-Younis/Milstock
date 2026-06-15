@@ -11,6 +11,7 @@ import { useLocation } from "react-router";
 import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate } from "../lib/format";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT } from "../lib/dateValidation";
 const MovementLogs = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -240,7 +241,7 @@ const MovementLogs = () => {
     value={actionFilter}
     onChange={(e) => setActionFilter(e.target.value)}
   />
-        <Input type="date" />
+        <Input type="date" min={MIN_DATE_INPUT} max={MAX_DATE_INPUT} />
       </div>
 
       <div className="mb-4 flex items-center justify-between">

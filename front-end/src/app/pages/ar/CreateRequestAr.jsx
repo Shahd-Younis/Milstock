@@ -10,6 +10,7 @@ import { api } from "../../lib/api";
 import { useApiResource } from "../../lib/useApiResource";
 import { getStoredAssignedWarehouse } from "../../lib/warehouseDisplay";
 import { getLocalizedDisplayName, getLocalizedValue, localizeText } from "../../lib/localization";
+import { MAX_DATE_INPUT, MIN_DATE_INPUT, isValidDateInput } from "../../lib/dateValidation";
 
 const CreateRequestAr = () => {
   const navigate = useNavigate();
@@ -73,6 +74,10 @@ const CreateRequestAr = () => {
     }
     if (requestType === "warehouse_request" && !sourceWarehouseId) {
       setMessage("يرجى اختيار المخزن المطلوب منه.");
+      return;
+    }
+    if (!isValidDateInput(expectedDeliveryDate)) {
+      setMessage("أدخل تاريخ تسليم صحيحًا بين سنة 2000 و2100.");
       return;
     }
 
@@ -227,6 +232,8 @@ const CreateRequestAr = () => {
           {requestType === "supplier_request" && <Input
             label="تاريخ التسليم المتوقع"
             type="date"
+            min={MIN_DATE_INPUT}
+            max={MAX_DATE_INPUT}
             value={expectedDeliveryDate}
             onChange={(event) => setExpectedDeliveryDate(event.target.value)}
             className="text-right"
