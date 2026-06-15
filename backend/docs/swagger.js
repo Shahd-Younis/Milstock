@@ -68,7 +68,7 @@ const openApiSpec = {
   },
   servers: [
     { url: 'http://localhost:5001/api', description: 'Local backend' },
-    { url: '[ADD_RENDER_BACKEND_URL_HERE]/api', description: 'Production backend placeholder' },
+    { url: 'https://milstock.onrender.com/api', description: 'Production backend placeholder' },
   ],
   tags: [
     { name: 'Health' },
@@ -528,7 +528,7 @@ const setupSwagger = (app) => {
     res.json(openApiSpec);
   });
 
-  app.get('/api-docs', (_req, res) => {
+  app.get('/docs', (_req, res) => {
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https:; font-src 'self' data: https://unpkg.com; connect-src 'self'"
