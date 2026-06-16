@@ -17,8 +17,8 @@ const daysUntil = (date) => {
 const pageCopy = {
   en: {
     title: "Expiration Monitoring",
-    subtitle: "Track MongoDB products approaching expiration dates",
-    loading: "Loading expiration data from MongoDB...",
+    subtitle: "Track products approaching expiration dates",
+    loading: "Loading expiration data...",
     count: (count) => `${count} monitored products loaded`,
     withinCritical: "Expiring Within 7 Days",
     withinWarning: "Expiring Within 30 Days",
@@ -36,9 +36,9 @@ const pageCopy = {
     status: "Status",
     days: "days",
     unassigned: "Unassigned",
-    noCritical: "No critical expiring MongoDB products.",
-    noWarning: "No MongoDB products expiring within 30 days.",
-    noExpiring: "No expiring MongoDB products found.",
+    noCritical: "No critical expiring products.",
+    noWarning: "No products expiring within 30 days.",
+    noExpiring: "No expiring products found.",
     statusCritical: "critical",
     statusWarning: "warning",
     statusNormal: "normal",
@@ -46,7 +46,7 @@ const pageCopy = {
   ar: {
     title: "متابعة تواريخ الصلاحية",
     subtitle: "متابعة الأصناف القريبة من انتهاء الصلاحية",
-    loading: "جاري تحميل بيانات الصلاحية من MongoDB...",
+    loading: "جاري تحميل بيانات الصلاحية...",
     count: (count) => `تم تحميل ${count} صنف تحت المتابعة`,
     withinCritical: "تنتهي خلال 7 أيام",
     withinWarning: "تنتهي خلال 30 يومًا",

@@ -42,6 +42,8 @@ const labels = {
     date: "Date",
     empty: "No waste records found.",
     noNotes: "N/A",
+    noProducts: "No products available",
+    loadingProducts: "Loading products...",
   },
   ar: {
     title: "تحليل الهدر",
@@ -68,6 +70,8 @@ const labels = {
     date: "التاريخ",
     empty: "لا توجد سجلات هدر.",
     noNotes: "غير محدد",
+    noProducts: "لا توجد منتجات متاحة",
+    loadingProducts: "جاري تحميل المنتجات...",
   }
 };
 
@@ -112,7 +116,12 @@ const WasteAnalysisView = ({ isArabic = false }) => {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [analyticsState, setAnalyticsState] = useState({ data: null, loading: true, error: "" });
-  const { data: products } = useApiResource(() => canCreate ? api.products.list() : Promise.resolve([]), [canCreate]);
+  const { data: products, loading: productsLoading, error: productsError } = useApiResource(
+    () => canCreate
+      ? api.waste.products().catch(() => api.products.list())
+      : Promise.resolve([]),
+    [canCreate]
+  );
 
   const refresh = useCallback(() => {
     setAnalyticsState((current) => ({ ...current, loading: true, error: "" }));
@@ -203,9 +212,10 @@ const WasteAnalysisView = ({ isArabic = false }) => {
             value={form.product}
             onChange={(event) => updateField("product", event.target.value)}
             options={[
-              { value: "", label: t.selectProduct },
+              { value: "", label: productsLoading ? t.loadingProducts : productsError || (products.length ? t.selectProduct : t.noProducts), disabled: productsLoading || !products.length },
               ...products.map((product) => ({ value: product._id, label: getLocalizedValue(product, "name", locale) }))
             ]}
+            disabled={productsLoading || !products.length}
           />
           <Input label={t.quantity} type="number" min="0" step="0.01" value={form.quantity} onChange={(event) => updateField("quantity", event.target.value)} />
           <Select

@@ -269,7 +269,7 @@ const WarehouseLocations = () => {
 
     <div className="flex items-center justify-between gap-3">
       <p className="text-sm text-[#5A6B50]">
-        {loading ? "Loading warehouses from MongoDB..." : warehousesError || `${warehouseCards.length} warehouses loaded`}
+        {loading ? "Loading warehouses..." : warehousesError || `${warehouseCards.length} warehouses loaded`}
       </p>
       <ExportCsvButton filenamePrefix="warehouses-export" columns={exportColumns} rows={loading ? [] : warehouseCards}>
         Export

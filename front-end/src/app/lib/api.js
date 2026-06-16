@@ -221,6 +221,7 @@ const api = {
   },
   waste: {
     list: () => requestWithFallback("/waste", "/wastes"),
+    products: () => requestWithFallback("/waste/products", "/products"),
     analytics: () => requestWithFallback("/waste/analytics", "/wastes/analytics"),
     create: (payload) => requestWithFallback("/waste", "/wastes", {
       method: "POST",

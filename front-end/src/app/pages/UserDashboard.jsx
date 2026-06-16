@@ -78,7 +78,7 @@ const UserDashboard = () => {
     /* KPI Stats */
   }
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-        <StatCard title="Active Requests" value={orders.length.toString()} icon={FileText} trend={{ value: "MongoDB orders", isPositive: true }} color="primary" />
+        <StatCard title="Active Requests" value={orders.length.toString()} icon={FileText} trend={{ value: "Recorded orders", isPositive: true }} color="primary" />
         <StatCard title="Pending Approval" value={pendingRequests.toString()} icon={Clock} trend={{ value: "Awaiting review", isPositive: true }} color="warning" />
         <StatCard title="Completed This Month" value={completedRequests.toString()} icon={CheckCircle} trend={{ value: "Completed orders", isPositive: true }} color="success" />
       </div>
@@ -126,7 +126,7 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {notifications.length === 0 && <p className="text-sm text-[#5A6B50]">No MongoDB notifications found.</p>}
+              {notifications.length === 0 && <p className="text-sm text-[#5A6B50]">No notifications found.</p>}
               {notifications.slice(0, 3).map((n) => <div
     key={n._id}
     className={`flex items-start gap-3 p-3.5 rounded-xl border ${n.type.includes("order") ? "bg-[#5B8A4A]/5 border-[#5B8A4A]/15" : n.type.includes("low") ? "bg-[#B8862A]/5 border-[#B8862A]/15" : "bg-[#6A7B4D]/5 border-[#6A7B4D]/15"}`}
@@ -160,7 +160,7 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {myRequests.length === 0 && <p className="text-sm text-[#5A6B50]">No MongoDB orders found.</p>}
+              {myRequests.length === 0 && <p className="text-sm text-[#5A6B50]">No Recorded orders found.</p>}
               {myRequests.map((req) => <Link
     key={req.id}
     to={`/user/requests/${req.mongoId}`}
@@ -194,7 +194,7 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {availableStock.length === 0 && <p className="text-sm text-[#5A6B50]">No MongoDB products found.</p>}
+              {availableStock.length === 0 && <p className="text-sm text-[#5A6B50]">No products found.</p>}
               {availableStock.map((stock) => <div key={stock.category} className="flex items-center justify-between p-3.5 rounded-xl bg-[#ECEEE2]/60 border border-[#4E4631]/8">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[#2E3A24] truncate">{stock.category}</p>

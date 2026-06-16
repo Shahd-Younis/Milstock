@@ -167,7 +167,7 @@ const RequestDetailsAr = () => {
         العودة إلى الطلبات
       </button>
       <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">جاري تحميل تفاصيل الطلب من MongoDB...</CardContent>
+        <CardContent className="py-10 text-center text-muted-foreground">جاري تحميل تفاصيل الطلب...</CardContent>
       </Card>
     </div>;
   }

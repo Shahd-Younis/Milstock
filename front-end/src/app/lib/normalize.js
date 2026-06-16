@@ -2,6 +2,7 @@ const normalizeArray = (value) => {
   if (Array.isArray(value)) return value;
   if (Array.isArray(value?.data)) return value.data;
   if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.products)) return value.products;
   if (Array.isArray(value?.warehouses)) return value.warehouses;
   if (Array.isArray(value?.suppliers)) return value.suppliers;
   if (Array.isArray(value?.users)) return value.users;

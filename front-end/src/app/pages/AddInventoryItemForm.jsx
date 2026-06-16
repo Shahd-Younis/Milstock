@@ -17,7 +17,7 @@ const translations = {
     titleAdd: "Add New Inventory Item",
     titleEdit: "Edit Inventory Item",
     subtitleAdd: "Create a new item in the inventory system",
-    subtitleEdit: (id) => `Editing MongoDB Product: ${id}`,
+    subtitleEdit: (id) => `Editing Product: ${id}`,
     sections: {
       basicInformation: "Basic Information",
       stockInformation: "Stock Information",
@@ -30,6 +30,7 @@ const translations = {
       category: "Category *",
       initialQuantity: "Initial Quantity *",
       unitType: "Unit Type *",
+      unitPrice: "Unit Price *",
       lowStockThreshold: "Low Stock Threshold *",
       warehouse: "Warehouse *",
       storageSection: "Storage Section",
@@ -43,9 +44,10 @@ const translations = {
     placeholders: {
       itemName: "Enter item name",
       category: "Select category...",
-      noCategories: "No MongoDB categories yet",
+      noCategories: "No categories yet",
       quantity: "0",
       unit: "Select unit...",
+      unitPrice: "0",
       lowStock: "0",
       warehouse: "Select warehouse...",
       loadingWarehouses: "Loading warehouses...",
@@ -59,6 +61,7 @@ const translations = {
       nameRequired: "Item name is required.",
       categoryRequired: "Category is required.",
       warehouseRequired: "Warehouse is required.",
+      unitPriceRequired: "Unit price is required.",
       invalidDate: "Enter a valid date between 2000 and 2100.",
       invalidDateRange: "Manufacturing date cannot be after expiration date.",
       created: "Item created successfully.",
@@ -78,7 +81,7 @@ const translations = {
     titleAdd: "إضافة صنف جديد",
     titleEdit: "تعديل الصنف",
     subtitleAdd: "إضافة صنف غذائي جديد إلى المخزون",
-    subtitleEdit: () => "تحديث بيانات صنف غذائي من MongoDB",
+    subtitleEdit: () => "تحديث بيانات صنف غذائي",
     sections: {
       basicInformation: "المعلومات الأساسية",
       stockInformation: "معلومات المخزون",
@@ -91,6 +94,7 @@ const translations = {
       category: "الفئة *",
       initialQuantity: "الكمية الأولية *",
       unitType: "الوحدة *",
+      unitPrice: "سعر الوحدة *",
       lowStockThreshold: "حد انخفاض المخزون *",
       warehouse: "المخزن *",
       storageSection: "قسم التخزين",
@@ -104,9 +108,10 @@ const translations = {
     placeholders: {
       itemName: "اكتب اسم الصنف",
       category: "اختر الفئة...",
-      noCategories: "لا توجد فئات في MongoDB",
+      noCategories: "لا توجد فئات بعد",
       quantity: "0",
       unit: "اختر وحدة القياس",
+      unitPrice: "0",
       lowStock: "0",
       warehouse: "اختر المخزن...",
       loadingWarehouses: "جاري تحميل المخازن...",
@@ -120,6 +125,7 @@ const translations = {
       nameRequired: "اسم الصنف مطلوب.",
       categoryRequired: "الفئة مطلوبة.",
       warehouseRequired: "المخزن مطلوب.",
+      unitPriceRequired: "سعر الوحدة مطلوب.",
       invalidDate: "أدخل تاريخًا صحيحًا بين سنة 2000 و2100.",
       invalidDateRange: "تاريخ التصنيع لا يمكن أن يكون بعد تاريخ انتهاء الصلاحية.",
       created: "تم إنشاء الصنف بنجاح.",
@@ -199,6 +205,7 @@ const initialForm = {
   categoryAr: "",
   quantity: "",
   unit: "",
+  unit_price: "",
   min_quantity: "",
   warehouse_id: "",
   warehouse_name: "",
@@ -279,6 +286,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       categoryAr: product.categoryAr || "",
       quantity: String(product.quantity ?? ""),
       unit: product.unit || "",
+      unit_price: String(product.unit_price ?? ""),
       min_quantity: String(product.min_quantity ?? ""),
       warehouse_id: product.warehouse_id?._id || product.warehouse_id || "",
       warehouse_name: product.warehouse_name || product.warehouse_id?.name || "",
@@ -375,6 +383,12 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       setSaving(false);
       return;
     }
+    if (form.unit_price === "" || Number(form.unit_price) < 0) {
+      setMessageType("error");
+      setMessage(t.messages.unitPriceRequired);
+      setSaving(false);
+      return;
+    }
     const expirationDate = form.expiration_date || form.expiry_date || "";
     if (!isValidDateInput(expirationDate) || !isValidDateInput(form.manufacturing_date)) {
       setMessageType("error");
@@ -411,6 +425,7 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
       category_name_ar: categoryAr,
       quantity: Number(form.quantity),
       unit: form.unit,
+      unit_price: Number(form.unit_price),
       min_quantity: Number(form.min_quantity),
       warehouse_id: form.warehouse_id,
       warehouse_name: selectedWarehouse?.name || form.warehouse_name || "",
@@ -482,9 +497,10 @@ const AddInventoryItemForm = ({ locale = "en" }) => {
           </Section>
 
           <Section title={t.sections.stockInformation}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Input label={t.fields.initialQuantity} type="number" placeholder={t.placeholders.quantity} value={form.quantity} onChange={handleChange("quantity")} min="0" required className={fieldClass} />
               <Select label={t.fields.unitType} options={unitOptionsByLocale[locale]} value={form.unit} onChange={handleChange("unit")} required className={fieldClass} />
+              <Input label={t.fields.unitPrice} type="number" placeholder={t.placeholders.unitPrice} value={form.unit_price} onChange={handleChange("unit_price")} min="0" step="0.01" required className={fieldClass} />
               <Input label={t.fields.lowStockThreshold} type="number" placeholder={t.placeholders.lowStock} value={form.min_quantity} onChange={handleChange("min_quantity")} min="0" required className={fieldClass} />
             </div>
           </Section>

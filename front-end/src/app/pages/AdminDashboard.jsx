@@ -94,7 +94,7 @@ const AdminDashboard = () => {
   }
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
         <StatCard title="Total Inventory Items" value={products.reduce((sum, product) => sum + product.quantity, 0).toLocaleString()} icon={Package} trend={{ value: `${products.length} products`, isPositive: true }} color="primary" to="/admin/inventory" />
-        <StatCard title="Low Stock Items" value={lowStockItems.length.toString()} icon={AlertTriangle} trend={{ value: "From MongoDB thresholds", isPositive: false }} color="warning" to="/admin/inventory?status=low_stock" />
+        <StatCard title="Low Stock Items" value={lowStockItems.length.toString()} icon={AlertTriangle} trend={{ value: "From product thresholds", isPositive: false }} color="warning" to="/admin/inventory?status=low_stock" />
         <StatCard title="Expiring Soon" value={expiringSoon.length.toString()} icon={Calendar} trend={{ value: "Product thresholds", isPositive: false }} color="danger" to="/admin/inventory?filter=expiring" />
         <StatCard title="Pending Requests" value={pendingOrders.length.toString()} icon={FileText} trend={{ value: "Open orders", isPositive: true }} color="success" to="/admin/requests?status=pending" />
         <StatCard title="Consumed Today" value={consumedToday.toLocaleString()} icon={Utensils} trend={{ value: `${consumptions.length} records`, isPositive: true }} color="primary" to="/admin/consumptions" />
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentRequests.length === 0 && <p className="text-sm text-[#5A6B50]">No MongoDB orders found.</p>}
+              {recentRequests.length === 0 && <p className="text-sm text-[#5A6B50]">No Recorded orders found.</p>}
               {recentRequests.map((req) => <div
     key={req.id}
     className="flex items-start justify-between p-4 rounded-xl bg-[#ECEEE2]/60 hover:bg-[#ECEEE2] border border-transparent hover:border-[#4E4631]/10 transition-all"
@@ -217,7 +217,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {criticalAlerts.length === 0 && <p className="text-sm text-[#5A6B50]">No MongoDB notifications found.</p>}
+              {criticalAlerts.length === 0 && <p className="text-sm text-[#5A6B50]">No notifications found.</p>}
               {criticalAlerts.map((alert, index) => <div
     key={index}
     className={`flex items-start gap-3 p-4 rounded-xl border ${alert.severity === "danger" ? "bg-[#D4183D]/5 border-[#D4183D]/15" : alert.severity === "warning" ? "bg-[#B8862A]/5 border-[#B8862A]/15" : "bg-[#5B8A4A]/5 border-[#5B8A4A]/15"}`}

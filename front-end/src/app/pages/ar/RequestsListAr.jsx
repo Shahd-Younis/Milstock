@@ -93,7 +93,7 @@ const RequestsListAr = () => {
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
       title={isAdmin ? "جميع طلبات التوريد" : "طلباتي"}
-      subtitle="طلبات التوريد المحملة من MongoDB"
+      subtitle="طلبات التوريد المسجلة"
       action={!isAdmin ? {
         label: "طلب جديد",
         onClick: () => navigate("/ar/user/requests/create"),
@@ -128,7 +128,7 @@ const RequestsListAr = () => {
 
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-muted-foreground text-sm">
-        {ordersLoading ? "جاري تحميل الطلبات من MongoDB..." : ordersError || `عرض ${filtered.length} من ${requestRows.length} طلب`}
+        {ordersLoading ? "جاري تحميل الطلبات..." : ordersError || `عرض ${filtered.length} من ${requestRows.length} طلب`}
       </p>
       <ExportCsvButton filenamePrefix="requests-export" columns={exportColumns} rows={ordersLoading ? [] : filtered} className="flex items-center gap-2">
         تصدير

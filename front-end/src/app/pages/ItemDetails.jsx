@@ -24,7 +24,7 @@ const ItemDetails = () => {
   const product = useMemo(() => products.find((entry) => entry._id === id), [id, products]);
 
   if (loading) {
-    return <div className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">Loading item from MongoDB...</CardContent></Card></div>;
+    return <div className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">Loading item...</CardContent></Card></div>;
   }
 
   if (error || !product) {

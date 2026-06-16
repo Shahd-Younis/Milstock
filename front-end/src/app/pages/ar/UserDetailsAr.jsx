@@ -16,7 +16,7 @@ const UserDetailsAr = () => {
   const { data: users, loading, error } = useApiResource(() => api.users.list(), []);
   const user = useMemo(() => users.find((entry) => entry._id === id), [id, users]);
 
-  if (loading) return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل المستخدم من MongoDB...</CardContent></Card></div>;
+  if (loading) return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل المستخدم...</CardContent></Card></div>;
 
   if (error || !user) {
     return <div dir="rtl" className="p-6 lg:p-8 space-y-6">

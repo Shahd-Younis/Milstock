@@ -204,7 +204,7 @@ const RequestDetails = () => {
         Back to Requests
       </button>
       <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">Loading request details from MongoDB...</CardContent>
+        <CardContent className="py-10 text-center text-muted-foreground">Loading request details...</CardContent>
       </Card>
     </div>;
   }

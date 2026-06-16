@@ -62,7 +62,7 @@ const EditUserAr = () => {
     }
   };
 
-  if (loading) return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل المستخدم من MongoDB...</CardContent></Card></div>;
+  if (loading) return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل المستخدم...</CardContent></Card></div>;
   if (error || !user) return <div dir="rtl" className="p-6 lg:p-8 space-y-6"><button onClick={() => navigate("/ar/admin/users")} className="flex items-center gap-2 text-[#5A6B50] hover:text-[#2E3A24] text-sm"><ArrowRight className="w-4 h-4" />العودة إلى المستخدمين</button><Card><CardContent className="py-10 text-center text-muted-foreground">{error || "المستخدم غير موجود."}</CardContent></Card></div>;
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">

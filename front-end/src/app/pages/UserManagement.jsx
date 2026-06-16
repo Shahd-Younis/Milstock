@@ -170,7 +170,7 @@ const UserManagement = () => {
   ];
 
   return <div className="p-6 lg:p-8 space-y-6">
-    <PageHeader title="User Management" subtitle="Manage user accounts and permissions from MongoDB" action={{ label: "Add User", onClick: () => navigate("/admin/users/new"), icon: UserPlus }} />
+    <PageHeader title="User Management" subtitle="Manage user accounts and permissions" action={{ label: "Add User", onClick: () => navigate("/admin/users/new"), icon: UserPlus }} />
     {message && <div className="rounded-xl border border-[#5B8A4A]/20 bg-[#5B8A4A]/10 px-4 py-3 text-sm text-[#3d6b2e]">{message}</div>}
     {errorMessage && <div className="rounded-xl border border-[#D4183D]/20 bg-[#D4183D]/10 px-4 py-3 text-sm text-[#D4183D]">{errorMessage}</div>}
 
@@ -182,12 +182,12 @@ const UserManagement = () => {
     </div>
 
     <div className="flex items-center justify-between gap-3">
-      <p className="text-sm text-[#5A6B50]">{loading ? "Loading users from MongoDB..." : error || `${filteredUsers.length} users loaded`}</p>
+      <p className="text-sm text-[#5A6B50]">{loading ? "Loading users..." : error || `${filteredUsers.length} users loaded`}</p>
       <ExportCsvButton filenamePrefix="users-export" columns={exportColumns} rows={loading ? [] : filteredUsers}>
         Export
       </ExportCsvButton>
     </div>
-    <Table columns={columns} data={loading ? [] : filteredUsers} emptyMessage={error || "No MongoDB users found. Run npm run seed in the backend."} />
+    <Table columns={columns} data={loading ? [] : filteredUsers} emptyMessage={error || "No users found. Add users or run the backend seed."} />
 
     {openMenu && <ActionsPortalMenu
       anchorRect={openMenu.rect}

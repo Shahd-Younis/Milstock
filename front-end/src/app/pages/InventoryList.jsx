@@ -12,9 +12,12 @@ import { api } from "../lib/api";
 import { useApiResource } from "../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../lib/format";
 import { getLocalizedValue } from "../lib/localization";
+import { getStoredAuth } from "../lib/auth";
 const InventoryList = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = getStoredAuth();
+  const isAdmin = role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -22,6 +25,7 @@ const InventoryList = () => {
   const query = new URLSearchParams(location.search);
   const urlFilter = query.get("filter");
   const warehouseFilter = query.get("warehouse_id");
+  const itemFilter = query.get("item_id");
 
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
@@ -59,7 +63,8 @@ const InventoryList = () => {
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
     const matchesWarehouse = !warehouseFilter || String(item.warehouseId) === String(warehouseFilter);
-    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse;
+    const matchesItem = !itemFilter || String(item.mongoId) === String(itemFilter);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse && matchesItem;
   });
   const columns = [
     { key: "id", header: "Item ID" },
@@ -93,7 +98,7 @@ const InventoryList = () => {
         return <Badge variant={variantMap[row.status]}>{row.status.replace("-", " ")}</Badge>;
       }
     },
-    {
+    isAdmin && {
       key: "actions",
       header: "Actions",
       render: (row) => <button
@@ -108,7 +113,7 @@ const InventoryList = () => {
           Delete
         </button>
     }
-  ];
+  ].filter(Boolean);
   const exportColumns = [
     { key: "id", header: "Item ID" },
     { key: "name", header: "Item Name" },
@@ -123,11 +128,11 @@ const InventoryList = () => {
       <PageHeader
     title="Inventory Management"
     subtitle="Track and manage all inventory items across warehouses"
-    action={{
+    action={isAdmin ? {
       label: "Add New Item",
       onClick: () => navigate("/admin/inventory/add"),
       icon: Plus
-    }}
+    } : null}
   />
 
       <div className="bg-white rounded-2xl border border-[#4E4631]/10 p-4 shadow-sm">
@@ -166,7 +171,7 @@ const InventoryList = () => {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#5A6B50]">
-          {loading ? "Loading inventory from MongoDB..." : error || <>
+          {loading ? "Loading inventory..." : error || <>
                   Showing <span className="font-semibold text-[#2E3A24]">{filteredData.length}</span> of{" "}
                   {inventoryData.length} items
                 </>}
@@ -179,8 +184,8 @@ const InventoryList = () => {
       <Table
     columns={columns}
     data={loading ? [] : filteredData}
-    emptyMessage={error || "No MongoDB products found. Run npm run seed in the backend."}
-    onRowClick={(row) => navigate(`/admin/inventory/${row.mongoId}`)}
+    emptyMessage={error || "No products found. Add items or run the backend seed."}
+    onRowClick={isAdmin ? (row) => navigate(`/admin/inventory/${row.mongoId}`) : undefined}
   />
     </div>;
 };

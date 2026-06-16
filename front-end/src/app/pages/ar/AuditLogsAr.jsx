@@ -56,7 +56,7 @@ const AuditLogsAr = () => {
   ];
 
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
-    <PageHeaderAr title="سجل العمليات" subtitle="مراجعة الأنشطة المهمة المخزنة في MongoDB" />
+    <PageHeaderAr title="سجل العمليات" subtitle="مراجعة الأنشطة المهمة المسجلة" />
 
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {[
@@ -94,7 +94,7 @@ const AuditLogsAr = () => {
 
     <div className="flex items-center justify-between">
       <p className="text-sm text-[#5A6B50]">
-        {loading ? "جار تحميل السجلات من MongoDB..." : error || <>عرض <span className="font-semibold text-[#2E3A24]">{filtered.length}</span> من {logs.length} سجل</>}
+        {loading ? "جار تحميل السجلات..." : error || <>عرض <span className="font-semibold text-[#2E3A24]">{filtered.length}</span> من {logs.length} سجل</>}
       </p>
       <ExportCsvButton filenamePrefix="audit-logs-export" columns={exportColumns} rows={loading ? [] : filtered} className="flex items-center gap-2">
         تصدير السجل

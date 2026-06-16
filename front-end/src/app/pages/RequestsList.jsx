@@ -145,7 +145,7 @@ const RequestsList = () => {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#5A6B50]">
-          {loading ? "Loading requests from MongoDB..." : ordersError || <>
+          {loading ? "Loading requests..." : ordersError || <>
                   Showing <span className="font-semibold text-[#2E3A24]">{filteredData.length}</span> of{" "}
                   {requestsData.length} requests
                 </>}
@@ -158,7 +158,7 @@ const RequestsList = () => {
   <Table
     columns={columns}
     data={loading ? [] : filteredData}
-    emptyMessage={ordersError || "No MongoDB orders found. Run npm run seed in the backend."}
+    emptyMessage={ordersError || "No orders found. Add requests or run the backend seed."}
     onRowClick={(row) => navigate(isAdmin ? `/admin/requests/${row.mongoId}` : `/user/requests/${row.mongoId}`)}
   />
     </div>;

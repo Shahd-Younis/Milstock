@@ -9,6 +9,11 @@ const supplierSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 50,
     },
+    nameAr: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     code: {
       type: String,
       trim: true,
@@ -28,6 +33,11 @@ const supplierSchema = new mongoose.Schema(
       trim: true,
     },
     category: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    categoryAr: {
       type: String,
       trim: true,
       default: '',

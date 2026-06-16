@@ -29,7 +29,11 @@ const CreateRequestAr = () => {
   const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
 
   const activeWarehouses = warehouses.filter((warehouse) => !warehouse.status || warehouse.status === "active");
-  const activeSuppliers = suppliers.filter((supplier) => (!supplier.status || supplier.status === "active") && (!supplier.role || supplier.role === "supplier"));
+  const activeSuppliers = suppliers.filter((supplier) => {
+    const text = `${supplier.name || ""} ${supplier.email || ""}`.toLowerCase();
+    const isNonFood = /(medical|equipment|hardware|device)/i.test(text);
+    return !isNonFood && (!supplier.status || supplier.status === "active") && (!supplier.role || supplier.role === "supplier");
+  });
   const selectableWarehouses = activeWarehouses.filter((warehouse) => warehouse._id !== assignedWarehouse.id);
   const warehousePlaceholder = warehousesLoading
     ? "جاري تحميل المخازن..."
@@ -42,6 +46,11 @@ const CreateRequestAr = () => {
     const product = products.find((entry) => entry._id === productId);
     return Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
   };
+  const formatProductPrice = (productId) => {
+    if (!productId) return "اختر الصنف";
+    return getProductPrice(productId).toLocaleString("ar-EG");
+  };
+  const getItemTotal = (item) => Number(item.quantity || 0) * getProductPrice(item.product_id);
 
   const addItem = () => {
     setItems((current) => [...current, { id: Date.now().toString(), product_id: "", quantity: "" }]);
@@ -206,13 +215,13 @@ const CreateRequestAr = () => {
               <div>
                 <p className="block mb-1.5 text-sm font-medium text-[#2E3A24] text-right">سعر الوحدة</p>
                 <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24] text-right">
-                  {getProductPrice(item.product_id) || "N/A"}
+                  {formatProductPrice(item.product_id)}
                 </div>
               </div>
               <div>
                 <p className="block mb-1.5 text-sm font-medium text-[#2E3A24] text-right">الإجمالي</p>
                 <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24] text-right">
-                  {(Number(item.quantity || 0) * getProductPrice(item.product_id)).toLocaleString()}
+                  {getItemTotal(item).toLocaleString("ar-EG")}
                 </div>
               </div>
             </div>

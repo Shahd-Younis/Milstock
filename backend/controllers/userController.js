@@ -211,9 +211,15 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
+const nonFoodSupplierPattern = /(medical|equipment|hardware|device|supplies|medical|equipment)/i;
 const getSupplierUsers = asyncHandler(async (_req, res) => {
-  const suppliers = await User.find({ role: 'supplier', status: { $ne: 'inactive' } })
-    .select('_id name email phone status role')
+  const suppliers = await User.find({
+    role: 'supplier',
+    status: { $ne: 'inactive' },
+    name: { $not: nonFoodSupplierPattern },
+    email: { $not: nonFoodSupplierPattern },
+  })
+    .select('_id name nameAr email phone status role')
     .sort('name');
   res.json({ success: true, count: suppliers.length, data: suppliers });
 });

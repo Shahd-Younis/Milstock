@@ -144,7 +144,7 @@ const WarehouseLocationsAr = () => {
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
       title="مواقع التخزين"
-      subtitle="نفس مستودعات MongoDB المستخدمة في الواجهة الإنجليزية"
+      subtitle="نفس المستودعات المستخدمة في الواجهة الإنجليزية"
       action={{
         label: "إضافة مخزن",
         onClick: () => {
@@ -249,7 +249,7 @@ const WarehouseLocationsAr = () => {
         تصدير
       </ExportCsvButton>
       <p className="text-sm text-[#5A6B50] text-right">
-        {loading ? "جاري تحميل المستودعات من MongoDB..." : warehousesError || `${warehouseCards.length} مستودعات محملة`}
+        {loading ? "جاري تحميل المستودعات..." : warehousesError || `${warehouseCards.length} مستودعات محملة`}
       </p>
     </div>
 

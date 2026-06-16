@@ -117,7 +117,7 @@ const AuditLogs = () => {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[#5A6B50]">
-          {loading ? "Loading audit logs from MongoDB..." : error || <>Showing <span className="font-semibold text-[#2E3A24]">{filteredData.length}</span> of {logs.length} audit logs</>}
+          {loading ? "Loading audit logs..." : error || <>Showing <span className="font-semibold text-[#2E3A24]">{filteredData.length}</span> of {logs.length} audit logs</>}
         </p>
         <ExportCsvButton filenamePrefix="audit-logs-export" columns={exportColumns} rows={filteredData}>
           Export

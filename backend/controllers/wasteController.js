@@ -59,6 +59,15 @@ const getWaste = asyncHandler(async (req, res) => {
   res.json({ success: true, count: records.length, data: records });
 });
 
+const getWasteProducts = asyncHandler(async (req, res) => {
+  ensureWasteViewer(req);
+  const products = await Product.find({})
+    .populate('warehouse_id')
+    .sort({ name: 1 });
+
+  res.json({ success: true, count: products.length, data: products, products });
+});
+
 const getWasteAnalytics = asyncHandler(async (req, res) => {
   ensureWasteViewer(req);
 
@@ -113,5 +122,6 @@ module.exports = {
   createWasteRules,
   createWaste,
   getWaste,
+  getWasteProducts,
   getWasteAnalytics,
 };

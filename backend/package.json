@@ -16,7 +16,10 @@
     "migrate:product-alert-settings": "node scripts/migrateProductAlertSettings.js",
     "migrate:arabic-fields": "node scripts/migrateArabicFields.js",
     "seed:arabic-translations": "node scripts/seedArabicTranslations.js",
-    "backfill:item-translations": "node scripts/backfillItemTranslations.js"
+    "backfill:item-translations": "node scripts/backfillItemTranslations.js",
+    "seed:food-bilingual": "node scripts/seedFoodBilingualDataset.js",
+    "backfill:product-prices": "node scripts/backfillProductPrices.js",
+    "cleanup:non-food-suppliers": "node scripts/cleanupNonFoodSuppliers.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

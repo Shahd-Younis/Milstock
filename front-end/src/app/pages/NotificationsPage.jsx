@@ -117,6 +117,7 @@ const NotificationsPage = () => {
   const { notifications, unreadCount, loading, error, fetchNotifications, markAllAsRead, markOneAsRead, isRead } = useNotifications();
   const [filter, setFilter] = useState("all");
   const isAdminPath = location.pathname.startsWith("/admin");
+  const isUserPath = location.pathname.startsWith("/user");
 
   const filtered = useMemo(() => notifications.filter((notification) => {
     if (filter === "unread") return !isRead(notification);
@@ -138,6 +139,7 @@ const NotificationsPage = () => {
     const itemId = getNotificationItemId(notification);
     if (!itemId) return;
     if (isAdminPath) navigate(`/admin/inventory/${itemId}`);
+    if (isUserPath) navigate(`/user/inventory?item_id=${itemId}`);
   };
 
   const viewRequest = (notification) => {
@@ -213,7 +215,7 @@ const NotificationsPage = () => {
         const requestId = getNotificationRequestId(notification);
         const formatted = formatNotification(notification, "en");
         const itemName = getItemName(notification, "en");
-        const canOpenItem = Boolean(itemId && isAdminPath && isItemNotification(notification));
+        const canOpenItem = Boolean(itemId && (isAdminPath || isUserPath) && isItemNotification(notification));
         const canOpenRequest = Boolean(requestId && isRequestNotification(notification));
         const canOpenNotification = canOpenItem || canOpenRequest;
         const handleOpen = () => {

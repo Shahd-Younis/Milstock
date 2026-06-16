@@ -17,7 +17,7 @@ const UserDetails = () => {
   const user = useMemo(() => users.find((entry) => entry._id === id), [id, users]);
 
   if (loading) {
-    return <div className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">Loading user from MongoDB...</CardContent></Card></div>;
+    return <div className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">Loading user...</CardContent></Card></div>;
   }
 
   if (error || !user) {

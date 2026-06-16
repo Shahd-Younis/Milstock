@@ -12,6 +12,7 @@ import { useApiResource } from "../../lib/useApiResource";
 import { formatDate, getProductStatus, uniqueOptions } from "../../lib/format";
 import { getLocalizedValue } from "../../lib/localization";
 import { isValidDateValue } from "../../lib/dateValidation";
+import { getStoredAuth } from "../../lib/auth";
 
 const unitLabelsAr = {
   kg: "كجم",
@@ -63,6 +64,8 @@ const variantMap = {
 const InventoryListAr = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = getStoredAuth();
+  const isAdmin = role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -70,6 +73,7 @@ const InventoryListAr = () => {
   const query = new URLSearchParams(location.search);
   const urlFilter = query.get("filter");
   const warehouseFilter = query.get("warehouse_id");
+  const itemFilter = query.get("item_id");
 
   useEffect(() => {
     const urlStatus = new URLSearchParams(location.search).get("status");
@@ -112,7 +116,8 @@ const InventoryListAr = () => {
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     const matchesUrlFilter = urlFilter !== "expiring" || isExpiringWithin30Days(item.expirationRaw);
     const matchesWarehouse = !warehouseFilter || String(item.warehouseId) === String(warehouseFilter);
-    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse;
+    const matchesItem = !itemFilter || String(item.mongoId) === String(itemFilter);
+    return matchesSearch && matchesCategory && matchesStatus && matchesUrlFilter && matchesWarehouse && matchesItem;
   });
 
   const columns = [
@@ -134,7 +139,7 @@ const InventoryListAr = () => {
       header: "الحالة",
       render: (row) => <Badge variant={variantMap[row.status]}>{statusLabels[row.status]}</Badge>
     },
-    {
+    isAdmin && {
       key: "actions",
       header: "حذف",
       render: (row) => <button
@@ -150,7 +155,7 @@ const InventoryListAr = () => {
         حذف
       </button>
     }
-  ];
+  ].filter(Boolean);
   const exportColumns = [
     { key: "id", header: "\u0631\u0645\u0632 \u0627\u0644\u0635\u0646\u0641" },
     { key: "name", header: "\u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641" },
@@ -165,12 +170,12 @@ const InventoryListAr = () => {
   return <div dir="rtl" className="p-6 lg:p-8 space-y-6">
     <PageHeaderAr
       title="إدارة المخزون"
-      subtitle="نفس بيانات MongoDB المستخدمة في الواجهة الإنجليزية"
-      action={{
+      subtitle="نفس البيانات المستخدمة في الواجهة الإنجليزية"
+      action={isAdmin ? {
         label: "إضافة صنف جديد",
         onClick: () => navigate("/ar/admin/inventory/add"),
         icon: Plus
-      }}
+      } : null}
     />
 
     <div className="bg-white rounded-2xl border border-[#4E4631]/10 p-4 shadow-sm">
@@ -212,14 +217,14 @@ const InventoryListAr = () => {
     </div>
 
     <p className="text-sm text-[#5A6B50] text-start">
-      {loading ? "جاري تحميل بيانات المخزون من MongoDB..." : error || `عرض ${filteredData.length} من ${inventoryData.length} صنف`}
+      {loading ? "جاري تحميل بيانات المخزون..." : error || `عرض ${filteredData.length} من ${inventoryData.length} صنف`}
     </p>
 
     <Table
       columns={columns}
       data={loading ? [] : filteredData}
-      emptyMessage={error || "لا توجد منتجات في MongoDB. شغّل npm run seed."}
-      onRowClick={(row) => navigate(`/ar/admin/inventory/${row.mongoId}`)}
+      emptyMessage={error || "لا توجد منتجات. أضف أصنافًا أو شغّل seed."}
+      onRowClick={isAdmin ? (row) => navigate(`/ar/admin/inventory/${row.mongoId}`) : undefined}
       className="text-start"
     />
   </div>;

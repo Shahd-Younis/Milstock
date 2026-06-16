@@ -279,7 +279,7 @@ const MovementLogsAr = () => {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-muted-foreground">
-          {loading ? "جاري تحميل سجلات الحركة من MongoDB..." : error || `عرض ${filteredData.length} من ${movementData.length} حركة`}
+          {loading ? "جاري تحميل سجلات الحركة..." : error || `عرض ${filteredData.length} من ${movementData.length} حركة`}
         </p>
         <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={loading ? [] : filteredData}>
           تصدير السجلات
@@ -289,7 +289,7 @@ const MovementLogsAr = () => {
       <Table
         columns={columns}
         data={loading ? [] : filteredData}
-        emptyMessage={error || "لا توجد حركات مخزون في MongoDB. شغّل seed في backend."}
+        emptyMessage={error || "لا توجد حركات مخزون. أضف حركة أو شغّل seed."}
       />
     </>}
   </div>;

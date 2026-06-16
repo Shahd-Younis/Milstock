@@ -246,7 +246,7 @@ const MovementLogs = () => {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-muted-foreground">
-          {loading ? "Loading movement logs from MongoDB..." : error || `Showing ${filteredData.length} of ${movementData.length} movements`}
+          {loading ? "Loading movement logs..." : error || `Showing ${filteredData.length} of ${movementData.length} movements`}
         </p>
         <ExportCsvButton filenamePrefix="movement-logs-export" columns={exportColumns} rows={loading ? [] : filteredData}>
           Export Logs
@@ -256,7 +256,7 @@ const MovementLogs = () => {
       <Table
     columns={columns}
     data={loading ? [] : filteredData}
-    emptyMessage={error || "No MongoDB inventory movements found. Run npm run seed in the backend."}
+    emptyMessage={error || "No inventory movements found. Add movements or run the backend seed."}
   />
       </>}
     </div>;

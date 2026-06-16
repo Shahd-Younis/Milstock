@@ -66,7 +66,7 @@ const ItemDetailsAr = () => {
   }, [id]);
 
   if (loading) {
-    return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل الصنف من MongoDB...</CardContent></Card></div>;
+    return <div dir="rtl" className="p-6 lg:p-8"><Card><CardContent className="py-10 text-center text-muted-foreground">جار تحميل الصنف...</CardContent></Card></div>;
   }
 
   if (error || !product) {

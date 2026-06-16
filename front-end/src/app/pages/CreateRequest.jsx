@@ -26,7 +26,11 @@ const CreateRequest = () => {
   const { data: supplierUsers, loading: suppliersLoading, error: suppliersError } = useApiResource(() => api.supplierUsers.list(), []);
   const { data: warehouses, loading: warehousesLoading, error: warehousesError } = useApiResource(() => api.warehouses.list(), []);
   const activeWarehouses = warehouses.filter((warehouse) => !warehouse.status || warehouse.status === "active");
-  const activeSuppliers = supplierUsers.filter((supplier) => (!supplier.status || supplier.status === "active") && (!supplier.role || supplier.role === "supplier"));
+  const activeSuppliers = supplierUsers.filter((supplier) => {
+    const text = `${supplier.name || ""} ${supplier.email || ""}`.toLowerCase();
+    const isNonFood = /(medical|equipment|hardware|device)/i.test(text);
+    return !isNonFood && (!supplier.status || supplier.status === "active") && (!supplier.role || supplier.role === "supplier");
+  });
   const selectableWarehouses = activeWarehouses.filter((warehouse) => warehouse._id !== assignedWarehouse.id);
   const warehousePlaceholder = warehousesLoading
     ? "Loading warehouses..."
@@ -38,6 +42,11 @@ const CreateRequest = () => {
     const product = products.find((entry) => entry._id === productId);
     return Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
   };
+  const formatProductPrice = (productId) => {
+    if (!productId) return "Select product";
+    return getProductPrice(productId).toLocaleString();
+  };
+  const getItemTotal = (item) => Number(item.quantity || 0) * getProductPrice(item.product_id);
   const addItem = () => {
     setItems([...items, { product_id: "", quantity: "" }]);
   };
@@ -178,13 +187,13 @@ const CreateRequest = () => {
                       <div>
                         <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Unit Price</p>
                         <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
-                          {getProductPrice(item.product_id) || "N/A"}
+                          {formatProductPrice(item.product_id)}
                         </div>
                       </div>
                       <div>
                         <p className="block mb-1.5 text-sm font-medium text-[#2E3A24]">Total</p>
                         <div className="rounded-xl border border-[#4E4631]/15 bg-[#ECEEE2]/60 px-4 py-2.5 text-sm text-[#2E3A24]">
-                          {(Number(item.quantity || 0) * getProductPrice(item.product_id)).toLocaleString()}
+                          {getItemTotal(item).toLocaleString()}
                         </div>
                       </div>
                     </div>

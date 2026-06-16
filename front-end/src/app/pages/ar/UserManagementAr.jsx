@@ -15,10 +15,10 @@ import { getLocalizedDisplayName, getLocalizedRoleLabel } from "../../lib/locali
 
 const t = {
   pageTitle: "إدارة المستخدمين",
-  pageSubtitle: "إدارة حسابات المستخدمين وصلاحياتهم من MongoDB",
+  pageSubtitle: "إدارة حسابات المستخدمين وصلاحياتهم",
   addUser: "إضافة مستخدم",
   searchPlaceholder: "ابحث في المستخدمين...",
-  loading: "جاري تحميل المستخدمين من MongoDB...",
+  loading: "جاري تحميل المستخدمين...",
   userCount: (count) => `${count} مستخدم`,
   export: "تصدير",
   notAssigned: "غير محدد",
