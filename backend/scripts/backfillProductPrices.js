@@ -61,6 +61,19 @@ const unitPrices = {
   'Sunflower Oil': 11,
   'Powdered Milk': 10,
   'Tomato Paste': 5,
+  'White Cheese': 14,
+  Labneh: 9,
+  'Frozen Fish': 20,
+  'Frozen Chicken Nuggets': 16,
+  'Green Peas': 5,
+  Zucchini: 4,
+  Eggplant: 4,
+  Pears: 7,
+  'Pita Bread': 1,
+  'Burger Buns': 1.2,
+  'Mineral Water': 1,
+  'Lemon Juice': 6,
+  'Iced Tea': 5,
 };
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
