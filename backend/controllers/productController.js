@@ -9,6 +9,7 @@ const { createAuditLog } = require('../services/auditLogService');
 const { generateExpirationNotifications } = require('../services/expirationNotificationService');
 const { buildWarehouseScopeFilter, assertWarehouseAccess } = require('../utils/warehouseScope');
 const { assertDateRange, assertValidDate } = require('../utils/dateValidation');
+const { getEffectiveProductUnitPrice } = require('../utils/productPricing');
 
 const textTranslations = {
   Chicken: 'دجاج',
@@ -294,6 +295,9 @@ const createProduct = asyncHandler(async (req, res) => {
     const warehouse = await Warehouse.findById(payload.warehouse_id);
     payload.warehouse_name = warehouse?.name || '';
   }
+  if (!Number(payload.unit_price || 0)) {
+    payload.unit_price = getEffectiveProductUnitPrice(payload);
+  }
 
   const product = await Product.create(payload);
 
@@ -341,6 +345,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (payload.warehouse_id && !payload.warehouse_name) {
     const warehouse = await Warehouse.findById(payload.warehouse_id);
     payload.warehouse_name = warehouse?.name || '';
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'unit_price') && !Number(payload.unit_price || 0)) {
+    payload.unit_price = getEffectiveProductUnitPrice({ ...previous?.toObject?.(), ...payload });
   }
 
   const product = await Product.findByIdAndUpdate(req.params.id, payload, {
@@ -528,8 +535,11 @@ const attachWarehouseStock = async (products, options = {}) => {
     }
 
     const totalStock = warehouses.reduce((sum, warehouse) => sum + Number(warehouse.quantity || 0), 0);
+    const unitPrice = getEffectiveProductUnitPrice(plain);
     return {
       ...plain,
+      unit_price: unitPrice,
+      price: unitPrice,
       warehouses,
       totalStock,
       quantity: warehouses.length ? totalStock : Number(plain.quantity || 0),

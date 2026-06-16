@@ -13,6 +13,7 @@ const { createNotification } = require('../services/notificationService');
 const { createAuditLog } = require('../services/auditLogService');
 const { assertWarehouseAccess, requireAssignedWarehouse } = require('../utils/warehouseScope');
 const { assertValidDate } = require('../utils/dateValidation');
+const { getEffectiveProductUnitPrice } = require('../utils/productPricing');
 
 const orderRules = [
   body('total_price').optional().isFloat({ min: 0 }).withMessage('Total price must be 0 or greater'),
@@ -71,9 +72,6 @@ const applyCompletedOrderInventory = async ({ order, userId }) => {
   }
 };
 
-const getProductUnitPrice = (product) =>
-  Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
-
 const normalizeRequestType = (type) => {
   if (type === 'provider') return 'supplier_request';
   if (type === 'warehouse_transfer') return 'warehouse_request';
@@ -105,7 +103,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
   const total_price = items.reduce((sum, item) => {
     const product = productsById.get(String(item.product_id));
-    return sum + Number(item.quantity) * getProductUnitPrice(product);
+    return sum + Number(item.quantity) * getEffectiveProductUnitPrice(product);
   }, 0);
 
   if (requestType === 'supplier_request') {
@@ -143,7 +141,7 @@ const createOrder = asyncHandler(async (req, res) => {
     await OrderItem.insertMany(
       items.map((item) => {
         const product = productsById.get(String(item.product_id));
-        const unitPrice = getProductUnitPrice(product);
+        const unitPrice = getEffectiveProductUnitPrice(product);
         return {
         order_id: order._id,
         product_id: item.product_id,

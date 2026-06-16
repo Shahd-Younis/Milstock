@@ -11,6 +11,7 @@ import { useApiResource } from "../../lib/useApiResource";
 import { getStoredAssignedWarehouse } from "../../lib/warehouseDisplay";
 import { getLocalizedDisplayName, getLocalizedValue, localizeText } from "../../lib/localization";
 import { MAX_DATE_INPUT, MIN_DATE_INPUT, isValidDateInput } from "../../lib/dateValidation";
+import { getEffectiveProductUnitPrice } from "../../lib/productPricing";
 
 const CreateRequestAr = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const CreateRequestAr = () => {
 
   const getProductPrice = (productId) => {
     const product = products.find((entry) => entry._id === productId);
-    return Number(product?.price ?? product?.unit_price ?? product?.cost ?? product?.purchase_price ?? product?.supplier_price ?? 0);
+    return getEffectiveProductUnitPrice(product);
   };
   const formatProductPrice = (productId) => {
     if (!productId) return "اختر الصنف";

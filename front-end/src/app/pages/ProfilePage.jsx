@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/Card";
 import { Input } from "../components/Input";
@@ -33,6 +34,7 @@ const labels = {
     weekly: "Weekly Reports",
     weeklyHelp: "Receive weekly inventory summary emails",
     savePreferences: "Save Preferences",
+    preferencesSaved: "Notification preferences saved successfully.",
   },
   ar: {
     title: "إعدادات الملف الشخصي",
@@ -61,12 +63,20 @@ const labels = {
     weekly: "تقارير أسبوعية",
     weeklyHelp: "استلام ملخص أسبوعي للمخزون عبر البريد",
     savePreferences: "حفظ التفضيلات",
+    preferencesSaved: "تم حفظ تفضيلات الإشعارات بنجاح.",
   },
 };
 
-const PreferenceRow = ({ title, help, defaultChecked = false }) => (
-  <label className="flex items-center gap-3 cursor-pointer">
-    <input type="checkbox" defaultChecked={defaultChecked} className="w-4 h-4 accent-primary" />
+const defaultNotificationPreferences = {
+  lowStock: true,
+  expiration: true,
+  requests: true,
+  weekly: false,
+};
+
+const PreferenceRow = ({ title, help, checked, onChange, isArabic = false }) => (
+  <label className={`flex items-center gap-3 cursor-pointer ${isArabic ? "flex-row-reverse text-right" : ""}`}>
+    <input type="checkbox" checked={checked} onChange={onChange} className="w-4 h-4 accent-primary shrink-0" />
     <div>
       <p className="font-medium text-foreground">{title}</p>
       <p className="text-sm text-muted-foreground">{help}</p>
@@ -76,6 +86,27 @@ const PreferenceRow = ({ title, help, defaultChecked = false }) => (
 
 const ProfilePageView = ({ isArabic = false }) => {
   const t = labels[isArabic ? "ar" : "en"];
+  const [preferences, setPreferences] = useState(defaultNotificationPreferences);
+  const [preferencesMessage, setPreferencesMessage] = useState("");
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("milstock_notification_preferences") || "{}");
+      setPreferences({ ...defaultNotificationPreferences, ...saved });
+    } catch {
+      setPreferences(defaultNotificationPreferences);
+    }
+  }, []);
+
+  const updatePreference = (key) => (event) => {
+    setPreferences((current) => ({ ...current, [key]: event.target.checked }));
+    setPreferencesMessage("");
+  };
+
+  const saveNotificationPreferences = () => {
+    localStorage.setItem("milstock_notification_preferences", JSON.stringify(preferences));
+    setPreferencesMessage(t.preferencesSaved);
+  };
 
   return <div className="p-6 lg:p-8 space-y-6" dir={isArabic ? "rtl" : "ltr"}>
     <PageHeader title={t.title} subtitle={t.subtitle} />
@@ -139,13 +170,14 @@ const ProfilePageView = ({ isArabic = false }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <PreferenceRow title={t.lowStock} help={t.lowStockHelp} defaultChecked />
-            <PreferenceRow title={t.expiration} help={t.expirationHelp} defaultChecked />
-            <PreferenceRow title={t.requests} help={t.requestsHelp} defaultChecked />
-            <PreferenceRow title={t.weekly} help={t.weeklyHelp} />
+            <PreferenceRow title={t.lowStock} help={t.lowStockHelp} checked={preferences.lowStock} onChange={updatePreference("lowStock")} isArabic={isArabic} />
+            <PreferenceRow title={t.expiration} help={t.expirationHelp} checked={preferences.expiration} onChange={updatePreference("expiration")} isArabic={isArabic} />
+            <PreferenceRow title={t.requests} help={t.requestsHelp} checked={preferences.requests} onChange={updatePreference("requests")} isArabic={isArabic} />
+            <PreferenceRow title={t.weekly} help={t.weeklyHelp} checked={preferences.weekly} onChange={updatePreference("weekly")} isArabic={isArabic} />
           </div>
+          {preferencesMessage && <p className="mt-4 text-sm text-[#5B8A4A]">{preferencesMessage}</p>}
           <div className="mt-6">
-            <Button>{t.savePreferences}</Button>
+            <Button type="button" onClick={saveNotificationPreferences}>{t.savePreferences}</Button>
           </div>
         </CardContent>
       </Card>
